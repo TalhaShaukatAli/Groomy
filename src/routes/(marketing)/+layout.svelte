@@ -1,13 +1,10 @@
 <script>
     import paw from "$lib/static/paw.png"
-    import SideBarNav from "$lib/components/SideBarNav.svelte";
-    import TopTabBar from "$lib/components/TopTabBar.svelte";
-</script>
+    import SideBarNavMartketing from "$lib/components/SideBarNavMartketing.svelte";
+    </script>
 <div class="container">
-	<SideBarNav />
+	<SideBarNavMartketing />
     <div class="content">
-        <TopTabBar />
-        
         <slot />
     </div>
 </div>
