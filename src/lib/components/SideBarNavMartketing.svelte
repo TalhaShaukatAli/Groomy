@@ -1,7 +1,7 @@
 <script>
 	import paw from '$lib/static/paw.png';
 
-    import { page } from '$lib/stores.svelte';
+	import { page } from '$lib/stores.svelte';
 </script>
 
 <div class="sideBar">
@@ -9,26 +9,24 @@
 		<img src={paw} alt="" width="100px" />
 		<b>Groomy</b>
 	</div>
-	<a class="sideBarItem" class:highlighted={page.get() === "Home"} href="/">Home</a>
-    <a class="sideBarItem" class:highlighted={page.get() === "Login"} href="/login">Login</a>
-    <a class="sideBarItem" class:highlighted={page.get() === "About"} href="/about">About Us</a>
-
+	<a class="sideBarItem" class:highlighted={page.get() === 'Home'} href="/">Home</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'About'} href="/about">About</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'Login'} href="/login">Login</a>
 </div>
 
 <style>
-    .highlighted {
-        background-color: var(--main-hover) !important;
+	.highlighted {
+		background-color: var(--main-hover) !important;
 		color: white;
-    }
+	}
 	b {
-		font-size: 1.9rem;
+		font-size: 1.7rem;
 	}
 
-    a {
-        text-decoration: none;
-        color: black;
-
-    }
+	a {
+		text-decoration: none;
+		color: black;
+	}
 
 	img {
 		padding: 0.25rem;
@@ -44,7 +42,7 @@
 	}
 
 	.sideBarItem {
-		font-size: 1.5rem;
+		font-size: 1.2rem;
 		width: 100%;
 		text-align: center;
 		padding: 1rem 0rem;
