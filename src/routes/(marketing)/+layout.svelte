@@ -1,5 +1,4 @@
 <script>
-	import paw from '$lib/static/paw.png';
 	import SideBarNavMartketing from '$lib/components/SideBarNavMartketing.svelte';
 </script>
 
