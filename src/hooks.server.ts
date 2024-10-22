@@ -7,5 +7,3 @@ connect().then(():void => {
     console.log("MongoDB failed to start");
     console.log(e);
 });
-
-console.log("WWHY")

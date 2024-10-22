@@ -1,38 +1,72 @@
-# create-svelte
+# Software Engineering Technical Specification
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+## Overview
+This document outlines the technical specifications for a web-based business management system, designed to handle customer relationships, appointments, and payments.
 
-## Creating a project
+## Functional Requirements
+* User can create an account
+* User can login / authenticate
+* User can CRUD customers
+* User can CRUD appointments
+* User can CRUD notes
+* User can CRUD services
+* User can CRUD invoices
+* User can see a map of the local area
+* User can view a path from current location to the next appointment on the map
+* User can take payments 
+* (Anything else can be added later)
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Non-functional Requirements
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+- Web-based application
+- Remote access capability
+- Cross-platform compatibility
+- Responsive design
 
-## Developing
+## Design Guidelines
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Color Palette
+- Primary Blue: `#50869e`
+- Secondary Blue: `#2f7ea0`
+- Hover Blue: `#3c6c85`
+- Background: `#faf6f2` (Off-white)
 
-```bash
-npm run dev
+### Fonts
+- Primary Font: Lucida Sans
+- Default Text Color: White
+- Headings: Primary Blue
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+### Input Buttons
+- Border: None
+- Border Radius: 0.25rem
 
-## Building
+### Form Buttons
+- Default Border: 2px solid transparent
+- Hover Border: 2px solid yellow
+- Border Radius: 0.25rem
 
-To create a production version of your app:
+### Layout
+- Background: Off-white (`#faf6f2`)
+- Sidebar: Primary Blue (`#50869e`) with black text
 
-```bash
-npm run build
-```
+## Technical Stack
 
-You can preview the production build with `npm run preview`.
+### Frontend / Backend
+- Framework: SvelteKit
+- Languages:
+  - TypeScript
+  - JavaScript 
+- Database: MongoDB
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+### Project Structure
+- Source code: `/src` directory
+- UI tests: `/tests` directory
+- Unit tests: Located with source files
+
+### Naming Conventions
+- General code: camelCase
+- Variables: camelCase
+- Functions: camelCase
+- Classes: PascalCase
+- Components: PascalCase

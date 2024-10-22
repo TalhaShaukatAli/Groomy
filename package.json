@@ -35,6 +35,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"mongodb": "^6.9.0"
+		"mongodb": "^6.10.0"
 	}
 }

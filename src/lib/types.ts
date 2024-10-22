@@ -1,8 +1,16 @@
-export type user = {
-    id: string,
+export type existingUser = {
+    _id: object,
+    firstName: string,
+    lastName: string,
     email: string,
-    hashedPassword: string,
-    mongoID: string
+    password: string,
+}
+
+export type newUser = {
+    firstName: string,
+    lastName: string,
+    email: string
+    password: string
 }
 
 export type cookie = {
