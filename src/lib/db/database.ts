@@ -1,12 +1,7 @@
-import type { existingUser, newUser, user } from "$lib/types";
+import type { cookie, existingUser, newUser, user } from "$lib/types";
 import { getDB } from "./mongo";
 
 let db = getDB()
-
-export const test = async() => {
-	let data = await db.collection("users").findOne({})
-	return data
-}
 
 export const AddNewUser = async (user: newUser) => {
 	await db.collection("users").insertOne(user)
@@ -19,4 +14,24 @@ export const GetUserByEmail = async (email: string):Promise<existingUser | undef
 	} else {
 		return undefined
 	}
+}
+
+export const AddCookie = async (cookie: string) => {
+	await db.collection("cookie").insertOne({cookie:cookie, expireTime: (Date.now() + 3600*1000)})
+}
+
+export const RemoveCookie = async (cookie: string) => {
+	await db.collection("cookie").deleteOne({cookie:cookie})
+}
+
+export const GetCookie = async (cookie: string):Promise<cookie> => {
+	let result = await db.collection("cookie").findOne({cookie:cookie})
+	return result
+}
+
+export const UpdateCookie = async (cookie: string) => {
+	let updateDoc = {$set: {expireTime: Date.now() + 3600*1000}}
+	
+	await db.collection("cookie").updateOne({cookie:cookie},updateDoc)
+
 }

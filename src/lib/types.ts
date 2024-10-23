@@ -14,11 +14,6 @@ export type newUser = {
 }
 
 export type cookie = {
-    id: string,
     cookie: string
-}
-
-export type data = {
-    user: user[],
-    cookie : cookie[]
+    expireTime: number
 }

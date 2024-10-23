@@ -11,6 +11,8 @@
 	</div>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Home'} href="/">Home</a>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Test'} href="/test">Test</a>
+	<div style="flex-grow: 1;"></div>
+	<a class="sideBarItem" href="/login/logout">Log Out</a>
 </div>
 
 <style>
