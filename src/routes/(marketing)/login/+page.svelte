@@ -76,7 +76,7 @@
 					<label for="email">Password</label>
 					<input type="password" placeholder="ABC123" name="password" required />
 				</div>
-				<button type="submit" class="signin">Login</button>
+				<button type="submit" class="signin">Create</button>
 				{#if form?.error}
 					<p class="error">{form.error}</p>
 				{/if}

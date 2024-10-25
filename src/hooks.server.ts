@@ -14,19 +14,19 @@ connect()
 	});
 
 export const handle: Handle = async ({ event, resolve }) => {
-	if(event.url.pathname.startsWith("/home")){
-		let cookie = event.cookies.get("sessionID")
-		if(cookie){
-			let dbCookie = await GetCookie(cookie)
-			if(dbCookie.expireTime > Date.now()){
-				await UpdateCookie(dbCookie.cookie)
+	if (event.url.pathname.startsWith('/home')) {
+		const cookie = event.cookies.get('sessionID');
+		if (cookie) {
+			const dbCookie = await GetCookie(cookie);
+			if (dbCookie.expireTime > Date.now()) {
+				await UpdateCookie(dbCookie.cookie);
 				return await resolve(event);
 			}
-			await RemoveCookie(dbCookie.cookie)
-			redirect(302, "/login")
+			await RemoveCookie(dbCookie.cookie);
+			redirect(302, '/login');
 		}
-		redirect(302, "/login")
+		redirect(302, '/login');
 	} else {
-        return await resolve(event);
-    }
+		return await resolve(event);
+	}
 };

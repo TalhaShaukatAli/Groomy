@@ -8,15 +8,15 @@
 	<h2>Our Passion for Pups</h2>
 
 	<p>
-		At Groomy, we're more than just a software company – we're a team of dedicated dog lovers
-		on a mission to make the world a better place for our furry friends.
+		At Groomy, we're more than just a software company – we're a team of dedicated dog lovers on a
+		mission to make the world a better place for our furry friends.
 	</p>
 
 	<h2>Our Story</h2>
 
 	<p>
-		Groomy was born from a simple observation: the joy that a well-groomed dog brings to both
-		its owner and itself. Our founder, a long-time dog groomer, realized that by streamlining the
+		Groomy was born from a simple observation: the joy that a well-groomed dog brings to both its
+		owner and itself. Our founder, a long-time dog groomer, realized that by streamlining the
 		business side of grooming, professionals could spend more time doing what they love – caring for
 		dogs.
 	</p>
@@ -42,9 +42,9 @@
 	<h2>Join Our Pack</h2>
 
 	<p>
-		When you choose Groomy, you're not just getting a software solution – you're joining a
-		community of passionate professionals who put dogs first. Together, we can make the world a more
-		beautiful place, one well-groomed pup at a time. Thank you for considering Groomy. We
-		can't wait to be a part of your grooming journey!
+		When you choose Groomy, you're not just getting a software solution – you're joining a community
+		of passionate professionals who put dogs first. Together, we can make the world a more beautiful
+		place, one well-groomed pup at a time. Thank you for considering Groomy. We can't wait to be a
+		part of your grooming journey!
 	</p>
 </div>

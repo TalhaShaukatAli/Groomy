@@ -21,21 +21,24 @@ export const actions = {
 		const email = <string>data.get('email');
 		const password = <string>data.get('password');
 
-		let user = await GetUserByEmail(email);
+		const user = await GetUserByEmail(email.toLowerCase());
 
-		if (user == null) {
+		if (user == undefined) {
 			return fail(422, {
-				error: "Incorrect username or password"
+				error: 'Incorrect username or password'
 			});
 		} else {
 			if (await argon2.verify(user.password, password)) {
-				let cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
-				await AddCookie(cookieID)
+				const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
+				await AddCookie(cookieID);
 				cookies.set('sessionID', cookieID, { path: '/' });
-				redirect(302, "/home")
+				redirect(302, '/home');
+			} else {
+				return fail(422, {
+					error: 'Incorrect username or password'
+				});
 			}
 		}
-
 	},
 	create: async ({ cookies, request }) => {
 		const data = await request.formData();
@@ -45,16 +48,6 @@ export const actions = {
 		const firstName = <string>data.get('firstName');
 		const lastName = <string>data.get('lastName');
 
-		
-
-		let user = await GetUserByEmail(email);
-
-		if (user !== null) {
-			return fail(422, {
-				error: "User with that email already exists"
-			});
-		}
-
 		const newUserData: newUser = {
 			firstName: firstName,
 			lastName: lastName,
@@ -62,6 +55,15 @@ export const actions = {
 			password: passwordHash
 		};
 
-		await AddNewUser(newUserData);
-	},
+		const user = await GetUserByEmail(email);
+
+		if (user != undefined) {
+			return fail(422, {
+				error: 'Email already exists'
+			});
+		}
+
+		let result = await AddNewUser(newUserData);
+		console.log(result)
+	}
 } satisfies Actions;

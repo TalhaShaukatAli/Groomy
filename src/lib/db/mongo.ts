@@ -5,15 +5,15 @@ const client = new MongoClient(MONGO);
 
 // connect to the database
 export async function connect(): Promise<void> {
-    await client.connect();
+	await client.connect();
 }
 
 // disconnect from the database
 export async function disconnect(): Promise<void> {
-    await client.close();
+	await client.close();
 }
 
 // get the database
 export function getDB() {
-    return client.db("User");
+	return client.db('User');
 }
