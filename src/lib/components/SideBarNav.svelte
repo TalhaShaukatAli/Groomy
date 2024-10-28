@@ -10,7 +10,7 @@
 		<b>Groomy</b>
 	</div>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Home'} href="/home">Home</a>
-	<a class="sideBarItem" class:highlighted={page.get() === 'Test'} href="/home/test">Test</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'Test'} href="/home/customers">Customers</a>
 	<div style="flex-grow: 1;"></div>
 	<a class="sideBarItem" href="/login/logout">Log Out</a>
 </div>

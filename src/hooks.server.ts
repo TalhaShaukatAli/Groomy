@@ -1,5 +1,5 @@
 import { updated } from '$app/stores';
-import { GetCookie, RemoveCookie, UpdateCookie } from '$lib/db/database';
+import { Auth_GetCookie, Auth_RemoveCookie, Auth_UpdateCookie } from '$lib/db/database';
 import { connect } from '$lib/db/mongo';
 import { redirect, type Handle } from '@sveltejs/kit';
 
@@ -17,12 +17,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/home')) {
 		const cookie = event.cookies.get('sessionID');
 		if (cookie) {
-			const dbCookie = await GetCookie(cookie);
+			const dbCookie = await Auth_GetCookie(cookie);
 			if (dbCookie.expireTime > Date.now()) {
-				await UpdateCookie(dbCookie.cookie);
+				await Auth_UpdateCookie(dbCookie.cookie);
 				return await resolve(event);
 			}
-			await RemoveCookie(dbCookie.cookie);
+			await Auth_RemoveCookie(dbCookie.cookie);
 			redirect(302, '/login');
 		}
 		redirect(302, '/login');

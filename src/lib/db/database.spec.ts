@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, beforeEach, vi, afterEach } from 'vitest';
 import {
-	AddNewUser,
-	GetUserByEmail,
-	AddCookie,
-	RemoveCookie,
-	GetCookie,
-	UpdateCookie
+	Auth_AddNewUser,
+	Auth_GetUserByEmail,
+	Auth_AddCookie,
+	Auth_RemoveCookie,
+	Auth_GetCookie,
+	Auth_UpdateCookie
 } from '$lib/db/database';
 import * as mongoModule from './mongo';
 import type { cookie, existingUser, newUser } from '$lib/types';
@@ -61,7 +61,7 @@ describe('Database Functions', () => {
 				const mockInsertOne = vi.fn().mockResolvedValue({ acknowledged: true });
 				db.collection('users').insertOne = mockInsertOne;
 
-				await AddNewUser(mockNewUser);
+				await Auth_AddNewUser(mockNewUser);
 
 				expect(db.collection).toHaveBeenCalledWith('users');
 				expect(mockInsertOne).toHaveBeenCalledWith(mockNewUser);
@@ -71,7 +71,7 @@ describe('Database Functions', () => {
 				const mockInsertOne = vi.fn().mockRejectedValue(new Error('DB Error'));
 				db.collection('users').insertOne = mockInsertOne;
 
-				await expect(AddNewUser(mockNewUser)).rejects.toThrow('DB Error');
+				await expect(Auth_AddNewUser(mockNewUser)).rejects.toThrow('DB Error');
 			});
 		});
 
@@ -80,7 +80,7 @@ describe('Database Functions', () => {
 				const mockFindOne = vi.fn().mockResolvedValue(mockExistingUser);
 				db.collection('users').findOne = mockFindOne;
 
-				const result = await GetUserByEmail('test@example.com');
+				const result = await Auth_GetUserByEmail('test@example.com');
 
 				expect(db.collection).toHaveBeenCalledWith('users');
 				expect(mockFindOne).toHaveBeenCalledWith({ email: 'test@example.com' });
@@ -91,7 +91,7 @@ describe('Database Functions', () => {
 				const mockFindOne = vi.fn().mockResolvedValue(null);
 				db.collection('users').findOne = mockFindOne;
 
-				const result = await GetUserByEmail('nonexistent@example.com');
+				const result = await Auth_GetUserByEmail('nonexistent@example.com');
 
 				expect(result).toBeUndefined();
 			});
@@ -116,7 +116,7 @@ describe('Database Functions', () => {
 				db.collection('cookie').insertOne = mockInsertOne;
 
 				const cookieString = 'test-cookie';
-				await AddCookie(cookieString);
+				await Auth_AddCookie(cookieString);
 
 				expect(db.collection).toHaveBeenCalledWith('cookie');
 				expect(mockInsertOne).toHaveBeenCalledWith({
@@ -132,7 +132,7 @@ describe('Database Functions', () => {
 				db.collection('cookie').deleteOne = mockDeleteOne;
 
 				const cookieString = 'test-cookie';
-				await RemoveCookie(cookieString);
+				await Auth_RemoveCookie(cookieString);
 
 				expect(db.collection).toHaveBeenCalledWith('cookie');
 				expect(mockDeleteOne).toHaveBeenCalledWith({ cookie: cookieString });
@@ -149,7 +149,7 @@ describe('Database Functions', () => {
 				const mockFindOne = vi.fn().mockResolvedValue(mockCookie);
 				db.collection('cookie').findOne = mockFindOne;
 
-				const result = await GetCookie('test-cookie');
+				const result = await Auth_GetCookie('test-cookie');
 
 				expect(db.collection).toHaveBeenCalledWith('cookie');
 				expect(mockFindOne).toHaveBeenCalledWith({ cookie: 'test-cookie' });
@@ -160,7 +160,7 @@ describe('Database Functions', () => {
 				const mockFindOne = vi.fn().mockResolvedValue(null);
 				db.collection('cookie').findOne = mockFindOne;
 
-				const result = await GetCookie('nonexistent-cookie');
+				const result = await Auth_GetCookie('nonexistent-cookie');
 
 				expect(result).toBeNull();
 			});
@@ -172,7 +172,7 @@ describe('Database Functions', () => {
 				db.collection('cookie').updateOne = mockUpdateOne;
 
 				const cookieString = 'test-cookie';
-				await UpdateCookie(cookieString);
+				await Auth_UpdateCookie(cookieString);
 
 				expect(db.collection).toHaveBeenCalledWith('cookie');
 				expect(mockUpdateOne).toHaveBeenCalledWith(

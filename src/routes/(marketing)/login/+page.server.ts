@@ -1,6 +1,11 @@
 /** @type {import('./$types').Actions} */
 
-import { AddCookie, AddNewUser, GetUserByEmail, RemoveCookie } from '$lib/db/database';
+import {
+	Auth_AddCookie,
+	Auth_AddNewUser,
+	Auth_GetUserByEmail,
+	Auth_RemoveCookie
+} from '$lib/db/database';
 import { generateRandomString } from '@oslojs/crypto/random';
 import argon2 from 'argon2';
 import type { newUser } from '$lib/types';
@@ -21,7 +26,7 @@ export const actions = {
 		const email = <string>data.get('email');
 		const password = <string>data.get('password');
 
-		const user = await GetUserByEmail(email.toLowerCase());
+		const user = await Auth_GetUserByEmail(email.toLowerCase());
 
 		if (user == undefined) {
 			return fail(422, {
@@ -30,7 +35,7 @@ export const actions = {
 		} else {
 			if (await argon2.verify(user.password, password)) {
 				const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
-				await AddCookie(cookieID);
+				await Auth_AddCookie(cookieID);
 				cookies.set('sessionID', cookieID, { path: '/' });
 				redirect(302, '/home');
 			} else {
@@ -55,7 +60,7 @@ export const actions = {
 			password: passwordHash
 		};
 
-		const user = await GetUserByEmail(email);
+		const user = await Auth_GetUserByEmail(email);
 
 		if (user != undefined) {
 			return fail(422, {
@@ -63,7 +68,7 @@ export const actions = {
 			});
 		}
 
-		let result = await AddNewUser(newUserData);
-		console.log(result)
+		let result = await Auth_AddNewUser(newUserData);
+		console.log(result);
 	}
 } satisfies Actions;
