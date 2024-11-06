@@ -9,7 +9,7 @@ import {
 import { generateRandomString } from '@oslojs/crypto/random';
 import { authenticatedUser } from '$lib/stores.svelte';
 import argon2 from 'argon2';
-import type { newUser } from '$lib/types';
+import type { newUserRecord } from '$lib/types';
 import type { Actions } from './$types';
 
 import type { RandomReader } from '@oslojs/crypto/random';
@@ -50,7 +50,7 @@ export const actions = {
 		const firstName = <string>data.get('firstName');
 		const lastName = <string>data.get('lastName');
 
-		const newUserData: newUser = {
+		const newUserData: newUserRecord = {
 			firstName: firstName,
 			lastName: lastName,
 			email: email.toLowerCase(),
@@ -59,7 +59,7 @@ export const actions = {
 
 		const result = await API.createUser(newUserData);
 
-		if (result.success) {
+		if (!result.success) {
 			return fail(422, {
 				error: result.message
 			});

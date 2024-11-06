@@ -12,12 +12,17 @@ import {
 	Customer_GetCustomers
 } from '$lib/db/database';
 import * as mongoModule from './mongo';
-import type { cookie, customerRecord, existingUser, newCustomerRecord, newUser } from '$lib/types';
+import type {
+	cookie,
+	customerRecord,
+	userRecord,
+	newCustomerRecord,
+	newUserRecord
+} from '$lib/types';
 import { ObjectId } from 'mongodb';
 
 // Mock the mongo module
 vi.mock('./mongo', () => {
-
 	// Create mock collection
 	const mockCollection = {
 		insertOne: vi.fn(),
@@ -44,14 +49,14 @@ describe('Database Functions', () => {
 	});
 
 	describe('User Functions', () => {
-		const mockNewUser: newUser = {
+		const mockNewUser: newUserRecord = {
 			email: 'test@example.com',
 			password: 'hashedPassword',
 			firstName: 'testUser',
 			lastName: 'fefs'
 		};
 
-		const mockExistingUser: existingUser = {
+		const mockExistingUser: userRecord = {
 			_id: new ObjectId('507f1f77bcf86cd799439011'),
 			...mockNewUser
 		};
@@ -102,42 +107,42 @@ describe('Database Functions', () => {
 		const mockCustomer: newCustomerRecord = {
 			userID: 'testUserId',
 			firstName: 'Test',
-			lastName: "customer",
+			lastName: 'customer',
 			email: 'customer@example.com',
 			phone: '1234567890',
 			address: {
 				street: '123 Test St',
-				city: "Test City",
-				state: "MN",
+				city: 'Test City',
+				state: 'MN',
 				zip: 49596
 			},
 			deleted: false
 		};
-	
+
 		const mockExistingCustomer: customerRecord = {
 			_id: new ObjectId('507f1f77bcf86cd799439011'),
 			...mockCustomer
 		};
-	
+
 		describe('AddNewCustomer', () => {
 			it('should add a new customer successfully', async () => {
 				const mockInsertOne = vi.fn().mockResolvedValue({ acknowledged: true });
 				db.collection('customer').insertOne = mockInsertOne;
-	
+
 				await Customer_AddNewCustomer(mockCustomer);
-	
+
 				expect(db.collection).toHaveBeenCalledWith('customer');
 				expect(mockInsertOne).toHaveBeenCalledWith(mockCustomer);
 			});
-	
+
 			it('should throw error if insertion fails', async () => {
 				const mockInsertOne = vi.fn().mockRejectedValue(new Error('DB Error'));
 				db.collection('customer').insertOne = mockInsertOne;
-	
+
 				await expect(Customer_AddNewCustomer(mockCustomer)).rejects.toThrow('DB Error');
 			});
 		});
-	
+
 		describe('GetCustomers', () => {
 			it('should return customers array when found', async () => {
 				const mockCustomers = [mockExistingCustomer];
@@ -145,65 +150,68 @@ describe('Database Functions', () => {
 					toArray: vi.fn().mockResolvedValue(mockCustomers)
 				});
 				db.collection('customer').find = mockFind;
-	
+
 				const result = await Customer_GetCustomers('testUserId');
-	
+
 				expect(db.collection).toHaveBeenCalledWith('customer');
 				expect(mockFind).toHaveBeenCalledWith({ userID: 'testUserId', deleted: false });
 				expect(result).toEqual(mockCustomers);
 			});
-	
+
 			it('should return undefined when no customers found', async () => {
 				const mockFind = vi.fn().mockReturnValue({
 					toArray: vi.fn().mockResolvedValue(null)
 				});
 				db.collection('customer').find = mockFind;
-	
+
 				const result = await Customer_GetCustomers('nonexistentUserId');
-	
+
 				expect(result).toBeNull();
 			});
 		});
-	
+
 		describe('GetCustomerByID', () => {
 			it('should return customer when found', async () => {
 				const mockFindOne = vi.fn().mockResolvedValue(mockExistingCustomer);
 				db.collection('customer').findOne = mockFindOne;
-	
+
 				const result = await Customer_GetCustomerByID('507f1f77bcf86cd799439011');
-	
+
 				expect(db.collection).toHaveBeenCalledWith('customer');
 				expect(mockFindOne).toHaveBeenCalledWith({
 					_id: new ObjectId('507f1f77bcf86cd799439011')
 				});
 				expect(result).toEqual(mockExistingCustomer);
 			});
-	
+
 			it('should return undefined when customer not found', async () => {
 				const mockFindOne = vi.fn().mockResolvedValue(null);
 				db.collection('customer').findOne = mockFindOne;
-	
+
 				const result = await Customer_GetCustomerByID('507f1f77bcf86cd799439011');
-	
+
 				expect(result).toBeUndefined();
 			});
-	
+
 			it('should handle invalid ObjectId', async () => {
 				const mockFindOne = vi.fn();
 				db.collection('customer').findOne = mockFindOne;
-	
+
 				await expect(Customer_GetCustomerByID('invalid-id')).rejects.toThrow();
 			});
 		});
-	
+
 		describe('UpdateCustomerByID', () => {
 			it('should update customer successfully', async () => {
 				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: true });
 				db.collection('customer').updateOne = mockUpdateOne;
-	
+
 				const updatedCustomer = { ...mockExistingCustomer, name: 'Updated Name' };
-				const result = await Customer_UpdateCustomerByID('507f1f77bcf86cd799439011', updatedCustomer);
-	
+				const result = await Customer_UpdateCustomerByID(
+					'507f1f77bcf86cd799439011',
+					updatedCustomer
+				);
+
 				expect(db.collection).toHaveBeenCalledWith('customer');
 				expect(mockUpdateOne).toHaveBeenCalledWith(
 					{ _id: new ObjectId('507f1f77bcf86cd799439011') },
@@ -211,24 +219,26 @@ describe('Database Functions', () => {
 				);
 				expect(result.acknowledged).toBe(true);
 			});
-	
+
 			it('should return false when update fails', async () => {
 				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: false });
 				db.collection('customer').updateOne = mockUpdateOne;
-	
+
 				const result = await Customer_UpdateCustomerByID(
 					'507f1f77bcf86cd799439011',
 					mockExistingCustomer
 				);
-	
+
 				expect(result.acknowledged).toBe(false);
 			});
-	
+
 			it('should handle invalid ObjectId', async () => {
 				const mockUpdateOne = vi.fn();
 				db.collection('customer').updateOne = mockUpdateOne;
-	
-				await expect(Customer_UpdateCustomerByID('invalid-id', mockExistingCustomer)).rejects.toThrow();
+
+				await expect(
+					Customer_UpdateCustomerByID('invalid-id', mockExistingCustomer)
+				).rejects.toThrow();
 			});
 		});
 	});

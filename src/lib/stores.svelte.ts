@@ -1,4 +1,4 @@
-import type { customerRecord, existingUser } from "./types";
+import type { customerRecord, userRecord } from './types';
 
 let _page = $state('');
 
@@ -9,10 +9,10 @@ export const page = {
 	}
 };
 
-let _user:existingUser = $state()
+let _user: userRecord = $state();
 export const authenticatedUser = {
 	get: () => _user,
-	set: (newUser: existingUser) => {
-		_user = newUser
+	set: (newUser: userRecord) => {
+		_user = newUser;
 	}
-}
+};

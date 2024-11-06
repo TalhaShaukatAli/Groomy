@@ -1,6 +1,6 @@
-import type { ObjectId } from "mongodb";
+import type { ObjectId } from 'mongodb';
 
-export type existingUser = {
+export type userRecord = {
 	_id: ObjectId;
 	firstName: string;
 	lastName: string;
@@ -8,7 +8,7 @@ export type existingUser = {
 	password: string;
 };
 
-export type newUser = {
+export type newUserRecord = {
 	firstName: string;
 	lastName: string;
 	email: string;
@@ -21,32 +21,65 @@ export type cookie = {
 };
 
 export type newCustomerRecord = {
-	userID: string,
-	firstName: string,
-	lastName: string,
-	email: string,
-	phone: string,
+	userID: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	phone: string;
 	address: {
-		street: string,
-		city: string,
-		state: string,
-		zip: number
-	}
-	deleted: boolean
-}
+		street: string;
+		city: string;
+		state: string;
+		zip: number;
+	};
+	deleted: boolean;
+};
 
 export type customerRecord = {
-	_id: ObjectId,
-	userID: string,
-	firstName: string,
-	lastName: string,
-	email: string,
-	phone: string,
+	_id: ObjectId;
+	userID: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	phone: string;
 	address: {
-		street: string,
-		city: string,
-		state: string,
-		zip: number
-	}
-	deleted: boolean
-}
+		street: string;
+		city: string;
+		state: string;
+		zip: number;
+	};
+	deleted: boolean;
+};
+
+export type appointmentRecord = {
+	_id: ObjectId;
+	startTime: number;
+	endTime: number;
+	userID: string;
+	customerID: string;
+	title: string;
+	description: string;
+	address: {
+		street: string;
+		city: string;
+		state: string;
+		zip: number;
+	};
+	deleted: boolean;
+};
+
+export type newAppointmentRecord = {
+	startTime: number;
+	endTime: number;
+	userID: string;
+	customerID: string;
+	title: string;
+	description: string;
+	address: {
+		street: string;
+		city: string;
+		state: string;
+		zip: number;
+	};
+	deleted: boolean;
+};
