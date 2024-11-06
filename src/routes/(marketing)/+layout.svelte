@@ -21,7 +21,6 @@
 		max-height: 100%;
 		padding: 2rem;
 		overflow-x: scroll;
-        background-color: var(--background);
+		background-color: var(--background);
 	}
-
 </style>

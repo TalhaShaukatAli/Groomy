@@ -17,7 +17,6 @@
 <style>
 	.highlighted {
 		background-color: var(--main-hover) !important;
-		color: white;
 	}
 	b {
 		font-size: 1.7rem;

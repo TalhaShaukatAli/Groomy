@@ -1,7 +1,7 @@
 <script>
-    import { page } from "$lib/stores.svelte";
+	import { page } from '$lib/stores.svelte';
 
-    page.set("Home")
+	page.set('Home');
 </script>
 
 <h1>Welcome</h1>
