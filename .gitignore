@@ -8,6 +8,7 @@ package-lock.json
 /.svelte-kit
 /build
 /coverage
+/playwright-report
 
 # OS
 .DS_Store

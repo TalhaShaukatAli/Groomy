@@ -1,5 +1,5 @@
 import type { cookie, customerRecord, existingUser, newCustomerRecord, newUser } from '$lib/types';
-import { ObjectId } from 'mongodb';
+import { ObjectId, type Document, type UpdateResult } from 'mongodb';
 import { getDB } from './mongo';
 
 // Create a class to handle database operations
@@ -72,7 +72,7 @@ export class DatabaseCustomerService {
 	}
 
 	async getCustomers(userID: string): Promise<customerRecord[] | undefined> {
-		const returnData = this.db.collection('customer').find({userID: userID});
+		const returnData = this.db.collection('customer').find({userID: userID, deleted: false});
 		if (returnData != null) {
 			return <customerRecord[]>(<unknown>returnData.toArray());
 		} else {
@@ -89,11 +89,17 @@ export class DatabaseCustomerService {
 			return undefined;
 		}
 	}
+
+	async updateCustomerByID(id:string, customer: newCustomerRecord): Promise<UpdateResult<Document>> {
+		const returnData = await this.db.collection('customer').updateOne({_id: new ObjectId(id)},customer);
+		return returnData
+	}
 }
 
 const defaultCustomerDatabase = new DatabaseCustomerService();
 
-export const Customer_AddNewCustomer = (customer: customerRecord) => defaultCustomerDatabase.addNewCustomer(customer);
+export const Customer_AddNewCustomer = (customer: newCustomerRecord) => defaultCustomerDatabase.addNewCustomer(customer);
 export const Customer_GetCustomers = (userID: string) => defaultCustomerDatabase.getCustomers(userID);
 export const Customer_GetCustomerByID = (id:string) => defaultCustomerDatabase.getCustomerByID(id);
+export const Customer_UpdateCustomerByID = (id: string, customer: newCustomerRecord) => defaultCustomerDatabase.updateCustomerByID(id, customer)
 

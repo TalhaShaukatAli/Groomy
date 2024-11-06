@@ -7,12 +7,14 @@ import {
 	Auth_RemoveCookie
 } from '$lib/db/database';
 import { generateRandomString } from '@oslojs/crypto/random';
+import { authenticatedUser } from '$lib/stores.svelte';
 import argon2 from 'argon2';
 import type { newUser } from '$lib/types';
 import type { Actions } from './$types';
 
 import type { RandomReader } from '@oslojs/crypto/random';
 import { fail, redirect } from '@sveltejs/kit';
+import API from '$lib/db/api';
 
 const random: RandomReader = {
 	read(bytes: Uint8Array): void {
@@ -26,23 +28,18 @@ export const actions = {
 		const email = <string>data.get('email');
 		const password = <string>data.get('password');
 
-		const user = await Auth_GetUserByEmail(email.toLowerCase());
+		const result = await API.login({ email, password });
 
-		if (user == undefined) {
+		if (result.success) {
+			const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
+			await Auth_AddCookie(cookieID);
+			cookies.set('sessionID', cookieID, { path: '/' });
+			authenticatedUser.set(result.data);
+			redirect(302, '/home');
+		} else {
 			return fail(422, {
 				error: 'Incorrect username or password'
 			});
-		} else {
-			if (await argon2.verify(user.password, password)) {
-				const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
-				await Auth_AddCookie(cookieID);
-				cookies.set('sessionID', cookieID, { path: '/' });
-				redirect(302, '/home');
-			} else {
-				return fail(422, {
-					error: 'Incorrect username or password'
-				});
-			}
 		}
 	},
 	create: async ({ cookies, request }) => {
@@ -60,15 +57,12 @@ export const actions = {
 			password: passwordHash
 		};
 
-		const user = await Auth_GetUserByEmail(email);
+		const result = await API.createUser(newUserData);
 
-		if (user != undefined) {
+		if (result.success) {
 			return fail(422, {
-				error: 'Email already exists'
+				error: result.message
 			});
 		}
-
-		let result = await Auth_AddNewUser(newUserData);
-		console.log(result);
 	}
 } satisfies Actions;

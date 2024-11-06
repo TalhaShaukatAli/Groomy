@@ -87,7 +87,7 @@
 
 	.head {
 		margin: 2rem 5rem 1rem 5rem;
-		color: white;
+		color: black;
 	}
 
 	.header {
@@ -99,7 +99,7 @@
 		border: none;
 		outline: none;
 		background-color: transparent;
-		color: white;
+		color: rgb(88, 88, 88);
 	}
 
 	.question {
@@ -113,7 +113,6 @@
 		background-color: var(--main-hover);
 		border: 2px solid transparent;
 		cursor: pointer;
-		color: white;
 		border-radius: 0.5rem;
 		transition: all 0.25s;
 	}
@@ -126,6 +125,7 @@
 	.login {
 		background-color: var(--main);
 		border-radius: 1rem;
+        filter: drop-shadow(rgb(88, 88, 88) .2rem .2rem 1rem);
 	}
 
 	form {
@@ -146,6 +146,5 @@
 		display: flex;
 		flex-direction: column;
 		font-size: 1.1rem;
-		color: white;
 	}
 </style>

@@ -6,10 +6,16 @@ const config: PlaywrightTestConfig = {
 		port: 4173,
 		reuseExistingServer: true
 	},
+	use: {
+		trace: "on-all-retries"
+	},
 	testDir: 'tests',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
 	retries: 1,
-	fullyParallel: true
+	fullyParallel: true,
+	outputDir: "test-results",
+	reporter: "html",
+	
 };
 
 export default config;

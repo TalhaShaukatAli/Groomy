@@ -1,5 +1,7 @@
+import type { ObjectId } from "mongodb";
+
 export type existingUser = {
-	_id: object;
+	_id: ObjectId;
 	firstName: string;
 	lastName: string;
 	email: string;
@@ -34,7 +36,7 @@ export type newCustomerRecord = {
 }
 
 export type customerRecord = {
-	_id: object
+	_id: ObjectId,
 	userID: string,
 	firstName: string,
 	lastName: string,
