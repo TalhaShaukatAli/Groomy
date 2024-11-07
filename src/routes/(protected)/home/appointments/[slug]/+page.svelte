@@ -98,7 +98,7 @@
 							name="Date"
 							id=""
 							bind:value={appointment.time.date}
-							onclick={updateCustomer}
+							onclick={updateTime}
 						/>
 					</div>
 					<div>
@@ -388,13 +388,6 @@
 		border: none;
 		border-radius: 1rem;
 		padding: 15px;
-	}
-
-	.addressRow {
-		display: flex;
-		flex-direction: row;
-		gap: 20px;
-		margin: 1rem;
 	}
 
 	.buttonRow {

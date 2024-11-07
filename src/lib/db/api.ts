@@ -50,6 +50,7 @@ class API {
 	private static async request<T>(endpoint: string, options: RequestInit = {}) {
 		try {
 			const baseURL = import.meta.env.VITE_API_URL;
+			console.log(baseURL)
 			const response = await fetch(`${baseURL}/api${endpoint}`, {
 				...options,
 				headers: {

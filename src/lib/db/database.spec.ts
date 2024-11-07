@@ -9,7 +9,12 @@ import {
 	Customer_UpdateCustomerByID,
 	Customer_AddNewCustomer,
 	Customer_GetCustomerByID,
-	Customer_GetCustomers
+	Customer_GetCustomers,
+	Appointment_UpdateAppointmentByID,
+	Appointment_GetAppointmentsByUserID,
+	Appointment_AddNewAppointment,
+	Appointment_GetAppointmentByID,
+	Appointment_GetAppointmentsByCustomerID
 } from '$lib/db/database';
 import * as mongoModule from './mongo';
 import type {
@@ -17,7 +22,9 @@ import type {
 	customerRecord,
 	userRecord,
 	newCustomerRecord,
-	newUserRecord
+	newUserRecord,
+	appointmentRecord,
+	newAppointmentRecord
 } from '$lib/types';
 import { ObjectId } from 'mongodb';
 
@@ -324,6 +331,221 @@ describe('Database Functions', () => {
 					{ cookie: cookieString },
 					{ $set: { expireTime: mockExpireTime } }
 				);
+			});
+		});
+	});
+
+	describe('Appointment Functions', () => {
+		const db = mongoModule.getDB();
+
+		beforeEach(() => {
+			vi.clearAllMocks();
+		});
+
+		const mockAppointment: newAppointmentRecord = {
+			userID: 'testUserId',
+			customerID: 'testCustomerId',
+			title: 'Test Appointment',
+			description: 'Regular maintenance check',
+			time: {
+				date: '2024-01-01',
+				start: '10:00',
+				end: '11:00',
+				exact: 1704096000000 // Unix timestamp for 2024-01-01 10:00:00
+			},
+			address: {
+				street: '123 Test St',
+				city: 'Test City',
+				state: 'MN',
+				zip: 55123
+			},
+			deleted: false
+		};
+
+		const mockExistingAppointment: appointmentRecord = {
+			_id: new ObjectId('507f1f77bcf86cd799439011'),
+			...mockAppointment
+		};
+
+		describe('AddNewAppointment', () => {
+			it('should add a new appointment successfully', async () => {
+				const mockInsertOne = vi.fn().mockResolvedValue({ acknowledged: true });
+				db.collection('appointments').insertOne = mockInsertOne;
+
+				await Appointment_AddNewAppointment(mockAppointment);
+
+				expect(db.collection).toHaveBeenCalledWith('appointments');
+				expect(mockInsertOne).toHaveBeenCalledWith(mockAppointment);
+			});
+
+			it('should throw error if insertion fails', async () => {
+				const mockInsertOne = vi.fn().mockRejectedValue(new Error('DB Error'));
+				db.collection('appointments').insertOne = mockInsertOne;
+
+				await expect(Appointment_AddNewAppointment(mockAppointment)).rejects.toThrow('DB Error');
+			});
+		});
+
+		describe('GetAppointmentByID', () => {
+			it('should return appointment when found', async () => {
+				const mockFindOne = vi.fn().mockResolvedValue(mockExistingAppointment);
+				db.collection('appointments').findOne = mockFindOne;
+
+				const result = await Appointment_GetAppointmentByID('507f1f77bcf86cd799439011');
+
+				expect(db.collection).toHaveBeenCalledWith('appointments');
+				expect(mockFindOne).toHaveBeenCalledWith({
+					_id: new ObjectId('507f1f77bcf86cd799439011')
+				});
+				expect(result).toEqual(mockExistingAppointment);
+			});
+
+			it('should return undefined when appointment not found', async () => {
+				const mockFindOne = vi.fn().mockResolvedValue(null);
+				db.collection('appointments').findOne = mockFindOne;
+
+				const result = await Appointment_GetAppointmentByID('507f1f77bcf86cd799439011');
+
+				expect(result).toBeUndefined();
+			});
+
+			it('should handle invalid ObjectId', async () => {
+				const mockFindOne = vi.fn();
+				db.collection('appointments').findOne = mockFindOne;
+
+				await expect(Appointment_GetAppointmentByID('invalid-id')).rejects.toThrow();
+			});
+		});
+
+		describe('GetAppointmentsByCustomerID', () => {
+			it('should return appointments array when found', async () => {
+				const mockAppointments = [mockExistingAppointment];
+				const mockFind = vi.fn().mockReturnValue({
+					toArray: vi.fn().mockResolvedValue(mockAppointments)
+				});
+				db.collection('appointments').find = mockFind;
+
+				const result = await Appointment_GetAppointmentsByCustomerID('testCustomerId');
+
+				expect(db.collection).toHaveBeenCalledWith('appointments');
+				expect(mockFind).toHaveBeenCalledWith({ customerID: 'testCustomerId', deleted: false });
+				expect(result).toEqual(mockAppointments);
+			});
+
+			it('should return undefined when no appointments found', async () => {
+				const mockFind = vi.fn().mockReturnValue({
+					toArray: vi.fn().mockResolvedValue(null)
+				});
+				db.collection('appointments').find = mockFind;
+
+				const result = await Appointment_GetAppointmentsByCustomerID('nonexistentCustomerId');
+
+				expect(result).toBeNull();
+			});
+
+			it('should only return non-deleted appointments', async () => {
+				const mockFind = vi.fn().mockReturnValue({
+					toArray: vi.fn().mockResolvedValue([])
+				});
+				db.collection('appointments').find = mockFind;
+
+				await Appointment_GetAppointmentsByCustomerID('testCustomerId');
+
+				expect(mockFind).toHaveBeenCalledWith(expect.objectContaining({ deleted: false }));
+			});
+		});
+
+		describe('GetAppointmentsByUserID', () => {
+			it('should return sorted appointments array when found', async () => {
+				const mockAppointments = [mockExistingAppointment];
+				const mockSort = vi.fn().mockReturnValue({
+					toArray: vi.fn().mockResolvedValue(mockAppointments)
+				});
+				const mockFind = vi.fn().mockReturnValue({
+					sort: mockSort
+				});
+				db.collection('appointments').find = mockFind;
+
+				const result = await Appointment_GetAppointmentsByUserID('testUserId');
+
+				expect(db.collection).toHaveBeenCalledWith('appointments');
+				expect(mockFind).toHaveBeenCalledWith({ userID: 'testUserId', deleted: false });
+				expect(mockSort).toHaveBeenCalledWith({ 'time.exact': 1 });
+				expect(result).toEqual(mockAppointments);
+			});
+
+			it('should return undefined when no appointments found', async () => {
+				const mockSort = vi.fn().mockReturnValue({
+					toArray: vi.fn().mockResolvedValue(null)
+				});
+				const mockFind = vi.fn().mockReturnValue({
+					sort: mockSort
+				});
+				db.collection('appointments').find = mockFind;
+
+				const result = await Appointment_GetAppointmentsByUserID('nonexistentUserId');
+
+				expect(result).toBeNull();
+			});
+
+			it('should sort appointments by time.exact in ascending order', async () => {
+				const mockSort = vi.fn().mockReturnValue({
+					toArray: vi.fn().mockResolvedValue([])
+				});
+				const mockFind = vi.fn().mockReturnValue({
+					sort: mockSort
+				});
+				db.collection('appointments').find = mockFind;
+
+				await Appointment_GetAppointmentsByUserID('testUserId');
+
+				expect(mockSort).toHaveBeenCalledWith({ 'time.exact': 1 });
+			});
+		});
+
+		describe('UpdateAppointmentByID', () => {
+			it('should update appointment successfully', async () => {
+				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: true });
+				db.collection('appointments').updateOne = mockUpdateOne;
+
+				const updatedAppointment = {
+					...mockAppointment,
+					title: 'Updated Title',
+					description: 'Updated description'
+				};
+
+				const result = await Appointment_UpdateAppointmentByID(
+					'507f1f77bcf86cd799439011',
+					updatedAppointment
+				);
+
+				expect(db.collection).toHaveBeenCalledWith('appointments');
+				expect(mockUpdateOne).toHaveBeenCalledWith(
+					{ _id: new ObjectId('507f1f77bcf86cd799439011') },
+					updatedAppointment
+				);
+				expect(result.acknowledged).toBe(true);
+			});
+
+			it('should return false when update fails', async () => {
+				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: false });
+				db.collection('appointments').updateOne = mockUpdateOne;
+
+				const result = await Appointment_UpdateAppointmentByID(
+					'507f1f77bcf86cd799439011',
+					mockAppointment
+				);
+
+				expect(result.acknowledged).toBe(false);
+			});
+
+			it('should handle invalid ObjectId', async () => {
+				const mockUpdateOne = vi.fn();
+				db.collection('appointments').updateOne = mockUpdateOne;
+
+				await expect(
+					Appointment_UpdateAppointmentByID('invalid-id', mockAppointment)
+				).rejects.toThrow();
 			});
 		});
 	});

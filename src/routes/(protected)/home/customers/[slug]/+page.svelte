@@ -16,8 +16,7 @@
 
 	async function cancel() {
 		editView = false;
-		goto(`/home/customers/${customer._id.toString()}`);
-		window.location.reload()
+		window.location.replace(`/home/customers/${customer._id.toString()}`)
 	}
 
 	async function onSave() {

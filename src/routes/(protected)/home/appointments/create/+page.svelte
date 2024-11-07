@@ -239,13 +239,6 @@
 		padding: 15px;
 	}
 
-	.addressRow {
-		display: flex;
-		flex-direction: row;
-		gap: 20px;
-		margin: 1rem;
-	}
-
 	.buttonRow {
 		display: flex;
 		flex-direction: row;
