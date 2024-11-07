@@ -53,8 +53,12 @@ export type customerRecord = {
 
 export type appointmentRecord = {
 	_id: ObjectId;
-	startTime: number;
-	endTime: number;
+	time: {
+		date: string;
+		start: string;
+		end: string;
+		exact: number;
+	};
 	userID: string;
 	customerID: string;
 	title: string;
@@ -69,8 +73,12 @@ export type appointmentRecord = {
 };
 
 export type newAppointmentRecord = {
-	startTime: number;
-	endTime: number;
+	time: {
+		date: string;
+		start: string;
+		end: string;
+		exact: number;
+	};
 	userID: string;
 	customerID: string;
 	title: string;

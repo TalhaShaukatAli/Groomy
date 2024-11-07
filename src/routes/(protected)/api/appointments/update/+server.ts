@@ -7,8 +7,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		const data: appointmentRecord = await request.json();
 		const updateDoc = {
             $set: {
-                startTime: data.startTime,
-    			endTime: data.endTime,
+				time: {
+					date: data.time.date,
+					start: data.time.start,
+					end: data.time.end,
+					exact: data.time.exact,
+				},
     			customerID: data.customerID,
     			title: data.title,
     			description: data.description,
@@ -22,7 +26,6 @@ export const POST: RequestHandler = async ({ request }) => {
         }
 
 		const result = await Appointment_UpdateAppointmentByID(data._id.toString(), updateDoc)
-        
 		if (result.acknowledged) {
 			return json({ success: true }, { status: 201 });
 		} else {

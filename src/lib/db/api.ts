@@ -1,9 +1,34 @@
-import type { userRecord, newCustomerRecord, newUserRecord, newAppointmentRecord, appointmentRecord } from '$lib/types';
+import type {
+	userRecord,
+	newCustomerRecord,
+	newUserRecord,
+	newAppointmentRecord,
+	appointmentRecord,
+	customerRecord
+} from '$lib/types';
 
 interface LoginResponse {
 	success: boolean;
 	message: string;
 	data: userRecord;
+}
+
+interface CustomerArrayResponse {
+	success: boolean;
+	message: string;
+	data: customerRecord[];
+}
+
+interface AppointmentArrayResponse {
+	success: boolean;
+	message: string;
+	data: appointmentRecord[];
+}
+
+interface AppointmentResponse {
+	success: boolean;
+	message: string;
+	data: appointmentRecord;
 }
 
 interface BaseResponse {
@@ -74,47 +99,54 @@ class API {
 		});
 	}
 
-    static async getAppointmentsByUserID(userid: string){
-        return this.request('/appointments/get/userid', {
+	static async getCustomers(userid: string): Promise<CustomerArrayResponse> {
+		return this.request('/customers/get', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});
-    }
+	}
 
-    static async getAppointmentsByCustomerID(customerid: string){
-        return this.request('/appointments/get/customerid', {
+	static async getAppointmentsByUserID(userid: string): Promise<AppointmentArrayResponse> {
+		return this.request('/appointments/get/userid', {
+			method: 'POST',
+			body: JSON.stringify(userid)
+		});
+	}
+
+	static async getAppointmentsByCustomerID(customerid: string): Promise<AppointmentArrayResponse> {
+		return this.request('/appointments/get/customerid', {
 			method: 'POST',
 			body: JSON.stringify(customerid)
 		});
-    }
+	}
 
-    static async getAppointmentByID(id: string){
-        return this.request('/appointments/get/id', {
+	static async getAppointmentByID(id: string): Promise<AppointmentResponse> {
+		return this.request('/appointments/get/id', {
 			method: 'POST',
 			body: JSON.stringify(id)
 		});
-    }
+	}
 
-    static async createAppointment(data: newAppointmentRecord){
-        return this.request('/appointments/create', {
+	static async createAppointment(data: newAppointmentRecord): Promise<BaseResponse> {
+		return this.request('/appointments/create', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
-    }
+	}
 
-    static async updateAppointment(data: appointmentRecord){
-        return this.request('/appointments/update', {
+	static async updateAppointment(data: appointmentRecord): Promise<BaseResponse> {
+		return this.request('/appointments/update', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
-    }
+	}
 
-    static async deleteAppointment(id: string){
-        return this.request('/appointments/delete', {
+	static async deleteAppointment(id: string): Promise<BaseResponse> {
+		return this.request('/appointments/delete', {
 			method: 'POST',
 			body: JSON.stringify(id)
 		});
-    }
+	}
 }
 
 export default API;

@@ -1,6 +1,9 @@
-<script>
+<script lang="ts">
     import { enhance } from "$app/forms";
-	let { form } = $props();
+	import { goto } from "$app/navigation";
+	import { authenticatedUser } from "$lib/stores.svelte";
+    import type {ActionData} from "./$types"
+	let { form }: {form :ActionData} = $props();
 	
     let regexEmail = String.raw`((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])`;
 	let login = $state(true);
@@ -8,6 +11,7 @@
 	function changeLogin() {
 		login = !login;
 	}
+
 </script>
 <div class="login">
     {#if login}

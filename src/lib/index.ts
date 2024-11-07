@@ -9,3 +9,8 @@ export function generateRandomString(length: number) {
 
 	return result;
 }
+
+export function DateTimeCombiner(date: string, startTime:string){
+	let convert = `${date}T${startTime}`
+	return Date.parse(convert)
+}

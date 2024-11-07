@@ -35,7 +35,7 @@ export const actions = {
 			await Auth_AddCookie(cookieID);
 			cookies.set('sessionID', cookieID, { path: '/' });
 			authenticatedUser.set(result.data);
-			redirect(302, '/home');
+			redirect(302,"/home")
 		} else {
 			return fail(422, {
 				error: 'Incorrect username or password'

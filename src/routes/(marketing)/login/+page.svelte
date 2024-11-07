@@ -1,13 +1,13 @@
-<script>
-	import { page } from '$lib/stores.svelte';
+<script lang="ts">
+	import { authenticatedUser, page } from '$lib/stores.svelte';
 	import Login from '$lib/components/Login.svelte';
+	import type { ActionData } from './$types';
 
-	let { form } = $props();
+	let { form }: {form :ActionData} = $props();
 
 	page.set('Login');
 
 </script>
-
 <div class="content">
 	<Login {form}/>
 </div>
