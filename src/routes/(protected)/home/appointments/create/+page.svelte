@@ -7,17 +7,15 @@
 	import { onMount } from 'svelte';
 	page.set('Appointment');
 
-	let { data } = $props();
 	let customerList: customerRecord[] = $state();
-	let id: string;
 	onMount(() => {
-		id = localStorage.getItem("authenticatedUserID") || ""
+		const id = localStorage.getItem('authenticatedUserID') || '';
 
 		API.getCustomers(id).then((value) => {
 			customerList = value.data;
 		});
 
-		appointment.userID = id
+		appointment.userID = id;
 	});
 
 	let appointment: newAppointmentRecord = $state({
@@ -27,7 +25,7 @@
 			end: '',
 			exact: 0
 		},
-		userID: "",
+		userID: '',
 		customerID: '',
 		title: '',
 		description: '',
@@ -53,8 +51,17 @@
 	}
 
 	async function updateCustomer(e: Event) {
-		appointment.customerID = e.target.value
+		appointment.customerID = e.target.value;
+		console.log(e.target.value);
 	}
+
+	let customer: customerRecord = $state();
+	$effect(() => {
+		console.log("Called")
+		API.getCustomerByID(appointment.customerID).then((value) => {
+			customer = value.data;
+		});
+	});
 </script>
 
 <div class="content">
@@ -64,16 +71,12 @@
 				{appointment.title}
 			</div>
 			<div class="grow"></div>
-			<button
-				onclick={() => {
-					createAppointment();
-				}}>Create Appointment</button
-			>
+			<button onclick={createAppointment}>Create Appointment</button>
 		</div>
 
 		<div class="topRow">
 			<div class="baseData">
-				<div style="margin-bottom: 10px;">
+				<div>
 					Title: <input type="text" name="Date" id="" bind:value={appointment.title} />
 				</div>
 				<div>
@@ -91,7 +94,7 @@
 						name="timeStart"
 						id=""
 						bind:value={appointment.time.start}
-						onclick={updateTime}
+						onchange={updateTime}
 					/>
 				</div>
 				<div>
@@ -100,7 +103,7 @@
 						name="timeStart"
 						id=""
 						bind:value={appointment.time.end}
-						onclick={updateTime}
+						onchange={updateTime}
 					/>
 				</div>
 			</div>
@@ -122,21 +125,39 @@
 			<div class="baseData">
 				<div>
 					Customer:
-					<select
-						name=""
-						id=""
-						onchange={(e) => {
-							updateCustomer(e);
-						}}
-					>
-						{#each customerList as customer}
-							<option value={customer}>{customer.firstName + " " + customer.lastName}</option>
+					<select name="" id="" onchange={updateCustomer}>
+						{#each customerList as customerItem}
+							<option
+								value={customerItem._id.toString()}
+								selected={customerItem._id.toString() === appointment.customerID}
+								>{customerItem.firstName + ' ' + customerItem.lastName}</option
+							>
 						{/each}
 					</select>
 				</div>
-				<div>
-					
-				</div>
+				{#if customer}
+					<div>
+						<span>
+							Full Name: {customer.firstName + ' ' + customer.lastName}
+						</span>
+					</div>
+					<div>
+						<span>
+							Phone: {customer.phone}
+						</span>
+					</div>
+					<div>
+						<span>
+							Email: {customer.email}
+						</span>
+					</div>
+					<div>
+						<span>
+							{customer.address.street + ' '} <br />
+							{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
+						</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 		<div class="description">
@@ -152,6 +173,18 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
+	}
+
+	span {
+		display: flex;
+		align-items: center;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		min-width: 14vw;
+		outline: none;
+		border: 3px solid transparent;
+		border-radius: 0.3rem;
+		font-size: 1rem;
 	}
 	.account {
 		display: flex;

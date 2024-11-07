@@ -13,15 +13,15 @@
 	let appointment: appointmentRecord = $state(JSON.parse(data.appointmentInfo));
 	let editView: boolean = $state(JSON.parse(data.editView));
 
-	onMount(()=>{
-		const id = localStorage.getItem("authenticatedUserID") || ""
+	onMount(() => {
+		const id = localStorage.getItem('authenticatedUserID') || '';
 
 		API.getCustomers(id).then((value) => {
 			customerList = value.data;
 		});
 
-		appointment.userID = id
-	})
+		appointment.userID = id;
+	});
 
 	function changeToEdit() {
 		editView = true;
@@ -49,17 +49,21 @@
 		}
 	}
 
-	async function updateTime(){
-		let result = DateTimeCombiner(appointment.time.date,appointment.time.start)
-		appointment.time.exact = result
+	async function updateTime() {
+		let result = DateTimeCombiner(appointment.time.date, appointment.time.start);
+		appointment.time.exact = result;
 	}
 
 	async function updateCustomer(e: Event) {
-		appointment.customerID = e.target.value
+		appointment.customerID = e.target.value;
 	}
 
-	$inspect(appointment)
-
+	let customer: customerRecord = $state();
+	$effect(() => {
+		API.getCustomerByID(appointment.customerID).then((value) => {
+			customer = value.data;
+		});
+	});
 </script>
 
 <div class="content">
@@ -85,11 +89,17 @@
 
 			<div class="topRow">
 				<div class="baseData">
-					<div style="margin-bottom: 10px;">
+					<div>
 						Title: <input type="text" name="Date" id="" bind:value={appointment.title} />
 					</div>
 					<div>
-						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} onclick={updateCustomer}/>
+						Date: <input
+							type="date"
+							name="Date"
+							id=""
+							bind:value={appointment.time.date}
+							onclick={updateCustomer}
+						/>
 					</div>
 					<div>
 						Time Start: <input
@@ -97,7 +107,7 @@
 							name="timeStart"
 							id=""
 							bind:value={appointment.time.start}
-							onclick={updateTime}
+							onchange={updateTime}
 						/>
 					</div>
 					<div>
@@ -106,7 +116,7 @@
 							name="timeStart"
 							id=""
 							bind:value={appointment.time.end}
-							onclick={updateTime}
+							onchange={updateTime}
 						/>
 					</div>
 				</div>
@@ -131,21 +141,48 @@
 					</div>
 				</div>
 				<div class="baseData">
-					<div>
-						Customer:
-						<select
-							name=""
-							id=""
-							onchange={(e) => {
-								updateCustomer(e);
-							}}
-						>
-							{#each customerList as customer}
-								<option value={customer._id.toString()} selected={customer._id.toString() === appointment.customerID}>{customer.firstName}</option>
-							{/each}
-						</select>
-					</div>
-					<div></div>
+					{#if customer}
+						<div>
+							Customer:
+							<select
+								name=""
+								id=""
+								onchange={(e) => {
+									updateCustomer(e);
+								}}
+							>
+								{#each customerList as customer}
+									<option
+										value={customer._id.toString()}
+										selected={customer._id.toString() === appointment.customerID}
+										>{customer.firstName + ' ' + customer.lastName}</option
+									>
+								{/each}
+							</select>
+						</div>
+						<div>
+							<span>
+								Full Name:
+								{customer.firstName + ' ' + customer.lastName}
+							</span>
+						</div>
+						<div>
+							<span>
+								Phone: {customer.phone}
+							</span>
+						</div>
+						<div>
+							<span>
+								Email: {customer.email}
+							</span>
+						</div>
+						<div>
+							<span>
+								{customer.address.street + ' '} <br />
+								{`${customer.address.city}, ${customer.address.state} ${customer.address.zip} `}
+							</span>
+						</div>
+					{/if}
 				</div>
 			</div>
 			<div class="description">
@@ -169,11 +206,17 @@
 
 			<div class="topRow">
 				<div class="baseData">
-					<div style="margin-bottom: 10px;">
-						Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled/>
+					<div>
+						Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled />
 					</div>
 					<div>
-						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled/>
+						Date: <input
+							type="date"
+							name="Date"
+							id=""
+							bind:value={appointment.time.date}
+							disabled
+						/>
 					</div>
 					<div>
 						Time Start: <input
@@ -181,7 +224,8 @@
 							name="timeStart"
 							id=""
 							bind:value={appointment.time.start}
-							disabled/>
+							disabled
+						/>
 					</div>
 					<div>
 						Time End: <input
@@ -189,7 +233,8 @@
 							name="timeStart"
 							id=""
 							bind:value={appointment.time.end}
-							disabled/>
+							disabled
+						/>
 					</div>
 				</div>
 				<div class="gap"></div>
@@ -200,35 +245,73 @@
 							name="street"
 							id=""
 							bind:value={appointment.address.street}
-							disabled/>
+							disabled
+						/>
 					</div>
 					<div>
-						City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled/>
+						City: <input
+							type="text"
+							name="city"
+							id=""
+							bind:value={appointment.address.city}
+							disabled
+						/>
 					</div>
 					<div>
-						State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled/>
+						State: <input
+							type="text"
+							name="state"
+							id=""
+							bind:value={appointment.address.state}
+							disabled
+						/>
 					</div>
 					<div>
-						Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled/>
+						Zip Code: <input
+							type="text"
+							name="zip"
+							id=""
+							bind:value={appointment.address.zip}
+							disabled
+						/>
 					</div>
 				</div>
 				<div class="baseData">
-					<div>
-						Customer:
-						<select
-							name=""
-							id=""
-							onchange={(e) => {
-								updateCustomer(e);
-							}}
-							disabled
-						>
-							{#each customerList as customer}
-								<option value={customer} selected={customer._id.toString() === appointment.customerID}>{customer.firstName}</option>
-							{/each}
-						</select>
-					</div>
-					<div></div>
+					{#if customer}
+						<div>
+							Customer:
+							<select name="" id="" disabled>
+								{#each customerList as customerItem}
+									<option
+										value={customerItem._id.toString()}
+										selected={customerItem._id.toString() === appointment.customerID}
+										>{customerItem.firstName + ' ' + customerItem.lastName}</option
+									>
+								{/each}
+							</select>
+						</div>
+						<div>
+							<span>
+								Full Name: {customer.firstName + ' ' + customer.lastName}
+							</span>
+						</div>
+						<div>
+							<span>
+								Phone: {customer.phone}
+							</span>
+						</div>
+						<div>
+							<span>
+								Email: {customer.email}
+							</span>
+						</div>
+						<div>
+							<span>
+								{customer.address.street + ' '} <br />
+								{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
+							</span>
+						</div>
+					{/if}
 				</div>
 			</div>
 			<div class="description">
@@ -240,6 +323,14 @@
 </div>
 
 <style>
+	select {
+		background-color: white;
+		border: none;
+		padding: 0.5rem;
+		width: 10vw;
+		font-size: 1rem;
+	}
+
 	.content {
 		display: flex;
 		align-items: center;
@@ -322,6 +413,19 @@
 	input {
 		padding: 0.5rem;
 		width: 10vw;
+		outline: none;
+		border: 3px solid transparent;
+		border-radius: 0.3rem;
+		font-size: 1rem;
+	}
+
+	span {
+		display: flex;
+		align-items: center;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		padding: 0.2rem;
+		min-width: 14vw;
 		outline: none;
 		border: 3px solid transparent;
 		border-radius: 0.3rem;

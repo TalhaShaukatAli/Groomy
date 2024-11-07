@@ -153,7 +153,7 @@ export class DatabaseAppointmentService {
 	}
 
 	async getAppointmentsByUserID(userID: string): Promise<appointmentRecord[] | undefined> {
-		const returnData = this.db.collection('appointments').find({ userID: userID, deleted: false });
+		const returnData = this.db.collection('appointments').find({ userID: userID, deleted: false }).sort({"time.exact": 1});
 		if (returnData != null) {
 			return <appointmentRecord[]>(<unknown>returnData.toArray());
 		} else {

@@ -7,7 +7,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const id: string = await request.json();
 		const updateDoc = {
             $set: {
-                deleted: false
+                deleted: true
             },
         }
 

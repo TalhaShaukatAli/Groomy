@@ -19,6 +19,12 @@ interface CustomerArrayResponse {
 	data: customerRecord[];
 }
 
+interface CustomerResponse {
+	success: boolean;
+	message: string;
+	data: customerRecord;
+}
+
 interface AppointmentArrayResponse {
 	success: boolean;
 	message: string;
@@ -101,6 +107,13 @@ class API {
 
 	static async getCustomers(userid: string): Promise<CustomerArrayResponse> {
 		return this.request('/customers/get', {
+			method: 'POST',
+			body: JSON.stringify(userid)
+		});
+	}
+
+	static async getCustomerByID(userid: string): Promise<CustomerResponse> {
+		return this.request('/customers/get/id', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});

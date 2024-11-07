@@ -35,8 +35,14 @@
 			</div>
 		</div>
 		<div class="time">
-			Date: {data.time.date}
-            Time: {data.time.start + " - " + data.time.end}
+			{data.time.date}
+			{data.time.start + ' - ' + data.time.end}
+		</div>
+		<div class="location">
+			<div>
+				{data.address.street + ' '} <br>
+				{`${data.address.city}, ${data.address.state} ${data.address.zip} `}
+			</div>
 		</div>
 		<div class="bottom">
 			<div class="edit">
@@ -149,5 +155,11 @@
 
 	.title {
 		font-size: 1.4rem;
+	}
+
+	.location {
+		display: flex;
+		flex-direction: row;
+		margin-top: 10px;
 	}
 </style>
