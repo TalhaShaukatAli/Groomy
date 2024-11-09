@@ -11,6 +11,6 @@ export function generateRandomString(length: number) {
 }
 
 export function DateTimeCombiner(date: string, startTime:string){
-	let convert = `${date}T${startTime}`
-	return Date.parse(convert)
+	let milliseconds = `${date}T${startTime}`
+	return Date.parse(milliseconds)
 }

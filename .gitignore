@@ -25,3 +25,5 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 package-lock.json
 test-results
+test-results/.last-run.json
+/test-results

@@ -1,15 +1,10 @@
 /** @type {import('./$types').Actions} */
 
-import {
-	Auth_AddCookie,
-	Auth_AddNewUser,
-	Auth_GetUserByEmail,
-	Auth_RemoveCookie
-} from '$lib/db/database';
+import { Auth_AddCookie, Auth_AddNewUser, Auth_GetUserByEmail, Auth_RemoveCookie } from '$lib/db/database';
 import { generateRandomString } from '@oslojs/crypto/random';
 import { authenticatedUser } from '$lib/stores.svelte';
 import argon2 from 'argon2';
-import type { newUserRecord } from '$lib/types';
+import type { BaseUserRecord } from '$lib/types';
 import type { Actions } from './$types';
 
 import type { RandomReader } from '@oslojs/crypto/random';
@@ -35,14 +30,14 @@ export const actions = {
 			await Auth_AddCookie(cookieID);
 			cookies.set('sessionID', cookieID, { path: '/' });
 			authenticatedUser.set(result.data);
-			redirect(302,"/home")
+			redirect(302, '/home');
 		} else {
 			return fail(422, {
 				error: 'Incorrect username or password'
 			});
 		}
 	},
-	create: async ({ cookies, request }) => {
+	signup: async ({ cookies, request }) => {
 		const data = await request.formData();
 		const email = <string>data.get('email');
 		const password = <string>data.get('password');
@@ -50,7 +45,7 @@ export const actions = {
 		const firstName = <string>data.get('firstName');
 		const lastName = <string>data.get('lastName');
 
-		const newUserData: newUserRecord = {
+		const newUserData: BaseUserRecord = {
 			firstName: firstName,
 			lastName: lastName,
 			email: email.toLowerCase(),

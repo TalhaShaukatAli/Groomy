@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { customerRecord } from '$lib/types';
+	import type { CustomerRecord } from '$lib/types';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
@@ -7,23 +7,22 @@
 
 	let { data } = $props();
 
-	let customer: customerRecord = $state(JSON.parse(data.customerInfo));
+	let customer: CustomerRecord = $state(JSON.parse(data.customerInfo));
 	let editView: boolean = $state(JSON.parse(data.editView));
 
 	function changeToEdit() {
 		editView = true;
 	}
 
-	async function cancel() {
+	async function onCancel() {
 		editView = false;
-		window.location.replace(`/home/customers/${customer._id.toString()}`)
+		window.location.replace(`/home/customers/${customer._id.toString()}`);
 	}
 
 	async function onSave() {
 		const result = await API.saveCustomer(customer);
 		if (result.success) {
 			goto(`/home/customers`);
-
 		}
 	}
 
@@ -54,7 +53,7 @@
 				>
 				<button
 					onclick={() => {
-						cancel();
+						onCancel();
 					}}>Cancel</button
 				>
 			</div>

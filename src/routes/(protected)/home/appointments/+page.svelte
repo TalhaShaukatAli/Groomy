@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { appointmentRecord } from '$lib/types.js';
+	import type { AppointmentRecord } from '$lib/types.js';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	page.set('Appointments');
 
 	let { data } = $props();
-	let appointments: appointmentRecord[] = JSON.parse(data.appointment);
+	let appointments: AppointmentRecord[] = JSON.parse(data.appointment);
 
 	async function DeleteByID(id: string) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');
@@ -40,7 +40,7 @@
 		</div>
 		<div class="location">
 			<div>
-				{data.address.street + ' '} <br>
+				{data.address.street + ' '} <br />
 				{`${data.address.city}, ${data.address.state} ${data.address.zip} `}
 			</div>
 		</div>

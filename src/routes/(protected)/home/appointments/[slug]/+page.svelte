@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { appointmentRecord, customerRecord } from '$lib/types';
+	import type { AppointmentRecord, CustomerRecord } from '$lib/types';
 	import { authenticatedUser, page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
@@ -8,9 +8,9 @@
 	page.set('Appointment');
 
 	let { data } = $props();
-	let customerList: customerRecord[] = $state();
+	let customerList: CustomerRecord[] = $state();
 
-	let appointment: appointmentRecord = $state(JSON.parse(data.appointmentInfo));
+	let appointment: AppointmentRecord = $state(JSON.parse(data.appointmentInfo));
 	let editView: boolean = $state(JSON.parse(data.editView));
 
 	onMount(() => {
@@ -58,7 +58,7 @@
 		appointment.customerID = e.target.value;
 	}
 
-	let customer: customerRecord = $state();
+	let customer: CustomerRecord = $state();
 	$effect(() => {
 		API.getCustomerByID(appointment.customerID).then((value) => {
 			customer = value.data;
@@ -93,42 +93,19 @@
 						Title: <input type="text" name="Date" id="" bind:value={appointment.title} />
 					</div>
 					<div>
-						Date: <input
-							type="date"
-							name="Date"
-							id=""
-							bind:value={appointment.time.date}
-							onclick={updateTime}
-						/>
+						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} onclick={updateTime} />
 					</div>
 					<div>
-						Time Start: <input
-							type="time"
-							name="timeStart"
-							id=""
-							bind:value={appointment.time.start}
-							onchange={updateTime}
-						/>
+						Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} onchange={updateTime} />
 					</div>
 					<div>
-						Time End: <input
-							type="time"
-							name="timeStart"
-							id=""
-							bind:value={appointment.time.end}
-							onchange={updateTime}
-						/>
+						Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} onchange={updateTime} />
 					</div>
 				</div>
 				<div class="gap"></div>
 				<div class="baseData">
 					<div>
-						Street: <input
-							type="text"
-							name="street"
-							id=""
-							bind:value={appointment.address.street}
-						/>
+						Street: <input type="text" name="street" id="" bind:value={appointment.address.street} />
 					</div>
 					<div>
 						City: <input type="text" name="city" id="" bind:value={appointment.address.city} />
@@ -152,11 +129,7 @@
 								}}
 							>
 								{#each customerList as customer}
-									<option
-										value={customer._id.toString()}
-										selected={customer._id.toString() === appointment.customerID}
-										>{customer.firstName + ' ' + customer.lastName}</option
-									>
+									<option value={customer._id.toString()} selected={customer._id.toString() === appointment.customerID}>{customer.firstName + ' ' + customer.lastName}</option>
 								{/each}
 							</select>
 						</div>
@@ -210,70 +183,28 @@
 						Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled />
 					</div>
 					<div>
-						Date: <input
-							type="date"
-							name="Date"
-							id=""
-							bind:value={appointment.time.date}
-							disabled
-						/>
+						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled />
 					</div>
 					<div>
-						Time Start: <input
-							type="time"
-							name="timeStart"
-							id=""
-							bind:value={appointment.time.start}
-							disabled
-						/>
+						Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled />
 					</div>
 					<div>
-						Time End: <input
-							type="time"
-							name="timeStart"
-							id=""
-							bind:value={appointment.time.end}
-							disabled
-						/>
+						Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled />
 					</div>
 				</div>
 				<div class="gap"></div>
 				<div class="baseData">
 					<div>
-						Street: <input
-							type="text"
-							name="street"
-							id=""
-							bind:value={appointment.address.street}
-							disabled
-						/>
+						Street: <input type="text" name="street" id="" bind:value={appointment.address.street} disabled />
 					</div>
 					<div>
-						City: <input
-							type="text"
-							name="city"
-							id=""
-							bind:value={appointment.address.city}
-							disabled
-						/>
+						City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled />
 					</div>
 					<div>
-						State: <input
-							type="text"
-							name="state"
-							id=""
-							bind:value={appointment.address.state}
-							disabled
-						/>
+						State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled />
 					</div>
 					<div>
-						Zip Code: <input
-							type="text"
-							name="zip"
-							id=""
-							bind:value={appointment.address.zip}
-							disabled
-						/>
+						Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled />
 					</div>
 				</div>
 				<div class="baseData">
@@ -282,11 +213,7 @@
 							Customer:
 							<select name="" id="" disabled>
 								{#each customerList as customerItem}
-									<option
-										value={customerItem._id.toString()}
-										selected={customerItem._id.toString() === appointment.customerID}
-										>{customerItem.firstName + ' ' + customerItem.lastName}</option
-									>
+									<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
 								{/each}
 							</select>
 						</div>

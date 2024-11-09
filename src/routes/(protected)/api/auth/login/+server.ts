@@ -1,4 +1,4 @@
-import {Auth_GetUserByEmail } from '$lib/db/database';
+import { Auth_GetUserByEmail } from '$lib/db/database';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import argon2 from 'argon2';
 
@@ -11,22 +11,21 @@ const random: RandomReader = {
 	}
 };
 
-export const POST: RequestHandler = async ({ request,cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
 		const data = await request.json();
 		const user = await Auth_GetUserByEmail(data.email.toLowerCase());
 
-		if (user == undefined) {
-			return json({ success: false, message:"No user with this email", data: undefined }, { status: 500 });
+		if (user == null) {
+			return json({ success: false, message: 'No user with this email', data: undefined }, { status: 500 });
 		} else {
 			if (await argon2.verify(user.password, data.password)) {
-				return json({ success: true, message: "Success", data: user}, { status: 201 });
+				return json({ success: true, message: 'Success', data: user }, { status: 201 });
 			} else {
-				return json({ success: false , message: "Incorrect email or password",data: undefined}, { status: 500 });
+				return json({ success: false, message: 'Incorrect email or password', data: undefined }, { status: 500 });
 			}
 		}
 	} catch (error) {
-		return json({ success: false, message: "Server Error. Try again later.", data: undefined }, { status: 500 })
+		return json({ success: false, message: 'Server Error. Try again later.', data: undefined }, { status: 500 });
 	}
 };
-

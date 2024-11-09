@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { customerRecord } from '$lib/types.js';
+	import type { CustomerRecord } from '$lib/types.js';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	page.set('Customer');
 
 	let { data } = $props();
-	let customers: customerRecord[] = JSON.parse(data.customers);
+	let customers: CustomerRecord[] = JSON.parse(data.customers);
 
 	async function DeleteByID(id: string) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');

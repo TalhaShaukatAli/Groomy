@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { appointmentRecord, customerRecord, newAppointmentRecord } from '$lib/types';
+	import type { AppointmentRecord, CustomerRecord, BaseAppointmentRecord } from '$lib/types';
 	import { authenticatedUser, page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
@@ -7,7 +7,7 @@
 	import { onMount } from 'svelte';
 	page.set('Appointment');
 
-	let customerList: customerRecord[] = $state();
+	let customerList: CustomerRecord[] = $state();
 	onMount(() => {
 		const id = localStorage.getItem('authenticatedUserID') || '';
 
@@ -18,7 +18,7 @@
 		appointment.userID = id;
 	});
 
-	let appointment: newAppointmentRecord = $state({
+	let appointment: BaseAppointmentRecord = $state({
 		time: {
 			date: '',
 			start: '',
@@ -55,9 +55,9 @@
 		console.log(e.target.value);
 	}
 
-	let customer: customerRecord = $state();
+	let customer: CustomerRecord = $state();
 	$effect(() => {
-		console.log("Called")
+		console.log('Called');
 		API.getCustomerByID(appointment.customerID).then((value) => {
 			customer = value.data;
 		});
@@ -80,31 +80,13 @@
 					Title: <input type="text" name="Date" id="" bind:value={appointment.title} />
 				</div>
 				<div>
-					Date: <input
-						type="date"
-						name="Date"
-						id=""
-						bind:value={appointment.time.date}
-						onclick={updateCustomer}
-					/>
+					Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} onclick={updateCustomer} />
 				</div>
 				<div>
-					Time Start: <input
-						type="time"
-						name="timeStart"
-						id=""
-						bind:value={appointment.time.start}
-						onchange={updateTime}
-					/>
+					Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} onchange={updateTime} />
 				</div>
 				<div>
-					Time End: <input
-						type="time"
-						name="timeStart"
-						id=""
-						bind:value={appointment.time.end}
-						onchange={updateTime}
-					/>
+					Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} onchange={updateTime} />
 				</div>
 			</div>
 			<div class="gap"></div>
@@ -127,11 +109,7 @@
 					Customer:
 					<select name="" id="" onchange={updateCustomer}>
 						{#each customerList as customerItem}
-							<option
-								value={customerItem._id.toString()}
-								selected={customerItem._id.toString() === appointment.customerID}
-								>{customerItem.firstName + ' ' + customerItem.lastName}</option
-							>
+							<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
 						{/each}
 					</select>
 				</div>

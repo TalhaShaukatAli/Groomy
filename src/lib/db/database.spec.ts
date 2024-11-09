@@ -17,15 +17,7 @@ import {
 	Appointment_GetAppointmentsByCustomerID
 } from '$lib/db/database';
 import * as mongoModule from './mongo';
-import type {
-	cookie,
-	customerRecord,
-	userRecord,
-	newCustomerRecord,
-	newUserRecord,
-	appointmentRecord,
-	newAppointmentRecord
-} from '$lib/types';
+import type { cookie, CustomerRecord, BaseCustomerRecord, BaseUserRecord, AppointmentRecord, BaseAppointmentRecord, UserRecord } from '$lib/types';
 import { ObjectId } from 'mongodb';
 
 // Mock the mongo module
@@ -56,14 +48,14 @@ describe('Database Functions', () => {
 	});
 
 	describe('User Functions', () => {
-		const mockNewUser: newUserRecord = {
+		const mockNewUser: BaseUserRecord = {
 			email: 'test@example.com',
 			password: 'hashedPassword',
 			firstName: 'testUser',
 			lastName: 'fefs'
 		};
 
-		const mockExistingUser: userRecord = {
+		const mockExistingUser: UserRecord = {
 			_id: new ObjectId('507f1f77bcf86cd799439011'),
 			...mockNewUser
 		};
@@ -105,13 +97,13 @@ describe('Database Functions', () => {
 
 				const result = await Auth_GetUserByEmail('nonexistent@example.com');
 
-				expect(result).toBeUndefined();
+				expect(result).toBeNull();
 			});
 		});
 	});
 
 	describe('Customer Functions', () => {
-		const mockCustomer: newCustomerRecord = {
+		const mockCustomer: BaseCustomerRecord = {
 			userID: 'testUserId',
 			firstName: 'Test',
 			lastName: 'customer',
@@ -126,7 +118,7 @@ describe('Database Functions', () => {
 			deleted: false
 		};
 
-		const mockExistingCustomer: customerRecord = {
+		const mockExistingCustomer: CustomerRecord = {
 			_id: new ObjectId('507f1f77bcf86cd799439011'),
 			...mockCustomer
 		};
@@ -197,7 +189,7 @@ describe('Database Functions', () => {
 
 				const result = await Customer_GetCustomerByID('507f1f77bcf86cd799439011');
 
-				expect(result).toBeUndefined();
+				expect(result).toBeNull();
 			});
 
 			it('should handle invalid ObjectId', async () => {
@@ -214,38 +206,27 @@ describe('Database Functions', () => {
 				db.collection('customer').updateOne = mockUpdateOne;
 
 				const updatedCustomer = { ...mockExistingCustomer, name: 'Updated Name' };
-				const result = await Customer_UpdateCustomerByID(
-					'507f1f77bcf86cd799439011',
-					updatedCustomer
-				);
+				const result = await Customer_UpdateCustomerByID('507f1f77bcf86cd799439011', updatedCustomer);
 
 				expect(db.collection).toHaveBeenCalledWith('customer');
-				expect(mockUpdateOne).toHaveBeenCalledWith(
-					{ _id: new ObjectId('507f1f77bcf86cd799439011') },
-					updatedCustomer
-				);
-				expect(result.acknowledged).toBe(true);
+				expect(mockUpdateOne).toHaveBeenCalledWith({ _id: new ObjectId('507f1f77bcf86cd799439011') }, updatedCustomer);
+				expect(result).toBe(true);
 			});
 
 			it('should return false when update fails', async () => {
 				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: false });
 				db.collection('customer').updateOne = mockUpdateOne;
 
-				const result = await Customer_UpdateCustomerByID(
-					'507f1f77bcf86cd799439011',
-					mockExistingCustomer
-				);
+				const result = await Customer_UpdateCustomerByID('507f1f77bcf86cd799439011', mockExistingCustomer);
 
-				expect(result.acknowledged).toBe(false);
+				expect(result).toBe(false);
 			});
 
 			it('should handle invalid ObjectId', async () => {
 				const mockUpdateOne = vi.fn();
 				db.collection('customer').updateOne = mockUpdateOne;
 
-				await expect(
-					Customer_UpdateCustomerByID('invalid-id', mockExistingCustomer)
-				).rejects.toThrow();
+				await expect(Customer_UpdateCustomerByID('invalid-id', mockExistingCustomer)).rejects.toThrow();
 			});
 		});
 	});
@@ -264,7 +245,7 @@ describe('Database Functions', () => {
 
 		describe('AddCookie', () => {
 			it('should add a cookie successfully', async () => {
-				const mockInsertOne = vi.fn().mockResolvedValue({ acknowledged: true });
+				const mockInsertOne = vi.fn().mockResolvedValue(true);
 				db.collection('cookie').insertOne = mockInsertOne;
 
 				const cookieString = 'test-cookie';
@@ -280,7 +261,7 @@ describe('Database Functions', () => {
 
 		describe('RemoveCookie', () => {
 			it('should remove a cookie successfully', async () => {
-				const mockDeleteOne = vi.fn().mockResolvedValue({ deletedCount: 1 });
+				const mockDeleteOne = vi.fn().mockResolvedValue(true);
 				db.collection('cookie').deleteOne = mockDeleteOne;
 
 				const cookieString = 'test-cookie';
@@ -320,17 +301,14 @@ describe('Database Functions', () => {
 
 		describe('UpdateCookie', () => {
 			it('should update cookie expiration time', async () => {
-				const mockUpdateOne = vi.fn().mockResolvedValue({ modifiedCount: 1 });
+				const mockUpdateOne = vi.fn().mockResolvedValue(true);
 				db.collection('cookie').updateOne = mockUpdateOne;
 
 				const cookieString = 'test-cookie';
 				await Auth_UpdateCookie(cookieString);
 
 				expect(db.collection).toHaveBeenCalledWith('cookie');
-				expect(mockUpdateOne).toHaveBeenCalledWith(
-					{ cookie: cookieString },
-					{ $set: { expireTime: mockExpireTime } }
-				);
+				expect(mockUpdateOne).toHaveBeenCalledWith({ cookie: cookieString }, { $set: { expireTime: mockExpireTime } });
 			});
 		});
 	});
@@ -342,7 +320,7 @@ describe('Database Functions', () => {
 			vi.clearAllMocks();
 		});
 
-		const mockAppointment: newAppointmentRecord = {
+		const mockAppointment: BaseAppointmentRecord = {
 			userID: 'testUserId',
 			customerID: 'testCustomerId',
 			title: 'Test Appointment',
@@ -362,14 +340,14 @@ describe('Database Functions', () => {
 			deleted: false
 		};
 
-		const mockExistingAppointment: appointmentRecord = {
+		const mockExistingAppointment: AppointmentRecord = {
 			_id: new ObjectId('507f1f77bcf86cd799439011'),
 			...mockAppointment
 		};
 
 		describe('AddNewAppointment', () => {
 			it('should add a new appointment successfully', async () => {
-				const mockInsertOne = vi.fn().mockResolvedValue({ acknowledged: true });
+				const mockInsertOne = vi.fn().mockResolvedValue(true);
 				db.collection('appointments').insertOne = mockInsertOne;
 
 				await Appointment_AddNewAppointment(mockAppointment);
@@ -406,7 +384,7 @@ describe('Database Functions', () => {
 
 				const result = await Appointment_GetAppointmentByID('507f1f77bcf86cd799439011');
 
-				expect(result).toBeUndefined();
+				expect(result).toBeNull();
 			});
 
 			it('should handle invalid ObjectId', async () => {
@@ -514,38 +492,27 @@ describe('Database Functions', () => {
 					description: 'Updated description'
 				};
 
-				const result = await Appointment_UpdateAppointmentByID(
-					'507f1f77bcf86cd799439011',
-					updatedAppointment
-				);
+				const result = await Appointment_UpdateAppointmentByID('507f1f77bcf86cd799439011', updatedAppointment);
 
 				expect(db.collection).toHaveBeenCalledWith('appointments');
-				expect(mockUpdateOne).toHaveBeenCalledWith(
-					{ _id: new ObjectId('507f1f77bcf86cd799439011') },
-					updatedAppointment
-				);
-				expect(result.acknowledged).toBe(true);
+				expect(mockUpdateOne).toHaveBeenCalledWith({ _id: new ObjectId('507f1f77bcf86cd799439011') }, { $set: updatedAppointment });
+				expect(result).toBe(true);
 			});
 
 			it('should return false when update fails', async () => {
 				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: false });
 				db.collection('appointments').updateOne = mockUpdateOne;
 
-				const result = await Appointment_UpdateAppointmentByID(
-					'507f1f77bcf86cd799439011',
-					mockAppointment
-				);
+				const result = await Appointment_UpdateAppointmentByID('507f1f77bcf86cd799439011', mockAppointment);
 
-				expect(result.acknowledged).toBe(false);
+				expect(result).toBe(false);
 			});
 
 			it('should handle invalid ObjectId', async () => {
 				const mockUpdateOne = vi.fn();
 				db.collection('appointments').updateOne = mockUpdateOne;
 
-				await expect(
-					Appointment_UpdateAppointmentByID('invalid-id', mockAppointment)
-				).rejects.toThrow();
+				await expect(Appointment_UpdateAppointmentByID('invalid-id', mockAppointment)).rejects.toThrow();
 			});
 		});
 	});

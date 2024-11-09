@@ -1,40 +1,33 @@
-import type {
-	userRecord,
-	newCustomerRecord,
-	newUserRecord,
-	newAppointmentRecord,
-	appointmentRecord,
-	customerRecord
-} from '$lib/types';
+import type { BaseUserRecord, BaseCustomerRecord, BaseUserRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord } from '$lib/types';
 
 interface LoginResponse {
 	success: boolean;
 	message: string;
-	data: userRecord;
+	data: BaseUserRecord;
 }
 
 interface CustomerArrayResponse {
 	success: boolean;
 	message: string;
-	data: customerRecord[];
+	data: CustomerRecord[];
 }
 
 interface CustomerResponse {
 	success: boolean;
 	message: string;
-	data: customerRecord;
+	data: CustomerRecord;
 }
 
 interface AppointmentArrayResponse {
 	success: boolean;
 	message: string;
-	data: appointmentRecord[];
+	data: AppointmentRecord[];
 }
 
 interface AppointmentResponse {
 	success: boolean;
 	message: string;
-	data: appointmentRecord;
+	data: AppointmentRecord;
 }
 
 interface BaseResponse {
@@ -50,7 +43,7 @@ class API {
 	private static async request<T>(endpoint: string, options: RequestInit = {}) {
 		try {
 			const baseURL = import.meta.env.VITE_API_URL;
-			console.log(baseURL)
+			console.log(baseURL);
 			const response = await fetch(`${baseURL}/api${endpoint}`, {
 				...options,
 				headers: {
@@ -78,14 +71,14 @@ class API {
 		});
 	}
 
-	static async createUser(data: newUserRecord): Promise<BaseResponse> {
+	static async createUser(data: BaseUserRecord): Promise<BaseResponse> {
 		return this.request('/auth/createUser', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async saveCustomer(data: newCustomerRecord): Promise<BaseResponse> {
+	static async saveCustomer(data: BaseCustomerRecord): Promise<BaseResponse> {
 		return this.request('/customers/save', {
 			method: 'POST',
 			body: JSON.stringify(data)
@@ -99,7 +92,7 @@ class API {
 		});
 	}
 
-	static async createCustomer(data: newCustomerRecord): Promise<BaseResponse> {
+	static async createCustomer(data: BaseCustomerRecord): Promise<BaseResponse> {
 		return this.request('/customers/create', {
 			method: 'POST',
 			body: JSON.stringify(data)
@@ -141,14 +134,14 @@ class API {
 		});
 	}
 
-	static async createAppointment(data: newAppointmentRecord): Promise<BaseResponse> {
+	static async createAppointment(data: BaseAppointmentRecord): Promise<BaseResponse> {
 		return this.request('/appointments/create', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async updateAppointment(data: appointmentRecord): Promise<BaseResponse> {
+	static async updateAppointment(data: AppointmentRecord): Promise<BaseResponse> {
 		return this.request('/appointments/update', {
 			method: 'POST',
 			body: JSON.stringify(data)
