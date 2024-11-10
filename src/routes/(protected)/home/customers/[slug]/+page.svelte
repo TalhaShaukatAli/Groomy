@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { customerRecord } from '$lib/types';
+	import type { CustomerRecord } from '$lib/types';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
@@ -7,35 +7,34 @@
 
 	let { data } = $props();
 
-	let customer: customerRecord = $state(JSON.parse(data.customerInfo));
+	let customer: CustomerRecord = $state(JSON.parse(data.customerInfo));
 	let editView: boolean = $state(JSON.parse(data.editView));
 
 	function changeToEdit() {
 		editView = true;
 	}
 
-	async function cancel(){
+	async function onCancel() {
 		editView = false;
-		await invalidateAll()
+		window.location.replace(`/home/customers/${customer._id.toString()}`);
 	}
 
 	async function onSave() {
-		const result = await API.saveCustomer(customer);
+		const result = await API.updateCustomer(customer);
 		if (result.success) {
-			goto(`/home/customers`)
+			goto(`/home/customers`);
 		}
 	}
 
-	async function onDelete(id:string) {
+	async function onDelete(id: string) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
 			if (result.success) {
-				goto("/home/customers")
+				goto('/home/customers');
 			}
 		}
 	}
-
 </script>
 
 <div class="content">
@@ -47,8 +46,16 @@
 				</div>
 				<div class="grow"></div>
 				<button onclick={onSave}>Save</button>
-				<button onclick={()=>{onDelete(customer._id.toString())}}>Delete</button>
-				<button onclick={()=>{cancel()}}>Cancel</button>
+				<button
+					onclick={() => {
+						onDelete(customer._id.toString());
+					}}>Delete</button
+				>
+				<button
+					onclick={() => {
+						onCancel();
+					}}>Cancel</button
+				>
 			</div>
 
 			<div class="nameRow">

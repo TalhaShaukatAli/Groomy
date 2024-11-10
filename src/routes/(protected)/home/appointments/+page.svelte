@@ -1,16 +1,16 @@
 <script lang="ts">
-	import type { CustomerRecord } from '$lib/types.js';
+	import type { AppointmentRecord } from '$lib/types.js';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
-	page.set('Customer');
+	page.set('Appointments');
 
 	let { data } = $props();
-	let customers: CustomerRecord[] = JSON.parse(data.customers);
+	let appointments: AppointmentRecord[] = JSON.parse(data.appointment);
 
 	async function DeleteByID(id: string) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');
 		if (confirmResult) {
-			const result = await API.deleteCustomer(id);
+			const result = await API.deleteAppointment(id);
 			if (result.success) {
 				window.location.reload();
 			}
@@ -19,31 +19,35 @@
 </script>
 
 <div class="table">
-	<a class="createNew" href="/home/customers/create"> Add New Customer > </a>
+	<a class="createNew" href="/home/appointments/create"> Create Appointment > </a>
 	<div class="rows">
-		{#each customers as customer}
-			{@render customerRow(customer)}
+		{#each appointments as appointment}
+			{@render appointmentRow(appointment)}
 		{/each}
 	</div>
 </div>
 
-{#snippet customerRow(data: customerRecord)}
+{#snippet appointmentRow(data: appointmentRecord)}
 	<div class="row">
 		<div class="top">
-			<div class="fullName">
-				{`${data.firstName} ${data.lastName}`}
+			<div class="title">
+				{`${data.title}`}
 			</div>
 		</div>
-		<div class="email">
-			{data.email}
+		<div class="time">
+			{data.time.date}
+			{data.time.start + ' - ' + data.time.end}
 		</div>
-		<div class="phone">
-			{data.phone}
+		<div class="location">
+			<div>
+				{data.address.street + ' '} <br />
+				{`${data.address.city}, ${data.address.state} ${data.address.zip} `}
+			</div>
 		</div>
 		<div class="bottom">
 			<div class="edit">
-				<a href="/home/customers/{data._id}">View</a>
-				<a href="/home/customers/{data._id}?edit=true">Edit</a>
+				<a href="/home/appointments/{data._id}">View</a>
+				<a href="/home/appointments/{data._id}?edit=true">Edit</a>
 				<button
 					onclick={() => {
 						DeleteByID(data._id.toString());
@@ -149,7 +153,13 @@
 		background-color: var(--main-hover);
 	}
 
-	.fullName {
+	.title {
 		font-size: 1.4rem;
+	}
+
+	.location {
+		display: flex;
+		flex-direction: row;
+		margin-top: 10px;
 	}
 </style>

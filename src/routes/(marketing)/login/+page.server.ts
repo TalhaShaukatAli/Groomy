@@ -1,15 +1,10 @@
 /** @type {import('./$types').Actions} */
 
-import {
-	Auth_AddCookie,
-	Auth_AddNewUser,
-	Auth_GetUserByEmail,
-	Auth_RemoveCookie
-} from '$lib/db/database';
+import { Auth_AddCookie, Auth_AddNewUser, Auth_GetUserByEmail, Auth_RemoveCookie } from '$lib/db/database';
 import { generateRandomString } from '@oslojs/crypto/random';
 import { authenticatedUser } from '$lib/stores.svelte';
 import argon2 from 'argon2';
-import type { newUser } from '$lib/types';
+import type { BaseUserRecord } from '$lib/types';
 import type { Actions } from './$types';
 
 import type { RandomReader } from '@oslojs/crypto/random';
@@ -42,7 +37,7 @@ export const actions = {
 			});
 		}
 	},
-	create: async ({ cookies, request }) => {
+	signup: async ({ cookies, request }) => {
 		const data = await request.formData();
 		const email = <string>data.get('email');
 		const password = <string>data.get('password');
@@ -50,16 +45,16 @@ export const actions = {
 		const firstName = <string>data.get('firstName');
 		const lastName = <string>data.get('lastName');
 
-		const newUserData: newUser = {
+		const newUserData: BaseUserRecord = {
 			firstName: firstName,
 			lastName: lastName,
 			email: email.toLowerCase(),
 			password: passwordHash
 		};
 
-		const result = await API.createUser(newUserData);
+		const result = await API.signup(newUserData);
 
-		if (result.success) {
+		if (!result.success) {
 			return fail(422, {
 				error: result.message
 			});

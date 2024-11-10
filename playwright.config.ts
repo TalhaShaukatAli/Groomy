@@ -7,7 +7,7 @@ const config: PlaywrightTestConfig = {
 		reuseExistingServer: true
 	},
 	use: {
-		trace: "on-all-retries"
+		trace: "retain-on-first-failure"
 	},
 	testDir: 'tests',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/,

@@ -1,86 +1,59 @@
-<script>
-    import { enhance } from "$app/forms";
-	let { form } = $props();
-	
-    let regexEmail = String.raw`((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])`;
+<script lang="ts">
+	import { enhance } from '$app/forms';
+	import type { ActionData } from './$types';
+	let { form }: { form: ActionData } = $props();
+
+	let regexEmail = String.raw`((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])`;
 	let login = $state(true);
 
-	function changeLogin() {
-		login = !login;
+	type FormMode = 'Login' | 'SignUp';
+	type FormAction = '?/login' | '?/signup';
+
+	let mode = $state<FormMode>('Login');
+	let formMode = $derived<FormAction>(mode === 'Login' ? '?/login' : '?/signup');
+
+	function toggleMode() {
+		mode = mode === 'Login' ? 'SignUp' : 'Login';
 	}
 </script>
+
 <div class="login">
-    {#if login}
-        <div class="head">
-            <div class="header">Login</div>
-            <button class="question" onclick={changeLogin}>
-                Don't have an account? <span style="color: yellow;">Click Here</span>
-            </button>
-        </div>
-        <form action="?/login" method="post" use:enhance>
-            <div class="inputField">
-                <label for="email">Email</label>
-                <input
-                    type="email"
-                    placeholder="Example@gmail.com"
-                    name="email"
-                    pattern={regexEmail}
-                    required
-                />
-            </div>
-            <br />
-            <div class="inputField">
-                <label for="password">Password</label>
-                <input type="password" placeholder="ABC123" name="password" required />
-            </div>
-            <button type="submit" class="signin">Login</button>
-            {#if form?.error}
-                <p class="error">{form.error}</p>
-            {/if}
-        </form>
-    {:else}
-        <div class="head">
-            <div class="header">Create Account</div>
-            <button class="question" onclick={changeLogin}>
-                Already have an account? <span style="color: yellow;">Click Here</span>
-            </button>
-        </div>
-        <form action="?/create" method="post">
-            <div class="inputField">
-                <label for="firstname">First Name</label>
-                <input type="text" placeholder="FirstName" name="firstName" max="20" required />
-            </div>
-            <br />
-            <div class="inputField">
-                <label for="email">Last Name</label>
-                <input type="text" placeholder="LastName" name="lastName" max="20" required />
-            </div>
-            <br />
-            <div class="inputField">
-                <label for="email">Email</label>
-                <input
-                    type="email"
-                    placeholder="Example@gmail.com"
-                    name="email"
-                    pattern={regexEmail}
-                    required
-                />
-            </div>
-            <br />
-            <div class="inputField">
-                <label for="email">Password</label>
-                <input type="password" placeholder="ABC123" name="password" required />
-            </div>
-            <button type="submit" class="signin">Create</button>
-            {#if form?.error}
-                <p class="error">{form.error}</p>
-            {/if}
-        </form>
-    {/if}
+	<div class="head">
+		<div class="header">{mode === 'Login' ? 'Login' : 'Create Account'}</div>
+		<button class="question" onclick={toggleMode}>
+			{mode === 'Login' ? "Don't have an account?" : 'Already have an account?'} <span style="color: yellow;">Click Here</span>
+		</button>
+	</div>
+	<form action={formMode} method="post">
+		{#if mode === "SignUp"}
+			<div class="inputField">
+				<label for="firstname">First Name</label>
+				<input type="text" placeholder="FirstName" name="firstName" max="20" required />
+			</div>
+			<br />
+			<div class="inputField">
+				<label for="email">Last Name</label>
+				<input type="text" placeholder="LastName" name="lastName" max="20" required />
+			</div>
+		{/if}
+		<br />
+		<div class="inputField">
+			<label for="email">Email</label>
+			<input type="email" placeholder="Example@gmail.com" name="email" pattern={regexEmail} required />
+		</div>
+		<br />
+		<div class="inputField">
+			<label for="email">Password</label>
+			<input type="password" placeholder="ABC123" name="password" required />
+		</div>
+		<button type="submit" class="signin">{mode === 'Login' ? 'Login' : 'Create'}</button>
+		{#if form?.error}
+			<p class="error">{form.error}</p>
+		{/if}
+	</form>
 </div>
 
 <style>
-    
 	.error {
 		color: rgb(248, 131, 131);
 	}
@@ -100,9 +73,6 @@
 		outline: none;
 		background-color: transparent;
 		color: rgb(88, 88, 88);
-	}
-
-	.question {
 		cursor: pointer;
 	}
 
@@ -125,7 +95,7 @@
 	.login {
 		background-color: var(--main);
 		border-radius: 1rem;
-        filter: drop-shadow(rgb(88, 88, 88) .2rem .2rem 1rem);
+		filter: drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem);
 	}
 
 	form {

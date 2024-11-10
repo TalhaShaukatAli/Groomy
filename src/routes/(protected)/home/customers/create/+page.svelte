@@ -1,23 +1,23 @@
 <script lang="ts">
-	import type { newCustomerRecord } from '$lib/types';
-	import { page,authenticatedUser } from '$lib/stores.svelte';
+	import type { BaseCustomerRecord } from '$lib/types';
+	import { page, authenticatedUser } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	page.set('Customer');
-	
-	let {data} = $props()
-	
-	let customer: newCustomerRecord = $state({
+
+	let { data } = $props();
+
+	let customer: BaseCustomerRecord = $state({
 		userID: data.user._id.toString(),
-		firstName: "",
-		lastName: "",
-		email: "",
-		phone: "",
+		firstName: '',
+		lastName: '',
+		email: '',
+		phone: '',
 		address: {
-			street: "",
-			city: "",
-			state: "",
-			zip: 1,
+			street: '',
+			city: '',
+			state: '',
+			zip: 1
 		},
 		deleted: false
 	});

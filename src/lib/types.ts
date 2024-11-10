@@ -1,52 +1,58 @@
-import type { ObjectId } from "mongodb";
+import { ObjectId } from 'mongodb';
 
-export type existingUser = {
-	_id: ObjectId;
+type Address = {
+	street: string;
+	city: string;
+	state: string;
+	zip: number;
+};
+
+type RecordWithId<T> = { _id: ObjectId } & T;
+
+
+//User Records
+export type BaseUserRecord = {
 	firstName: string;
 	lastName: string;
 	email: string;
 	password: string;
 };
 
-export type newUser = {
+export type UserRecord = RecordWithId<BaseUserRecord>;
+
+//Customer Records
+export type BaseCustomerRecord = {
+	userID: string;
 	firstName: string;
 	lastName: string;
 	email: string;
-	password: string;
+	phone: string;
+	address: Address;
+	deleted: boolean;
 };
 
+export type CustomerRecord = RecordWithId<BaseCustomerRecord>;
+
+//Appointment Records
+export type BaseAppointmentRecord = {
+	time: {
+		date: string;
+		start: string;
+		end: string;
+		exact: number;
+	};
+	userID: string;
+	customerID: string;
+	title: string;
+	description: string;
+	address: Address;
+	deleted: boolean;
+};
+
+export type AppointmentRecord = RecordWithId<BaseAppointmentRecord>;
+
+//Cookie
 export type cookie = {
 	cookie: string;
 	expireTime: number;
 };
-
-export type newCustomerRecord = {
-	userID: string,
-	firstName: string,
-	lastName: string,
-	email: string,
-	phone: string,
-	address: {
-		street: string,
-		city: string,
-		state: string,
-		zip: number
-	}
-	deleted: boolean
-}
-
-export type customerRecord = {
-	_id: ObjectId,
-	userID: string,
-	firstName: string,
-	lastName: string,
-	email: string,
-	phone: string,
-	address: {
-		street: string,
-		city: string,
-		state: string,
-		zip: number
-	}
-	deleted: boolean
-}

@@ -5,6 +5,7 @@ import { authenticatedUser } from '$lib/stores.svelte';
 import { redirect, type Handle } from '@sveltejs/kit';
 
 // Connect to MongoDB before starting the server
+console.log("please")
 connect()
 	.then((): void => {
 		console.log('MongoDB started');
@@ -15,15 +16,15 @@ connect()
 	});
 
 export const handle: Handle = async ({ event, resolve }) => {
-	if(event.url.pathname.startsWith("/api/auth")){
+	if (event.url.pathname.startsWith('/api/auth')) {
 		return await resolve(event);
 	}
-	if (event.url.pathname.startsWith('/home') || event.url.pathname.startsWith('/api') ) {
+	if (event.url.pathname.startsWith('/home') || event.url.pathname.startsWith('/api')) {
 		const cookie = event.cookies.get('sessionID');
 		if (cookie) {
 			const dbCookie = await Auth_GetCookie(cookie);
 			//If cookie doesn't exist, or user isn't saved, go back to login
-			if(dbCookie == null || !authenticatedUser.get()){
+			if (dbCookie == null || !authenticatedUser.get()) {
 				redirect(302, '/login');
 			}
 

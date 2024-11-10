@@ -60,7 +60,7 @@ test.describe('New Account', async () => {
 	const Email = generateRandomString(10) + '@gmail.com';
 	const Password = generateRandomString(10);
 
-	test('Create account', async ({ page }) => {
+	test('Create and edit customer', async ({ page }) => {
 		await page.goto('http://localhost:4173/login');
 		await page.getByRole('button', { name: "Don't have an account? Click" }).click();
 		await page.getByPlaceholder('FirstName').click();
