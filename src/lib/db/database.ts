@@ -95,8 +95,8 @@ export class DatabaseCustomerService {
 	}
 
 	// Update a customer's information by their ID
-	async updateCustomerByID(id: string, customer: BaseCustomerRecord): Promise<boolean> {
-		const result = await this.db.collection('customer').updateOne({ _id: new ObjectId(id) }, customer);
+	async updateCustomerByID(id: string, customer: object): Promise<boolean> {
+		const result = await this.db.collection('customer').updateOne({ _id: new ObjectId(id) }, { $set: customer });
 		return result.acknowledged;
 	}
 }
@@ -107,7 +107,7 @@ const defaultCustomerDatabase = new DatabaseCustomerService();
 export const Customer_AddNewCustomer = (customer: BaseCustomerRecord) => defaultCustomerDatabase.addNewCustomer(customer);
 export const Customer_GetCustomers = (userID: string) => defaultCustomerDatabase.getCustomers(userID);
 export const Customer_GetCustomerByID = (id: string) => defaultCustomerDatabase.getCustomerByID(id);
-export const Customer_UpdateCustomerByID = (id: string, customer: BaseCustomerRecord) => defaultCustomerDatabase.updateCustomerByID(id, customer);
+export const Customer_UpdateCustomerByID = (id: string, customer: object) => defaultCustomerDatabase.updateCustomerByID(id, customer);
 
 // Create a class to handle database operations for appointment-related functions
 export class DatabaseAppointmentService {
@@ -133,7 +133,7 @@ export class DatabaseAppointmentService {
 	async getAppointmentsByCustomerID(customerID: string): Promise<AppointmentRecord[] | null> {
 		const result = this.db.collection('appointments').find({ customerID: customerID, deleted: false });
 		const documents = await result.toArray();
-		
+
 		// Return null if no documents found, otherwise return the appointment records
 		//@ts-ignore
 		if (documents == null) {
@@ -157,13 +157,10 @@ export class DatabaseAppointmentService {
 	}
 
 	// Update an appointment's information by its ID
-	async updateAppointmentByID(id: string, appointment: BaseAppointmentRecord): Promise<boolean> {
+	async updateAppointmentByID(id: string, appointment: object): Promise<boolean> {
 		// Use $set to update only the provided fields, preserving other existing fields
-		const result = await this.db.collection('appointments').updateOne(
-			{ _id: new ObjectId(id) }, 
-			{ $set: appointment }
-		);
-		
+		const result = await this.db.collection('appointments').updateOne({ _id: new ObjectId(id) }, { $set: appointment });
+
 		// Return true if at least one document was modified, false otherwise
 		return result.acknowledged;
 	}
@@ -176,4 +173,4 @@ export const Appointment_AddNewAppointment = (appointment: BaseAppointmentRecord
 export const Appointment_GetAppointmentByID = (id: string) => defaultAppointmentDatabase.getAppointmentByID(id);
 export const Appointment_GetAppointmentsByCustomerID = (id: string) => defaultAppointmentDatabase.getAppointmentsByCustomerID(id);
 export const Appointment_GetAppointmentsByUserID = (id: string) => defaultAppointmentDatabase.getAppointmentsByUserID(id);
-export const Appointment_UpdateAppointmentByID = (id: string, appointment: BaseAppointmentRecord) => defaultAppointmentDatabase.updateAppointmentByID(id, appointment);
+export const Appointment_UpdateAppointmentByID = (id: string, appointment: object) => defaultAppointmentDatabase.updateAppointmentByID(id, appointment);

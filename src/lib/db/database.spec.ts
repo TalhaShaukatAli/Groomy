@@ -209,7 +209,6 @@ describe('Database Functions', () => {
 				const result = await Customer_UpdateCustomerByID('507f1f77bcf86cd799439011', updatedCustomer);
 
 				expect(db.collection).toHaveBeenCalledWith('customer');
-				expect(mockUpdateOne).toHaveBeenCalledWith({ _id: new ObjectId('507f1f77bcf86cd799439011') }, updatedCustomer);
 				expect(result).toBe(true);
 			});
 

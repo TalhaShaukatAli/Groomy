@@ -20,7 +20,7 @@
 	}
 
 	async function onSave() {
-		const result = await API.saveCustomer(customer);
+		const result = await API.updateCustomer(customer);
 		if (result.success) {
 			goto(`/home/customers`);
 		}

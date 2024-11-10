@@ -52,7 +52,7 @@ export const actions = {
 			password: passwordHash
 		};
 
-		const result = await API.createUser(newUserData);
+		const result = await API.signup(newUserData);
 
 		if (!result.success) {
 			return fail(422, {
