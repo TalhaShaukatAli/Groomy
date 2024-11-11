@@ -18,7 +18,7 @@
 
 	async function cancel() {
 		editView = false;
-		await invalidateAll();
+		window.location.replace(`/home/appointments/${appointment._id.toString()}`);
 	}
 
 	async function onSave() {
@@ -47,8 +47,20 @@
 </script>
 
 <div class="content">
-	{#if editView}
-		<div class="account">
+	<div class="account">
+		{#if !editView}
+			<div class="buttonRow">
+				<div class="fullName">
+					{appointment.title}
+				</div>
+				<div class="grow"></div>
+				<button
+					onclick={() => {
+						changeToEdit();
+					}}>Edit</button
+				>
+			</div>
+		{:else}
 			<div class="buttonRow">
 				<div class="fullName">
 					{appointment.title}
@@ -66,161 +78,75 @@
 					}}>Cancel</button
 				>
 			</div>
+		{/if}
 
-			<div class="topRow">
-				<div class="baseData">
-					<div>
-						Title: <input type="text" name="Date" id="" bind:value={appointment.title} />
-					</div>
-					<div>
-						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} onclick={updateTime} />
-					</div>
-					<div>
-						Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} onchange={updateTime} />
-					</div>
-					<div>
-						Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} onchange={updateTime} />
-					</div>
+		<div class="topRow">
+			<div class="baseData">
+				<div>
+					Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled={!editView} />
 				</div>
-				<div class="gap"></div>
-				<div class="baseData">
-					<div>
-						Street: <input type="text" name="street" id="" bind:value={appointment.address.street} />
-					</div>
-					<div>
-						City: <input type="text" name="city" id="" bind:value={appointment.address.city} />
-					</div>
-					<div>
-						State: <input type="text" name="state" id="" bind:value={appointment.address.state} />
-					</div>
-					<div>
-						Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} />
-					</div>
+				<div>
+					Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled={!editView} />
 				</div>
-				<div class="baseData">
-					<div>
-						Customer:
-						<select
-							name=""
-							id=""
-							bind:value={appointment.customerID}
-						>
-							{#each customerList as customer}
-								<option value={customer._id.toString()} selected={customer._id.toString() === appointment.customerID}>{customer.firstName + ' ' + customer.lastName}</option>
-							{/each}
-						</select>
-					</div>
-					<div>
-						<span>
-							Full Name:
-							{customer.firstName + ' ' + customer.lastName}
-						</span>
-					</div>
-					<div>
-						<span>
-							Phone: {customer.phone}
-						</span>
-					</div>
-					<div>
-						<span>
-							Email: {customer.email}
-						</span>
-					</div>
-					<div>
-						<span>
-							{customer.address.street + ' '} <br />
-							{`${customer.address.city}, ${customer.address.state} ${customer.address.zip} `}
-						</span>
-					</div>
+				<div>
+					Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled={!editView} />
+				</div>
+				<div>
+					Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled={!editView} />
 				</div>
 			</div>
-			<div class="description">
-				<div>Description:</div>
-				<textarea name="" id="" bind:value={appointment.description}> </textarea>
+			<div class="gap"></div>
+			<div class="baseData">
+				<div>
+					Street: <input type="text" name="street" id="" bind:value={appointment.address.street} disabled={!editView} />
+				</div>
+				<div>
+					City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled={!editView} />
+				</div>
+				<div>
+					State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled={!editView} />
+				</div>
+				<div>
+					Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled={!editView} />
+				</div>
+			</div>
+			<div class="baseData">
+				<div>
+					Customer:
+					<select name="" id="" disabled={!editView}>
+						{#each customerList as customerItem}
+							<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
+						{/each}
+					</select>
+				</div>
+				<div>
+					<span>
+						Full Name: {customer.firstName + ' ' + customer.lastName}
+					</span>
+				</div>
+				<div>
+					<span>
+						Phone: {customer.phone}
+					</span>
+				</div>
+				<div>
+					<span>
+						Email: {customer.email}
+					</span>
+				</div>
+				<div>
+					<span>
+						{customer.address.street + ' '} <br />
+						{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
+					</span>
+				</div>
 			</div>
 		</div>
-	{:else}
-		<div class="account">
-			<div class="buttonRow">
-				<div class="fullName">
-					{appointment.title}
-				</div>
-				<div class="grow"></div>
-				<button
-					onclick={() => {
-						changeToEdit();
-					}}>Edit</button
-				>
-			</div>
-
-			<div class="topRow">
-				<div class="baseData">
-					<div>
-						Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled />
-					</div>
-					<div>
-						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled />
-					</div>
-					<div>
-						Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled />
-					</div>
-					<div>
-						Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled />
-					</div>
-				</div>
-				<div class="gap"></div>
-				<div class="baseData">
-					<div>
-						Street: <input type="text" name="street" id="" bind:value={appointment.address.street} disabled />
-					</div>
-					<div>
-						City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled />
-					</div>
-					<div>
-						State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled />
-					</div>
-					<div>
-						Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled />
-					</div>
-				</div>
-				<div class="baseData">
-					<div>
-						Customer:
-						<select name="" id="" disabled>
-							{#each customerList as customerItem}
-								<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
-							{/each}
-						</select>
-					</div>
-					<div>
-						<span>
-							Full Name: {customer.firstName + ' ' + customer.lastName}
-						</span>
-					</div>
-					<div>
-						<span>
-							Phone: {customer.phone}
-						</span>
-					</div>
-					<div>
-						<span>
-							Email: {customer.email}
-						</span>
-					</div>
-					<div>
-						<span>
-							{customer.address.street + ' '} <br />
-							{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
-						</span>
-					</div>
-				</div>
-			</div>
-			<div class="description">
-				<div>Description:</div>
-				<textarea name="" id="" bind:value={appointment.description} disabled></textarea>
-			</div>
+		<div class="description">
+			<div>Description:</div>
+			<textarea name="" id="" bind:value={appointment.description} disabled={!editView}></textarea>
 		</div>
-	{/if}
+	</div>
 </div>
 
 <style>

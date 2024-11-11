@@ -38,13 +38,15 @@
 </script>
 
 <div class="content">
-	{#if editView}
-		<div class="account">
-			<div class="buttonRow">
-				<div class="fullName">
-					{customer.firstName + ' ' + customer.lastName}
-				</div>
-				<div class="grow"></div>
+	<div class="account">
+		<div class="buttonRow">
+			<div class="fullName">
+				{customer.firstName + ' ' + customer.lastName}
+			</div>
+			<div class="grow"></div>
+			{#if !editView}
+				<button onclick={changeToEdit}>Edit Customer</button>
+			{:else}
 				<button onclick={onSave}>Save</button>
 				<button
 					onclick={() => {
@@ -56,80 +58,40 @@
 						onCancel();
 					}}>Cancel</button
 				>
-			</div>
+			{/if}
+		</div>
 
-			<div class="nameRow">
-				<div>
-					First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} />
-				</div>
-				<div>
-					Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} />
-				</div>
+		<div class="nameRow">
+			<div>
+				First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} disabled={!editView} />
 			</div>
-			<div class="contactRow">
-				<div>
-					Phone: <input type="text" name="phone" id="" bind:value={customer.phone} />
-				</div>
-				<div>
-					Email: <input type="text" name="email" id="" bind:value={customer.email} />
-				</div>
-			</div>
-			<div class="addressRow">
-				<div>
-					Street: <input type="text" name="street" id="" bind:value={customer.address.street} />
-				</div>
-				<div>
-					City: <input type="text" name="city" id="" bind:value={customer.address.city} />
-				</div>
-				<div>
-					State: <input type="text" name="state" id="" bind:value={customer.address.state} />
-				</div>
-				<div>
-					Zip Code: <input type="text" name="zip" id="" bind:value={customer.address.zip} />
-				</div>
+			<div>
+				Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} disabled={!editView} />
 			</div>
 		</div>
-	{:else}
-		<div class="account">
-			<div class="buttonRow">
-				<div class="fullName">
-					{customer.firstName + ' ' + customer.lastName}
-				</div>
-				<div class="grow"></div>
-				<button onclick={changeToEdit}>Edit Customer</button>
+		<div class="contactRow">
+			<div>
+				Phone: <input type="text" name="phone" id="" bind:value={customer.phone} disabled={!editView} />
 			</div>
-			<div class="nameRow">
-				<div>
-					First Name: <input type="text" name="" id="" value={customer.firstName} disabled />
-				</div>
-				<div>
-					Last Name: <input type="text" name="" id="" value={customer.lastName} disabled />
-				</div>
-			</div>
-			<div class="contactRow">
-				<div>
-					Phone: <input type="text" name="" id="" value={customer.phone} disabled />
-				</div>
-				<div>
-					Email: <input type="text" name="" id="" value={customer.email} disabled />
-				</div>
-			</div>
-			<div class="addressRow">
-				<div>
-					Street: <input type="text" name="" id="" value={customer.address.street} disabled />
-				</div>
-				<div>
-					City: <input type="text" name="" id="" value={customer.address.city} disabled />
-				</div>
-				<div>
-					State: <input type="text" name="" id="" value={customer.address.state} disabled />
-				</div>
-				<div>
-					Zip Code: <input type="text" name="" id="" value={customer.address.zip} disabled />
-				</div>
+			<div>
+				Email: <input type="text" name="email" id="" bind:value={customer.email} disabled={!editView} />
 			</div>
 		</div>
-	{/if}
+		<div class="addressRow">
+			<div>
+				Street: <input type="text" name="street" id="" bind:value={customer.address.street} disabled={!editView} />
+			</div>
+			<div>
+				City: <input type="text" name="city" id="" bind:value={customer.address.city} disabled={!editView} />
+			</div>
+			<div>
+				State: <input type="text" name="state" id="" bind:value={customer.address.state} disabled={!editView} />
+			</div>
+			<div>
+				Zip Code: <input type="text" name="zip" id="" bind:value={customer.address.zip} disabled={!editView} />
+			</div>
+		</div>
+	</div>
 </div>
 
 <style>
