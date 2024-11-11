@@ -1,20 +1,17 @@
 <script lang="ts">
-	import type { AppointmentRecord, CustomerRecord, BaseAppointmentRecord } from '$lib/types';
-	import { authenticatedUser, page } from '$lib/stores.svelte';
+	import type { CustomerRecord, BaseAppointmentRecord } from '$lib/types';
+	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { DateTimeCombiner } from '$lib';
 	import { onMount } from 'svelte';
 	page.set('Appointment');
 
-	let customerList: CustomerRecord[] = $state();
+	let { data } = $props();
+	let customerList: CustomerRecord[] = $state(JSON.parse(data.customerInfo));
+
 	onMount(() => {
 		const id = localStorage.getItem('authenticatedUserID') || '';
-
-		API.getCustomers(id).then((value) => {
-			customerList = value.data;
-		});
-
 		appointment.userID = id;
 	});
 
@@ -26,7 +23,7 @@
 			exact: 0
 		},
 		userID: '',
-		customerID: '',
+		customerID: customerList[0]._id.toString(),
 		title: '',
 		description: '',
 		address: {
@@ -50,18 +47,7 @@
 		appointment.time.exact = result;
 	}
 
-	async function updateCustomer(e: Event) {
-		appointment.customerID = e.target.value;
-		console.log(e.target.value);
-	}
-
-	let customer: CustomerRecord = $state();
-	$effect(() => {
-		console.log('Called');
-		API.getCustomerByID(appointment.customerID).then((value) => {
-			customer = value.data;
-		});
-	});
+	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual._id.toString() == appointment.customerID)[0] || customerList[0]);
 </script>
 
 <div class="content">
@@ -80,7 +66,7 @@
 					Title: <input type="text" name="Date" id="" bind:value={appointment.title} />
 				</div>
 				<div>
-					Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} onclick={updateCustomer} />
+					Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} onchange={updateTime} />
 				</div>
 				<div>
 					Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} onchange={updateTime} />
@@ -107,35 +93,33 @@
 			<div class="baseData">
 				<div>
 					Customer:
-					<select name="" id="" onchange={updateCustomer}>
+					<select name="" id="" bind:value={appointment.customerID}>
 						{#each customerList as customerItem}
 							<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
 						{/each}
 					</select>
 				</div>
-				{#if customer}
-					<div>
-						<span>
-							Full Name: {customer.firstName + ' ' + customer.lastName}
-						</span>
-					</div>
-					<div>
-						<span>
-							Phone: {customer.phone}
-						</span>
-					</div>
-					<div>
-						<span>
-							Email: {customer.email}
-						</span>
-					</div>
-					<div>
-						<span>
-							{customer.address.street + ' '} <br />
-							{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
-						</span>
-					</div>
-				{/if}
+				<div>
+					<span>
+						Full Name: {customer.firstName + ' ' + customer.lastName}
+					</span>
+				</div>
+				<div>
+					<span>
+						Phone: {customer.phone}
+					</span>
+				</div>
+				<div>
+					<span>
+						Email: {customer.email}
+					</span>
+				</div>
+				<div>
+					<span>
+						{customer.address.street + ' '} <br />
+						{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
+					</span>
+				</div>
 			</div>
 		</div>
 		<div class="description">

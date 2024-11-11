@@ -8,20 +8,9 @@
 	page.set('Appointment');
 
 	let { data } = $props();
-	let customerList: CustomerRecord[] = $state();
-
+	let customerList: CustomerRecord[] = $state(JSON.parse(data.customerInfo));
 	let appointment: AppointmentRecord = $state(JSON.parse(data.appointmentInfo));
 	let editView: boolean = $state(JSON.parse(data.editView));
-
-	onMount(() => {
-		const id = localStorage.getItem('authenticatedUserID') || '';
-
-		API.getCustomers(id).then((value) => {
-			customerList = value.data;
-		});
-
-		appointment.userID = id;
-	});
 
 	function changeToEdit() {
 		editView = true;
@@ -54,16 +43,7 @@
 		appointment.time.exact = result;
 	}
 
-	async function updateCustomer(e: Event) {
-		appointment.customerID = e.target.value;
-	}
-
-	let customer: CustomerRecord = $state();
-	$effect(() => {
-		API.getCustomerByID(appointment.customerID).then((value) => {
-			customer = value.data;
-		});
-	});
+	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual._id.toString() == appointment.customerID)[0]);
 </script>
 
 <div class="content">
@@ -118,44 +98,40 @@
 					</div>
 				</div>
 				<div class="baseData">
-					{#if customer}
-						<div>
-							Customer:
-							<select
-								name=""
-								id=""
-								onchange={(e) => {
-									updateCustomer(e);
-								}}
-							>
-								{#each customerList as customer}
-									<option value={customer._id.toString()} selected={customer._id.toString() === appointment.customerID}>{customer.firstName + ' ' + customer.lastName}</option>
-								{/each}
-							</select>
-						</div>
-						<div>
-							<span>
-								Full Name:
-								{customer.firstName + ' ' + customer.lastName}
-							</span>
-						</div>
-						<div>
-							<span>
-								Phone: {customer.phone}
-							</span>
-						</div>
-						<div>
-							<span>
-								Email: {customer.email}
-							</span>
-						</div>
-						<div>
-							<span>
-								{customer.address.street + ' '} <br />
-								{`${customer.address.city}, ${customer.address.state} ${customer.address.zip} `}
-							</span>
-						</div>
-					{/if}
+					<div>
+						Customer:
+						<select
+							name=""
+							id=""
+							bind:value={appointment.customerID}
+						>
+							{#each customerList as customer}
+								<option value={customer._id.toString()} selected={customer._id.toString() === appointment.customerID}>{customer.firstName + ' ' + customer.lastName}</option>
+							{/each}
+						</select>
+					</div>
+					<div>
+						<span>
+							Full Name:
+							{customer.firstName + ' ' + customer.lastName}
+						</span>
+					</div>
+					<div>
+						<span>
+							Phone: {customer.phone}
+						</span>
+					</div>
+					<div>
+						<span>
+							Email: {customer.email}
+						</span>
+					</div>
+					<div>
+						<span>
+							{customer.address.street + ' '} <br />
+							{`${customer.address.city}, ${customer.address.state} ${customer.address.zip} `}
+						</span>
+					</div>
 				</div>
 			</div>
 			<div class="description">
@@ -208,37 +184,35 @@
 					</div>
 				</div>
 				<div class="baseData">
-					{#if customer}
-						<div>
-							Customer:
-							<select name="" id="" disabled>
-								{#each customerList as customerItem}
-									<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
-								{/each}
-							</select>
-						</div>
-						<div>
-							<span>
-								Full Name: {customer.firstName + ' ' + customer.lastName}
-							</span>
-						</div>
-						<div>
-							<span>
-								Phone: {customer.phone}
-							</span>
-						</div>
-						<div>
-							<span>
-								Email: {customer.email}
-							</span>
-						</div>
-						<div>
-							<span>
-								{customer.address.street + ' '} <br />
-								{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
-							</span>
-						</div>
-					{/if}
+					<div>
+						Customer:
+						<select name="" id="" disabled>
+							{#each customerList as customerItem}
+								<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
+							{/each}
+						</select>
+					</div>
+					<div>
+						<span>
+							Full Name: {customer.firstName + ' ' + customer.lastName}
+						</span>
+					</div>
+					<div>
+						<span>
+							Phone: {customer.phone}
+						</span>
+					</div>
+					<div>
+						<span>
+							Email: {customer.email}
+						</span>
+					</div>
+					<div>
+						<span>
+							{customer.address.street + ' '} <br />
+							{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
+						</span>
+					</div>
 				</div>
 			</div>
 			<div class="description">

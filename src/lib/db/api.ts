@@ -1,9 +1,9 @@
-import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord } from '$lib/types';
+import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, UserRecord } from '$lib/types';
 
 interface LoginResponse {
 	success: boolean;
 	message: string;
-	data: BaseUserRecord;
+	data: UserRecord;
 }
 
 interface CustomerArrayResponse {

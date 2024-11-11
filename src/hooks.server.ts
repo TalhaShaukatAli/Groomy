@@ -5,7 +5,6 @@ import { authenticatedUser } from '$lib/stores.svelte';
 import { redirect, type Handle } from '@sveltejs/kit';
 
 // Connect to MongoDB before starting the server
-console.log("please")
 connect()
 	.then((): void => {
 		console.log('MongoDB started');
@@ -26,12 +25,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 			//If cookie doesn't exist, or user isn't saved, go back to login
 			if (dbCookie == null || !authenticatedUser.get()) {
 				redirect(302, '/login');
-			}
+			}	
 
 			//If expiretime is still good, allow to protected page.
 			if (dbCookie.expireTime > Date.now()) {
 				await Auth_UpdateCookie(dbCookie.cookie);
+				event.locals.user = {
+					id: dbCookie.userID,
+				};
 				return await resolve(event);
+
 			}
 			//Remove Cookie otherwise
 			await Auth_RemoveCookie(dbCookie.cookie);

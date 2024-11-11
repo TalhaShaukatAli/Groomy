@@ -27,7 +27,7 @@ export const actions = {
 
 		if (result.success) {
 			const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
-			await Auth_AddCookie(cookieID);
+			await Auth_AddCookie(cookieID, result.data._id.toString());
 			cookies.set('sessionID', cookieID, { path: '/' });
 			authenticatedUser.set(result.data);
 			redirect(302, '/home');

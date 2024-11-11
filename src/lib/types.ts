@@ -9,7 +9,6 @@ type Address = {
 
 type RecordWithId<T> = { _id: ObjectId } & T;
 
-
 //User Records
 export type BaseUserRecord = {
 	firstName: string;
@@ -54,5 +53,6 @@ export type AppointmentRecord = RecordWithId<BaseAppointmentRecord>;
 //Cookie
 export type cookie = {
 	cookie: string;
+	userID: string;
 	expireTime: number;
 };

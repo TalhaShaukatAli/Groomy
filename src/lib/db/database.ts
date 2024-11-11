@@ -1,4 +1,4 @@
-import type { cookie, CustomerRecord, BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord } from '$lib/types';
+import type { cookie, CustomerRecord, BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, UserRecord } from '$lib/types';
 import { ObjectId, type Document, type UpdateResult } from 'mongodb';
 import { getDB } from './mongo';
 
@@ -17,14 +17,15 @@ export class DatabaseAuthService {
 	}
 
 	// Retrieve a user by their email address
-	async getUserByEmail(email: string): Promise<BaseUserRecord | null> {
+	async getUserByEmail(email: string): Promise<UserRecord | null> {
 		const result = await this.db.collection('users').findOne({ email: email });
-		return <BaseUserRecord | null>result;
+		return <UserRecord | null>result;
 	}
 
 	// Add a new cookie to the database with an expiration time
-	async addCookie(cookie: string): Promise<boolean> {
+	async addCookie(cookie: string, userID: string): Promise<boolean> {
 		const result = await this.db.collection('cookie').insertOne({
+			userID: userID,
 			cookie: cookie,
 			expireTime: Date.now() + 3600 * 1000 // Cookie expires in 1 hour
 		});
@@ -56,7 +57,7 @@ const defaultAuthDatabase = new DatabaseAuthService();
 // Exported functions for authentication database operations
 export const Auth_AddNewUser = (user: BaseUserRecord) => defaultAuthDatabase.addNewUser(user);
 export const Auth_GetUserByEmail = (email: string) => defaultAuthDatabase.getUserByEmail(email);
-export const Auth_AddCookie = (cookie: string) => defaultAuthDatabase.addCookie(cookie);
+export const Auth_AddCookie = (cookie: string, userID:string) => defaultAuthDatabase.addCookie(cookie,userID);
 export const Auth_RemoveCookie = (cookie: string) => defaultAuthDatabase.removeCookie(cookie);
 export const Auth_GetCookie = (cookie: string) => defaultAuthDatabase.getCookie(cookie);
 export const Auth_UpdateCookie = (cookie: string) => defaultAuthDatabase.updateCookie(cookie);
