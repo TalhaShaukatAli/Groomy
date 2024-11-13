@@ -23,7 +23,7 @@
 			exact: 0
 		},
 		userID: '',
-		customerID: customerList[0]._id.toString(),
+		customerID: customerList[0].id,
 		title: '',
 		description: '',
 		address: {
@@ -47,7 +47,7 @@
 		appointment.time.exact = result;
 	}
 
-	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual._id.toString() == appointment.customerID)[0] || customerList[0]);
+	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual.id == appointment.customerID)[0] || customerList[0]);
 </script>
 
 <div class="content">
@@ -95,7 +95,7 @@
 					Customer:
 					<select name="" id="" bind:value={appointment.customerID}>
 						{#each customerList as customerItem}
-							<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
+							<option value={customerItem.id} selected={customerItem.id === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
 						{/each}
 					</select>
 				</div>

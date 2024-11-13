@@ -273,7 +273,7 @@ describe('Database Functions', () => {
 
 		describe('GetCookie', () => {
 			const mockCookie: cookie = {
-				cookie: 'test-cookie',
+				cookieID: 'test-cookie',
 				expireTime: mockExpireTime
 			};
 

@@ -19,25 +19,24 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return await resolve(event);
 	}
 	if (event.url.pathname.startsWith('/home') || event.url.pathname.startsWith('/api')) {
-		const cookie = event.cookies.get('sessionID');
-		if (cookie) {
-			const dbCookie = await Auth_GetCookie(cookie);
+		const cookieID = event.cookies.get('sessionID');
+		if (cookieID) {
+			const dbCookie = Auth_GetCookie(cookieID);
 			//If cookie doesn't exist, or user isn't saved, go back to login
 			if (dbCookie == null || !authenticatedUser.get()) {
 				redirect(302, '/login');
-			}	
+			}
 
 			//If expiretime is still good, allow to protected page.
 			if (dbCookie.expireTime > Date.now()) {
-				await Auth_UpdateCookie(dbCookie.cookie);
+				Auth_UpdateCookie(dbCookie.cookieID);
 				event.locals.user = {
-					id: dbCookie.userID,
+					id: dbCookie.userID
 				};
 				return await resolve(event);
-
 			}
 			//Remove Cookie otherwise
-			await Auth_RemoveCookie(dbCookie.cookie);
+			Auth_RemoveCookie(dbCookie.cookieID);
 			redirect(302, '/login');
 		}
 		redirect(302, '/login');

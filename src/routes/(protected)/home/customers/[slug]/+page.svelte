@@ -16,7 +16,7 @@
 
 	async function onCancel() {
 		editView = false;
-		window.location.replace(`/home/customers/${customer._id.toString()}`);
+		window.location.replace(`/home/customers/${customer.id}`);
 	}
 
 	async function onSave() {
@@ -26,7 +26,7 @@
 		}
 	}
 
-	async function onDelete(id: string) {
+	async function onDelete(id: number) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
@@ -50,7 +50,7 @@
 				<button onclick={onSave}>Save</button>
 				<button
 					onclick={() => {
-						onDelete(customer._id.toString());
+						onDelete(customer.id);
 					}}>Delete</button
 				>
 				<button

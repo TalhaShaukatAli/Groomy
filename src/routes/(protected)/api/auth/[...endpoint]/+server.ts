@@ -9,13 +9,12 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	try {
 		switch (path) {
 			case 'signup': {
-				const user = await Auth_GetUserByEmail(data.email);
+				// const user = await Auth_GetUserByEmail(data.email);
 
-				if (user != null) {
-					return json({ success: false, message: 'User with email already exists' }, { status: 201 });
-				}
-
-				let result = await Auth_AddNewUser(data);
+				// if (user != null) {
+				// 	return json({ success: false, message: 'User with email already exists' }, { status: 201 });
+				// }
+				let result = Auth_AddNewUser(data);
 
 				if (result) {
 					return json({ success: true, message: 'Success' }, { status: 201 });
@@ -30,7 +29,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 				if (user == null) {
 					return json({ success: false, message: 'No user with this email', data: undefined }, { status: 500 });
 				} else {
-					if (await argon2.verify(user.password, data.password)) {
+					if (await argon2.verify(user.hashedPassword, data.password)) {
 						return json({ success: true, message: 'Success', data: user }, { status: 201 });
 					} else {
 						return json({ success: false, message: 'Incorrect email or password', data: undefined }, { status: 500 });

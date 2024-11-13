@@ -4,7 +4,7 @@ import type { PageServerLoad } from './$types';
 import type { CustomerRecord } from '$lib/types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const customers = await Customer_GetCustomers(locals.user?.id);
+	const customers = Customer_GetCustomers(locals.user?.id);
 
 	if(customers == null){
 		redirect(302,"/home/customers")

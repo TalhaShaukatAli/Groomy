@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ params, url,locals }) => {
 	let editView = url.searchParams.get('edit') ? true : false;
 
 	const appointments = await Appointment_GetAppointmentByID(appointmentID);
-	const customers = await Customer_GetCustomers(locals.user?.id)
+	const customers = Customer_GetCustomers(locals.user?.id)
 
 	if (appointments != null) {
 		return {

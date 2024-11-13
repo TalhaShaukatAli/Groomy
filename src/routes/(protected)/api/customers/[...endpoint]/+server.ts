@@ -1,4 +1,4 @@
-import { Customer_AddNewCustomer, Customer_GetCustomerByID, Customer_GetCustomers, Customer_UpdateCustomerByID } from '$lib/db/database';
+import { Customer_AddNewCustomer, Customer_DeleteCustomerByID, Customer_GetCustomerByID, Customer_GetCustomers, Customer_UpdateCustomerByID } from '$lib/db/database';
 import argon2 from 'argon2';
 import { json, type RequestHandler } from '@sveltejs/kit';
 import type { CustomerRecord } from '$lib/types';
@@ -10,7 +10,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	try {
 		switch (path) {
 			case 'create': {
-				const result = await Customer_AddNewCustomer(data);
+				const result = Customer_AddNewCustomer(data);
 				if (result) {
 					return json({ success: true }, { status: 201 });
 				} else {
@@ -19,11 +19,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'delete': {
-				const updateDoc = {
-					deleted: true
-				};
-
-				const result = await Customer_UpdateCustomerByID(data, updateDoc);
+				const result = Customer_DeleteCustomerByID(data);
 				if (result) {
 					return json({ success: true, message: 'Success' });
 				} else {
@@ -32,9 +28,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'update': {
-				const { _id, deleted, ...newDoc } = data;
-
-				const result = await Customer_UpdateCustomerByID(data._id.toString(), newDoc);
+				const result = Customer_UpdateCustomerByID(data.id, data);
 				if (result) {
 					return json({ success: true, message: 'Success' });
 				} else {
@@ -43,7 +37,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'getCustomersByUserID': {
-				const result = await Customer_GetCustomers(data);
+				const result = Customer_GetCustomers(data);
 				if (result) {
 					return json({ success: true, message: 'Success', data: result });
 				} else {
@@ -52,7 +46,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'getCustomerByUserID': {
-				const result = await Customer_GetCustomerByID(data);
+				const result = Customer_GetCustomerByID(data);
 				if (result) {
 					return json({ success: true, message: 'Success', data: result });
 				} else {

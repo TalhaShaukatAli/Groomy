@@ -18,7 +18,7 @@
 
 	async function cancel() {
 		editView = false;
-		window.location.replace(`/home/appointments/${appointment._id.toString()}`);
+		window.location.replace(`/home/appointments/${appointment.id}`);
 	}
 
 	async function onSave() {
@@ -28,7 +28,7 @@
 		}
 	}
 
-	async function onDelete(id: string) {
+	async function onDelete(id: number) {
 		let confirmResult = confirm('Are you sure you want to delete this appointment?');
 		if (confirmResult) {
 			const result = await API.deleteAppointment(id);
@@ -43,7 +43,7 @@
 		appointment.time.exact = result;
 	}
 
-	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual._id.toString() == appointment.customerID)[0]);
+	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual.id == appointment.customerID)[0]);
 </script>
 
 <div class="content">
@@ -69,7 +69,7 @@
 				<button onclick={onSave}>Save</button>
 				<button
 					onclick={() => {
-						onDelete(appointment._id.toString());
+						onDelete(appointment.id);
 					}}>Delete</button
 				>
 				<button
@@ -86,13 +86,13 @@
 					Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled={!editView} />
 				</div>
 				<div>
-					Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled={!editView} />
+					Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled={!editView} onchange={updateTime}/>
 				</div>
 				<div>
-					Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled={!editView} />
+					Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled={!editView} onchange={updateTime} />
 				</div>
 				<div>
-					Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled={!editView} />
+					Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled={!editView} onchange={updateTime}/>
 				</div>
 			</div>
 			<div class="gap"></div>
@@ -115,7 +115,7 @@
 					Customer:
 					<select name="" id="" disabled={!editView}>
 						{#each customerList as customerItem}
-							<option value={customerItem._id.toString()} selected={customerItem._id.toString() === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
+							<option value={customerItem.id} selected={customerItem.id === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
 						{/each}
 					</select>
 				</div>

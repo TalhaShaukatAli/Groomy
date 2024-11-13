@@ -8,7 +8,7 @@
 	let { data } = $props();
 
 	let customer: BaseCustomerRecord = $state({
-		userID: data.user._id.toString(),
+		userID: data.id,
 		firstName: '',
 		lastName: '',
 		email: '',
@@ -21,6 +21,7 @@
 		},
 		deleted: false
 	});
+	$inspect(customer)
 
 	async function onCreate() {
 		const result = await API.createCustomer(customer);

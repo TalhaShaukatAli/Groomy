@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	let customerID = params.slug;
 	let editView = url.searchParams.get('edit') ? true : false;
 
-	const result = await Customer_GetCustomerByID(customerID);
+	const result = Customer_GetCustomerByID(parseInt(customerID));
 	if (result != null) {
 		return {
 			customerInfo: JSON.stringify(result),

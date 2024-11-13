@@ -85,7 +85,7 @@ class API {
 		});
 	}
 
-	static async deleteCustomer(id: string): Promise<BaseResponse> {
+	static async deleteCustomer(id: number): Promise<BaseResponse> {
 		return this.request('/customers/delete', {
 			method: 'POST',
 			body: JSON.stringify(id)
@@ -99,35 +99,35 @@ class API {
 		});
 	}
 
-	static async getCustomers(userid: string): Promise<CustomerArrayResponse> {
+	static async getCustomers(userid: number): Promise<CustomerArrayResponse> {
 		return this.request('/customers/getCustomersByUserID', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});
 	}
 
-	static async getCustomerByID(userid: string): Promise<CustomerResponse> {
+	static async getCustomerByID(userid: number): Promise<CustomerResponse> {
 		return this.request('/customers/getCustomerByUserID', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});
 	}
 
-	static async getAppointmentsByUserID(userid: string): Promise<AppointmentArrayResponse> {
+	static async getAppointmentsByUserID(userid: number): Promise<AppointmentArrayResponse> {
 		return this.request('/appointments/getByUserID', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});
 	}
 
-	static async getAppointmentsByCustomerID(customerid: string): Promise<AppointmentArrayResponse> {
+	static async getAppointmentsByCustomerID(customerid: number): Promise<AppointmentArrayResponse> {
 		return this.request('/appointments/getByCustomerID', {
 			method: 'POST',
 			body: JSON.stringify(customerid)
 		});
 	}
 
-	static async getAppointmentByID(id: string): Promise<AppointmentResponse> {
+	static async getAppointmentByID(id: number): Promise<AppointmentResponse> {
 		return this.request('/appointments/getByAppointmentID', {
 			method: 'POST',
 			body: JSON.stringify(id)
@@ -148,7 +148,7 @@ class API {
 		});
 	}
 
-	static async deleteAppointment(id: string): Promise<BaseResponse> {
+	static async deleteAppointment(id: number): Promise<BaseResponse> {
 		return this.request('/appointments/delete', {
 			method: 'POST',
 			body: JSON.stringify(id)

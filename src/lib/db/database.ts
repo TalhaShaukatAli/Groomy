@@ -1,8 +1,32 @@
-import type { cookie, CustomerRecord, BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, UserRecord } from '$lib/types';
+import type { cookie, CustomerRecord, BaseUserRecord, BaseCustomerRecord as DatabaseCustomerResponse, BaseAppointmentRecord, AppointmentRecord, UserRecord } from '$lib/types';
 import { ObjectId, type Document, type UpdateResult } from 'mongodb';
-import { getDB } from './mongo';
+import Database from 'better-sqlite3';
 
-// Create a class to handle database operations for authentication-related functions
+type Address = {
+	street: string;
+	city: string;
+	state: string;
+	zip: number;
+};
+
+type DatabaseCustomerResponse = {
+	id: number;
+	userID: number;
+	firstName: string;
+	lastName: string;
+	email: string;
+	phone: string;
+	address_street: string;
+	address_city: string;
+	address_state: string;
+	address_zip: number;
+	deleted: number;
+};
+
+function getDB() {
+	return Database('mydb.sqlite', { verbose: console.log });
+}
+
 export class DatabaseAuthService {
 	private db;
 
@@ -11,44 +35,73 @@ export class DatabaseAuthService {
 	}
 
 	// Add a new user to the database
-	async addNewUser(user: BaseUserRecord): Promise<boolean> {
-		const result = await this.db.collection('users').insertOne(user);
-		return result.acknowledged;
+	addNewUser(user: BaseUserRecord): boolean {
+		const query = this.db.prepare('Insert into users (firstName, lastName, email, hashedPassword, deleted) VALUES (@firstName, @lastName, @email, @hashedPassword, @deleted)');
+		let result = query.run({ firstName: user.firstName, lastName: user.lastName, email: user.email, hashedPassword: user.password, deleted: 0 });
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	// Retrieve a user by their email address
-	async getUserByEmail(email: string): Promise<UserRecord | null> {
-		const result = await this.db.collection('users').findOne({ email: email });
-		return <UserRecord | null>result;
+	getUserByEmail(email: string): UserRecord | null {
+		const query = this.db.prepare('Select * from users WHERE email = ?');
+		const result = query.get(email);
+		if (result) {
+			return <UserRecord>result;
+		} else {
+			return null;
+		}
 	}
 
 	// Add a new cookie to the database with an expiration time
-	async addCookie(cookie: string, userID: string): Promise<boolean> {
-		const result = await this.db.collection('cookie').insertOne({
+	addCookie(cookie: string, userID: number): boolean {
+		const query = this.db.prepare('Insert into cookie (id, userID, expireTime) values (@id, @userID, @expireTime)');
+		const result = query.run({
+			id: cookie,
 			userID: userID,
-			cookie: cookie,
 			expireTime: Date.now() + 3600 * 1000 // Cookie expires in 1 hour
 		});
-		return result.acknowledged;
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	// Remove a specific cookie from the database
-	async removeCookie(cookie: string): Promise<boolean> {
-		const result = await this.db.collection('cookie').deleteOne({ cookie: cookie });
-		return result.acknowledged;
+	removeCookie(cookie: string): boolean {
+		const query = this.db.prepare('DELETE FROM users WHERE id = ?');
+		const result = query.run(cookie);
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	// Retrieve a cookie by its value
-	async getCookie(cookie: string): Promise<cookie | null> {
-		const result = <cookie | null>await this.db.collection('cookie').findOne({ cookie: cookie });
-		return result;
+	getCookie(cookie: string): cookie | null {
+		const query = this.db.prepare('Select * from cookie WHERE id = ?');
+		const result = query.get(cookie);
+		if (result) {
+			return <cookie>result;
+		} else {
+			return null;
+		}
 	}
 
 	// Update the expiration time of a specific cookie
-	async updateCookie(cookie: string): Promise<boolean> {
-		const updateDoc = { $set: { expireTime: Date.now() + 3600 * 1000 } };
-		let result = await this.db.collection('cookie').updateOne({ cookie: cookie }, updateDoc);
-		return result.acknowledged;
+	updateCookie(cookie: string): boolean {
+		let query = this.db.prepare('Update cookie SET expireTime = ? WHERE id = ?');
+		let result = query.run(Date.now(), cookie);
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
 
@@ -57,7 +110,7 @@ const defaultAuthDatabase = new DatabaseAuthService();
 // Exported functions for authentication database operations
 export const Auth_AddNewUser = (user: BaseUserRecord) => defaultAuthDatabase.addNewUser(user);
 export const Auth_GetUserByEmail = (email: string) => defaultAuthDatabase.getUserByEmail(email);
-export const Auth_AddCookie = (cookie: string, userID:string) => defaultAuthDatabase.addCookie(cookie,userID);
+export const Auth_AddCookie = (cookie: string, userID: number) => defaultAuthDatabase.addCookie(cookie, userID);
 export const Auth_RemoveCookie = (cookie: string) => defaultAuthDatabase.removeCookie(cookie);
 export const Auth_GetCookie = (cookie: string) => defaultAuthDatabase.getCookie(cookie);
 export const Auth_UpdateCookie = (cookie: string) => defaultAuthDatabase.updateCookie(cookie);
@@ -70,45 +123,125 @@ export class DatabaseCustomerService {
 		this.db = db;
 	}
 
+	private CustomerDatabaseResponseToCustomerRecord(record: DatabaseCustomerResponse): CustomerRecord {
+		let returnData: CustomerRecord = {
+			id: record.id,
+			userID: record.userID,
+			firstName: record.firstName,
+			lastName: record.lastName,
+			email: record.email,
+			phone: record.phone,
+			address: {
+				street: record.address_street,
+				city: record.address_city,
+				state: record.address_state,
+				zip: record.address_zip
+			},
+			deleted: record.deleted
+		};
+		return returnData;
+	}
+
 	// Add a new customer to the database
-	async addNewCustomer(customer: BaseCustomerRecord): Promise<boolean> {
-		const result = await this.db.collection('customer').insertOne(customer);
-		return result.acknowledged;
+	addNewCustomer(customer: CustomerRecord): boolean {
+		const query = this.db.prepare(
+			'Insert into customers (userID, firstName, lastName, email, phone, address_street, address_city, address_state, address_zip, deleted) VALUES (@userID, @firstName, @lastName, @email, @phone, @address_street, @address_city, @address_state, @address_zip, @deleted)'
+		);
+		let result = query.run({
+			userID: customer.userID,
+			firstName: customer.firstName,
+			lastName: customer.lastName,
+			email: customer.email,
+			phone: customer.phone,
+			address_street: customer.address.street,
+			address_city: customer.address.city,
+			address_state: customer.address.state,
+			address_zip: customer.address.zip,
+			deleted: 0
+		});
+
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	// Retrieve customers for a specific user, excluding deleted customers
-	async getCustomers(userID: string): Promise<CustomerRecord[] | null> {
-		const result = this.db.collection('customer').find({ userID: userID, deleted: false });
-		const documents = await result.toArray();
-
-		// Return null if no documents found, otherwise return the customer records
-		if (documents == null) {
-			return null;
+	getCustomers(userID: number): CustomerRecord[] | null {
+		const query = this.db.prepare('Select * from customers where userID = ? and deleted = 0');
+		const result = <DatabaseCustomerResponse[]>query.all(userID);
+		let resultArray: CustomerRecord[] = [];
+		if (result) {
+			for (let item of result) {
+				let data = this.CustomerDatabaseResponseToCustomerRecord(item);
+				resultArray.push(data);
+			}
+			return resultArray;
 		} else {
-			return <CustomerRecord[]>documents;
+			return null;
 		}
 	}
 
 	// Retrieve a specific customer by their ID
-	async getCustomerByID(id: string): Promise<CustomerRecord | null> {
-		const result = await this.db.collection('customer').findOne({ _id: new ObjectId(id) });
-		return <CustomerRecord | null>result;
+	getCustomerByID(id: number): CustomerRecord | null {
+		const query = this.db.prepare('Select * from customers where id = ?');
+		const result = <DatabaseCustomerResponse>query.get(id);
+		if (result) {
+			let data = this.CustomerDatabaseResponseToCustomerRecord(result);
+			return data;
+		} else {
+			return null;
+		}
 	}
 
 	// Update a customer's information by their ID
-	async updateCustomerByID(id: string, customer: object): Promise<boolean> {
-		const result = await this.db.collection('customer').updateOne({ _id: new ObjectId(id) }, { $set: customer });
-		return result.acknowledged;
+	updateCustomerByID(id: number, customer: CustomerRecord): boolean {
+		const query = this.db.prepare(
+			'UPDATE customers SET firstName = @firstName, lastName = @lastName, email = @email, phone = @phone, address_street = @address_street, address_city= @address_city, address_state = @address_state, address_zip = @address_zip, deleted = @deleted WHERE id = @id'
+		);
+		const result = query.run({
+			userID: customer.userID,
+			firstName: customer.firstName,
+			lastName: customer.lastName,
+			email: customer.email,
+			phone: customer.phone,
+			address_street: customer.address.street,
+			address_city: customer.address.city,
+			address_state: customer.address.state,
+			address_zip: customer.address.zip,
+			deleted: customer.deleted,
+			id: id
+		});
+
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	deleteCustomerByID(id: number): boolean {
+		const query = this.db.prepare(
+			'UPDATE customers SET deleted = 1 WHERE id = ?'
+		);
+		const result = query.run(id);
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
 
 const defaultCustomerDatabase = new DatabaseCustomerService();
 
 // Exported functions for customer database operations
-export const Customer_AddNewCustomer = (customer: BaseCustomerRecord) => defaultCustomerDatabase.addNewCustomer(customer);
-export const Customer_GetCustomers = (userID: string) => defaultCustomerDatabase.getCustomers(userID);
-export const Customer_GetCustomerByID = (id: string) => defaultCustomerDatabase.getCustomerByID(id);
-export const Customer_UpdateCustomerByID = (id: string, customer: object) => defaultCustomerDatabase.updateCustomerByID(id, customer);
+export const Customer_AddNewCustomer = (customer: CustomerRecord) => defaultCustomerDatabase.addNewCustomer(customer);
+export const Customer_GetCustomers = (userID: number) => defaultCustomerDatabase.getCustomers(userID);
+export const Customer_GetCustomerByID = (id: number) => defaultCustomerDatabase.getCustomerByID(id);
+export const Customer_UpdateCustomerByID = (id: number, customer: CustomerRecord) => defaultCustomerDatabase.updateCustomerByID(id, customer);
+export const Customer_DeleteCustomerByID = (id: number) => defaultCustomerDatabase.deleteCustomerByID(id);
 
 // Create a class to handle database operations for appointment-related functions
 export class DatabaseAppointmentService {
@@ -119,9 +252,32 @@ export class DatabaseAppointmentService {
 	}
 
 	// Add a new appointment to the database
-	async addNewAppointment(appointment: BaseAppointmentRecord): Promise<boolean> {
-		const result = await this.db.collection('appointments').insertOne(appointment);
-		return result.acknowledged;
+	addNewAppointment(appointment: BaseAppointmentRecord): boolean {
+		try{
+		const query = this.db.prepare(
+			'Insert into appointments (userID, customerID, title, description, address_street, address_city, address_state, address_zip, time_date, time_start, time_end, time_exact, deleted) VALUES (@userID, @customerID, @title, @description, @address_street, @address_city, @address_state, @address_zip, @time_date, @time_start, @time_end, @time_exact, @deleted)'
+		);
+		let result = query.run({
+			userID: appointment.userID,
+			customerID: appointment.customerID,
+			title: appointment.title,
+			description: appointment.description,
+			address_street: appointment.address.street,
+			address_city: appointment.address.city,
+			address_state: appointment.address.state,
+			address_zip: appointment.address.zip,
+			time_date: appointment.time.date,
+			time_start: appointment.time.start,
+			time_end: appointment.time.end,
+			time_exact: appointment.time.exact,
+			deleted: 0
+		});}catch(e){console.log(e)}
+
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	// Retrieve a specific appointment by its ID

@@ -1,5 +1,3 @@
-import { ObjectId } from 'mongodb';
-
 type Address = {
 	street: string;
 	city: string;
@@ -7,7 +5,7 @@ type Address = {
 	zip: number;
 };
 
-type RecordWithId<T> = { _id: ObjectId } & T;
+type RecordWithId<T> = { id: number } & T;
 
 //User Records
 export type BaseUserRecord = {
@@ -21,13 +19,13 @@ export type UserRecord = RecordWithId<BaseUserRecord>;
 
 //Customer Records
 export type BaseCustomerRecord = {
-	userID: string;
+	userID: number;
 	firstName: string;
 	lastName: string;
 	email: string;
 	phone: string;
 	address: Address;
-	deleted: boolean;
+	deleted: number;
 };
 
 export type CustomerRecord = RecordWithId<BaseCustomerRecord>;
@@ -40,19 +38,19 @@ export type BaseAppointmentRecord = {
 		end: string;
 		exact: number;
 	};
-	userID: string;
-	customerID: string;
+	userID: number;
+	customerID: number;
 	title: string;
 	description: string;
 	address: Address;
-	deleted: boolean;
+	deleted: number;
 };
 
 export type AppointmentRecord = RecordWithId<BaseAppointmentRecord>;
 
 //Cookie
 export type cookie = {
-	cookie: string;
-	userID: string;
+	cookieID: string;
+	userID: number;
 	expireTime: number;
 };

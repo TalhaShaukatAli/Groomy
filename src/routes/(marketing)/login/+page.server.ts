@@ -24,10 +24,9 @@ export const actions = {
 		const password = <string>data.get('password');
 
 		const result = await API.login({ email, password });
-
 		if (result.success) {
 			const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
-			await Auth_AddCookie(cookieID, result.data._id.toString());
+			await Auth_AddCookie(cookieID, result.data.id);
 			cookies.set('sessionID', cookieID, { path: '/' });
 			authenticatedUser.set(result.data);
 			redirect(302, '/home');

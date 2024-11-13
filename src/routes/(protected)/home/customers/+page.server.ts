@@ -3,8 +3,8 @@ import { authenticatedUser } from '$lib/stores.svelte';
 import type { CustomerRecord } from '$lib/types';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
-	const result = await Customer_GetCustomers(authenticatedUser.get()._id.toString());
+export const load: PageServerLoad = async ({locals}) => {
+	const result = Customer_GetCustomers(locals.user?.id);
 	const returnResult = JSON.stringify(result);
 	return { customers: returnResult };
 };
