@@ -38,60 +38,62 @@
 </script>
 
 <div class="content">
-	<div class="account">
-		<div class="buttonRow">
-			<div class="fullName">
-				{customer.firstName + ' ' + customer.lastName}
+	<form onsubmit={onSave}>
+		<div class="account">
+			<div class="buttonRow">
+				<div class="fullName">
+					{customer.firstName + ' ' + customer.lastName}
+				</div>
+				<div class="grow"></div>
+				{#if !editView}
+					<button onclick={changeToEdit}>Edit Customer</button>
+				{:else}
+					<button type="submit">Save</button>
+					<button
+						onclick={() => {
+							onDelete(customer.id);
+						}}>Delete</button
+					>
+					<button
+						onclick={() => {
+							onCancel();
+						}}>Cancel</button
+					>
+				{/if}
 			</div>
-			<div class="grow"></div>
-			{#if !editView}
-				<button onclick={changeToEdit}>Edit Customer</button>
-			{:else}
-				<button onclick={onSave}>Save</button>
-				<button
-					onclick={() => {
-						onDelete(customer.id);
-					}}>Delete</button
-				>
-				<button
-					onclick={() => {
-						onCancel();
-					}}>Cancel</button
-				>
-			{/if}
-		</div>
 
-		<div class="nameRow">
-			<div>
-				First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} disabled={!editView} />
+			<div class="nameRow">
+				<div>
+					First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} disabled={!editView} required/>
+				</div>
+				<div>
+					Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} disabled={!editView} required />
+				</div>
 			</div>
-			<div>
-				Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} disabled={!editView} />
+			<div class="contactRow">
+				<div>
+					Phone: <input type="text" name="phone" id="" bind:value={customer.phone} disabled={!editView} required />
+				</div>
+				<div>
+					Email: <input type="text" name="email" id="" bind:value={customer.email} disabled={!editView} required />
+				</div>
+			</div>
+			<div class="addressRow">
+				<div>
+					Street: <input type="text" name="street" id="" bind:value={customer.address.street} disabled={!editView} required />
+				</div>
+				<div>
+					City: <input type="text" name="city" id="" bind:value={customer.address.city} disabled={!editView} required />
+				</div>
+				<div>
+					State: <input type="text" name="state" id="" bind:value={customer.address.state} disabled={!editView} required />
+				</div>
+				<div>
+					Zip Code: <input type="number" name="zip" id="" bind:value={customer.address.zip} disabled={!editView} required />
+				</div>
 			</div>
 		</div>
-		<div class="contactRow">
-			<div>
-				Phone: <input type="text" name="phone" id="" bind:value={customer.phone} disabled={!editView} />
-			</div>
-			<div>
-				Email: <input type="text" name="email" id="" bind:value={customer.email} disabled={!editView} />
-			</div>
-		</div>
-		<div class="addressRow">
-			<div>
-				Street: <input type="text" name="street" id="" bind:value={customer.address.street} disabled={!editView} />
-			</div>
-			<div>
-				City: <input type="text" name="city" id="" bind:value={customer.address.city} disabled={!editView} />
-			</div>
-			<div>
-				State: <input type="text" name="state" id="" bind:value={customer.address.state} disabled={!editView} />
-			</div>
-			<div>
-				Zip Code: <input type="text" name="zip" id="" bind:value={customer.address.zip} disabled={!editView} />
-			</div>
-		</div>
-	</div>
+	</form>
 </div>
 
 <style>

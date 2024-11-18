@@ -1,5 +1,6 @@
 import {
 	Appointment_AddNewAppointment,
+	Appointment_DeleteAppointmentByID,
 	Appointment_GetAppointmentByID,
 	Appointment_GetAppointmentsByCustomerID,
 	Appointment_GetAppointmentsByUserID,
@@ -15,7 +16,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	try {
 		switch (path) {
 			case 'create': {
-				let result = await Appointment_AddNewAppointment(data);
+				let result = Appointment_AddNewAppointment(data);
 				if (result) {
 					return json({ success: true }, { status: 201 });
 				} else {
@@ -24,12 +25,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'delete': {
-				const updateDoc = {
-					deleted: true
-				};
-
-				let result = await Appointment_UpdateAppointmentByID(data, updateDoc);
-
+				let result = Appointment_DeleteAppointmentByID(data);
 				if (result) {
 					return json({ success: true }, { status: 201 });
 				} else {
@@ -38,9 +34,8 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'update': {
-				const { _id, deleted, ...newDoc } = data;
-				const result = await Appointment_UpdateAppointmentByID(data._id.toString(), newDoc);
-
+				const result = await Appointment_UpdateAppointmentByID(data.id, data);
+				console.log(result)
 				if (result) {
 					return json({ success: true }, { status: 201 });
 				} else {
@@ -49,8 +44,8 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'getByAppointmentID': {
-				const id: string = data;
-				const result = await Appointment_GetAppointmentByID(id);
+				const id: number = data;
+				const result = Appointment_GetAppointmentByID(id);
 
 				if (result != null) {
 					return json({ success: true, message: 'Success', data: result }, { status: 201 });
@@ -60,8 +55,8 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'getByCustomerID': {
-				const id: string = data;
-				const result = await Appointment_GetAppointmentsByCustomerID(id);
+				const id: number = data;
+				const result = Appointment_GetAppointmentsByCustomerID(id);
 
 				if (result != null) {
 					return json({ success: true, message: 'Success', data: result }, { status: 201 });
@@ -71,8 +66,8 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'getByUserID': {
-				const id: string = data;
-				const result = await Appointment_GetAppointmentsByUserID(id);
+				const id: number = data;
+				const result = Appointment_GetAppointmentsByUserID(id);
 
 				if (result != undefined) {
 					return json({ success: true, message: 'Success', data: result }, { status: 201 });

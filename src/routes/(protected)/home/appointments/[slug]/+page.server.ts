@@ -4,11 +4,15 @@ import type { PageServerLoad } from './$types';
 import type { CustomerRecord } from '$lib/types';
 
 export const load: PageServerLoad = async ({ params, url,locals }) => {
-	let appointmentID = params.slug;
+	let appointmentID = parseInt(params.slug);
 	let editView = url.searchParams.get('edit') ? true : false;
 
-	const appointments = await Appointment_GetAppointmentByID(appointmentID);
+	const appointments = Appointment_GetAppointmentByID(appointmentID);
 	const customers = Customer_GetCustomers(locals.user?.id)
+
+	if(customers == null){
+		redirect(302,"/home/customers")
+	}
 
 	if (appointments != null) {
 		return {

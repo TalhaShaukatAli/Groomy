@@ -2,10 +2,10 @@
 	import type { AppointmentRecord, CustomerRecord } from '$lib/types';
 	import { authenticatedUser, page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { DateTimeCombiner } from '$lib';
-	import { onMount } from 'svelte';
-	page.set('Appointment');
+	import Notes from '$lib/components/Notes.svelte';
+	page.set('Appointments');
 
 	let { data } = $props();
 	let customerList: CustomerRecord[] = $state(JSON.parse(data.customerInfo));
@@ -47,106 +47,109 @@
 </script>
 
 <div class="content">
-	<div class="account">
-		{#if !editView}
-			<div class="buttonRow">
-				<div class="fullName">
-					{appointment.title}
+	<form onsubmit={onSave}>
+		<div class="account">
+			{#if !editView}
+				<div class="buttonRow">
+					<div class="fullName">
+						{appointment.title}
+					</div>
+					<div class="grow"></div>
+					<button
+						onclick={() => {
+							changeToEdit();
+						}}>Edit</button
+					>
 				</div>
-				<div class="grow"></div>
-				<button
-					onclick={() => {
-						changeToEdit();
-					}}>Edit</button
-				>
-			</div>
-		{:else}
-			<div class="buttonRow">
-				<div class="fullName">
-					{appointment.title}
+			{:else}
+				<div class="buttonRow">
+					<div class="fullName">
+						{appointment.title}
+					</div>
+					<div class="grow"></div>
+					<button type="submit">Save</button>
+					<button
+						onclick={() => {
+							onDelete(appointment.id);
+						}}>Delete</button
+					>
+					<button
+						onclick={() => {
+							cancel();
+						}}>Cancel</button
+					>
 				</div>
-				<div class="grow"></div>
-				<button onclick={onSave}>Save</button>
-				<button
-					onclick={() => {
-						onDelete(appointment.id);
-					}}>Delete</button
-				>
-				<button
-					onclick={() => {
-						cancel();
-					}}>Cancel</button
-				>
-			</div>
-		{/if}
+			{/if}
 
-		<div class="topRow">
-			<div class="baseData">
-				<div>
-					Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled={!editView} />
+			<div class="topRow">
+				<div class="baseData">
+					<div>
+						Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled={!editView} required/>
+					</div>
+					<div>
+						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled={!editView} onchange={updateTime} required/>
+					</div>
+					<div>
+						Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled={!editView} onchange={updateTime} required/>
+					</div>
+					<div>
+						Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled={!editView} onchange={updateTime} required/>
+					</div>
 				</div>
-				<div>
-					Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled={!editView} onchange={updateTime}/>
+				<div class="gap"></div>
+				<div class="baseData">
+					<div>
+						Street: <input type="text" name="street" id="" bind:value={appointment.address.street} disabled={!editView} required/>
+					</div>
+					<div>
+						City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled={!editView} required/>
+					</div>
+					<div>
+						State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled={!editView} required/>
+					</div>
+					<div>
+						Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled={!editView} required/>
+					</div>
 				</div>
-				<div>
-					Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled={!editView} onchange={updateTime} />
-				</div>
-				<div>
-					Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled={!editView} onchange={updateTime}/>
+				<div class="baseData">
+					<div>
+						Customer:
+						<select name="" id="" disabled={!editView} bind:value={appointment.customerID} required>
+							{#each customerList as customerItem}
+								<option value={customerItem.id} selected={customerItem.id === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
+							{/each}
+						</select>
+					</div>
+					<div>
+						<span>
+							Full Name: {customer.firstName + ' ' + customer.lastName}
+						</span>
+					</div>
+					<div>
+						<span>
+							Phone: {customer.phone}
+						</span>
+					</div>
+					<div>
+						<span>
+							Email: {customer.email}
+						</span>
+					</div>
+					<div>
+						<span>
+							{customer.address.street + ' '} <br />
+							{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
+						</span>
+					</div>
 				</div>
 			</div>
-			<div class="gap"></div>
-			<div class="baseData">
-				<div>
-					Street: <input type="text" name="street" id="" bind:value={appointment.address.street} disabled={!editView} />
-				</div>
-				<div>
-					City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled={!editView} />
-				</div>
-				<div>
-					State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled={!editView} />
-				</div>
-				<div>
-					Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled={!editView} />
-				</div>
-			</div>
-			<div class="baseData">
-				<div>
-					Customer:
-					<select name="" id="" disabled={!editView}>
-						{#each customerList as customerItem}
-							<option value={customerItem.id} selected={customerItem.id === appointment.customerID}>{customerItem.firstName + ' ' + customerItem.lastName}</option>
-						{/each}
-					</select>
-				</div>
-				<div>
-					<span>
-						Full Name: {customer.firstName + ' ' + customer.lastName}
-					</span>
-				</div>
-				<div>
-					<span>
-						Phone: {customer.phone}
-					</span>
-				</div>
-				<div>
-					<span>
-						Email: {customer.email}
-					</span>
-				</div>
-				<div>
-					<span>
-						{customer.address.street + ' '} <br />
-						{`${customer.address.city}, ${customer.address.state} ${customer.address.zip}`}
-					</span>
-				</div>
+			<div class="description">
+				<div>Description:</div>
+				<textarea name="" id="" bind:value={appointment.description} disabled={!editView}></textarea>
 			</div>
 		</div>
-		<div class="description">
-			<div>Description:</div>
-			<textarea name="" id="" bind:value={appointment.description} disabled={!editView}></textarea>
-		</div>
-	</div>
+	</form>
+<Notes notesID={appointment.id}/>
 </div>
 
 <style>
@@ -154,19 +157,22 @@
 		background-color: white;
 		border: none;
 		padding: 0.5rem;
-		width: 10vw;
+		width: 8vw;
 		font-size: 1rem;
 	}
 
 	.content {
-		display: flex;
+		display: grid;
+		grid-template-columns: 1fr 400px;
 		align-items: center;
-		justify-content: center;
 		height: 100%;
 	}
 	.account {
 		display: flex;
-		align-items: start;
+		width: fit-content;
+		align-self: center;
+		margin-left: auto;
+		margin-right: auto;
 		justify-content: center;
 		flex-direction: column;
 		background-color: var(--main);
@@ -232,7 +238,7 @@
 
 	input {
 		padding: 0.5rem;
-		width: 10vw;
+		width: 7vw;
 		outline: none;
 		border: 3px solid transparent;
 		border-radius: 0.3rem;
@@ -253,8 +259,6 @@
 	}
 
 	input:disabled {
-		padding: 0.5rem;
-		width: 10vw;
 		outline: none;
 		background: none;
 		color: black;

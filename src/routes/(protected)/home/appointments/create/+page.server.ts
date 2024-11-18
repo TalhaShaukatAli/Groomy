@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		redirect(302,"/home/customers")
 	}
 	return {
-		customerInfo: JSON.stringify(customers)
+		customerInfo: JSON.stringify(customers),
+		userID: locals.user.id
 	};
 };

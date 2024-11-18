@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { generateRandomString } from '$lib';
+import { TestMapping } from './Mapping';
 
 test("Make sure you can't go to protected page", async ({ page }) => {
-	await page.goto('http://localhost:4173/home');
+	const map = new TestMapping(page);
+	await map.GoTo("Customers")
 	await expect(page).toHaveURL('/login');
 });
 
@@ -10,71 +12,44 @@ test.describe('Existing Account', async () => {
 	let email = 'test@gmail.com';
 	let password = 'test123';
 	test('Login Test', async ({ page }) => {
-		await page.goto('http://localhost:4173/');
-		await page.getByRole('link', { name: 'Login' }).click();
-		await page.getByPlaceholder('Example@gmail.com').click();
-		await page.getByPlaceholder('Example@gmail.com').fill(email);
-		await page.getByPlaceholder('Example@gmail.com').press('Tab');
-		await page.getByPlaceholder('ABC123').fill(password);
-		await page.getByRole('button', { name: 'Login' }).click();
-		await expect(page).toHaveURL('/home');
-		await page.goto('http://localhost:4173/');
-		await expect(page).toHaveURL('/');
-		await page.goto('http://localhost:4173/home');
+		const map = new TestMapping(page);
+		await map.Account_Login();
 		await expect(page).toHaveURL('/home');
 	});
 
-	test('All Routes Accessible', async ({page})=>{
-		await page.goto('http://localhost:4173/');
-		await page.getByRole('link', { name: 'Login' }).click();
-		await page.getByPlaceholder('Example@gmail.com').click();
-		await page.getByPlaceholder('Example@gmail.com').fill(email);
-		await page.getByPlaceholder('Example@gmail.com').press('Tab');
-		await page.getByPlaceholder('ABC123').fill(password);
-		await page.getByRole('button', { name: 'Login' }).click();
-		await expect(page).toHaveURL('/home');
-		await page.goto('http://localhost:4173/');
-		await expect(page).toHaveURL('/');
-		await page.goto('http://localhost:4173/home');
-		await expect(page).toHaveURL('/home');
-		await page.goto('http://localhost:4173/home/customers');
-		await expect(page).toHaveURL('/home/customers');
+	test('All Routes Accessible', async ({ page }) => {
+		const map = new TestMapping(page);
+		await map.Account_Login();
 
-	})
+		await map.GoTo("Base")
+		await expect(page).toHaveURL('/');
+		await map.GoTo("Home")
+		await expect(page).toHaveURL('/home');
+		await map.GoTo("Customers")
+		await expect(page).toHaveURL('/home/customers');
+		await map.GoTo("Appointments")
+		await expect(page).toHaveURL('/home/appointments');
+	});
 
 	test('Incorrect Password', async ({ page }) => {
-		await page.goto('http://localhost:4173/');
-		await page.getByRole('link', { name: 'Login' }).click();
-		await page.getByPlaceholder('Example@gmail.com').click();
-		await page.getByPlaceholder('Example@gmail.com').fill(email);
-		await page.getByPlaceholder('Example@gmail.com').press('Tab');
-		await page.getByPlaceholder('ABC123').fill("234");
-		await page.getByRole('button', { name: 'Login' }).click();
+		const map = new TestMapping(page);
+		await map.Account_Login(password="sfsdgr");
 		await expect(page.getByText('Incorrect username or password')).toBeVisible();
 	});
 
 	test('Incorrect Email', async ({ page }) => {
-		await page.goto('http://localhost:4173/');
-		await page.getByRole('link', { name: 'Login' }).click();
-		await page.getByPlaceholder('Example@gmail.com').click();
-		await page.getByPlaceholder('Example@gmail.com').fill("23433@gmail.com");
-		await page.getByPlaceholder('Example@gmail.com').press('Tab');
-		await page.getByPlaceholder('ABC123').fill(password);
-		await page.getByRole('button', { name: 'Login' }).click();
+		const map = new TestMapping(page);
+		await map.Account_Login(email="sfsdgr@gmail.com");
 		await expect(page.getByText('Incorrect username or password')).toBeVisible();
 	});
 
 	test('Log Out Test', async ({ page }) => {
-		await page.goto('http://localhost:4173/login');
-		await page.getByPlaceholder('Example@gmail.com').click();
-		await page.getByPlaceholder('Example@gmail.com').fill(email);
-		await page.getByPlaceholder('Example@gmail.com').press('Tab');
-		await page.getByPlaceholder('ABC123').fill(password);
-		await page.getByRole('button', { name: 'Login' }).click();
+		const map = new TestMapping(page)
+		await map.Account_Login()
 		await expect(page).toHaveURL('/home');
-		await page.getByRole('link', { name: 'Log Out' }).click();
+		await map.Account_Logout()
 		await expect(page).toHaveURL('/');
-		await page.goto('http://localhost:4173/home');
+		await map.GoTo("Home")
 		await expect(page).toHaveURL('/login');
 	});
 });

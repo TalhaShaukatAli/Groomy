@@ -1,5 +1,4 @@
-import type { cookie, CustomerRecord, BaseUserRecord, BaseCustomerRecord as DatabaseCustomerResponse, BaseAppointmentRecord, AppointmentRecord, UserRecord } from '$lib/types';
-import { ObjectId, type Document, type UpdateResult } from 'mongodb';
+import type { cookie, CustomerRecord, BaseUserRecord, BaseAppointmentRecord, AppointmentRecord, UserRecord, Note, BaseNote } from '$lib/types';
 import Database from 'better-sqlite3';
 
 type Address = {
@@ -24,8 +23,27 @@ type DatabaseCustomerResponse = {
 };
 
 function getDB() {
-	return Database('mydb.sqlite', { verbose: console.log });
+	const db = Database('mydb.sqlite', { verbose: console.log });
+	db.pragma('journal_mode = WAL');
+	return db;
 }
+
+type DatabaseAppointmentResponse = {
+	id: number;
+	userID: number;
+	customerID: number;
+	title: string;
+	description: string;
+	address_street: string;
+	address_city: string;
+	address_state: string;
+	address_zip: number;
+	time_date: string;
+	time_start: string;
+	time_end: string;
+	time_exact: number;
+	deleted: number;
+};
 
 export class DatabaseAuthService {
 	private db;
@@ -37,7 +55,7 @@ export class DatabaseAuthService {
 	// Add a new user to the database
 	addNewUser(user: BaseUserRecord): boolean {
 		const query = this.db.prepare('Insert into users (firstName, lastName, email, hashedPassword, deleted) VALUES (@firstName, @lastName, @email, @hashedPassword, @deleted)');
-		let result = query.run({ firstName: user.firstName, lastName: user.lastName, email: user.email, hashedPassword: user.password, deleted: 0 });
+		let result = query.run({ firstName: user.firstName, lastName: user.lastName, email: user.email, hashedPassword: user.hashedPassword, deleted: 0 });
 		if (result.changes == 1) {
 			return true;
 		} else {
@@ -73,7 +91,7 @@ export class DatabaseAuthService {
 
 	// Remove a specific cookie from the database
 	removeCookie(cookie: string): boolean {
-		const query = this.db.prepare('DELETE FROM users WHERE id = ?');
+		const query = this.db.prepare('DELETE FROM cookie WHERE id = ?');
 		const result = query.run(cookie);
 		if (result.changes == 1) {
 			return true;
@@ -222,9 +240,7 @@ export class DatabaseCustomerService {
 	}
 
 	deleteCustomerByID(id: number): boolean {
-		const query = this.db.prepare(
-			'UPDATE customers SET deleted = 1 WHERE id = ?'
-		);
+		const query = this.db.prepare('UPDATE customers SET deleted = 1 WHERE id = ?');
 		const result = query.run(id);
 		if (result.changes == 1) {
 			return true;
@@ -251,9 +267,32 @@ export class DatabaseAppointmentService {
 		this.db = db;
 	}
 
+	private AppointmentDatabaseResponseToAppointmentRecord(record: DatabaseAppointmentResponse): AppointmentRecord {
+		let returnData: AppointmentRecord = {
+			id: record.id,
+			userID: record.userID,
+			customerID: record.customerID,
+			title: record.title,
+			description: record.description,
+			time: {
+				date: record.time_date,
+				start: record.time_start,
+				end: record.time_end,
+				exact: record.time_exact
+			},
+			address: {
+				street: record.address_street,
+				city: record.address_city,
+				state: record.address_state,
+				zip: record.address_zip
+			},
+			deleted: record.deleted
+		};
+		return returnData;
+	}
+
 	// Add a new appointment to the database
 	addNewAppointment(appointment: BaseAppointmentRecord): boolean {
-		try{
 		const query = this.db.prepare(
 			'Insert into appointments (userID, customerID, title, description, address_street, address_city, address_state, address_zip, time_date, time_start, time_end, time_exact, deleted) VALUES (@userID, @customerID, @title, @description, @address_street, @address_city, @address_state, @address_zip, @time_date, @time_start, @time_end, @time_exact, @deleted)'
 		);
@@ -271,7 +310,7 @@ export class DatabaseAppointmentService {
 			time_end: appointment.time.end,
 			time_exact: appointment.time.exact,
 			deleted: 0
-		});}catch(e){console.log(e)}
+		});
 
 		if (result.changes == 1) {
 			return true;
@@ -281,45 +320,87 @@ export class DatabaseAppointmentService {
 	}
 
 	// Retrieve a specific appointment by its ID
-	async getAppointmentByID(id: string): Promise<AppointmentRecord | null> {
-		const result = await this.db.collection('appointments').findOne({ _id: new ObjectId(id) });
-		return <AppointmentRecord | null>result;
+	getAppointmentByID(id: number): AppointmentRecord | null {
+		const query = this.db.prepare('SELECT * from appointments WHERE id = ?');
+		const result = <DatabaseAppointmentResponse>query.get(id);
+		if (result) {
+			return this.AppointmentDatabaseResponseToAppointmentRecord(result);
+		} else {
+			return null;
+		}
 	}
 
 	// Retrieve appointments for a specific customer, excluding deleted appointments
-	async getAppointmentsByCustomerID(customerID: string): Promise<AppointmentRecord[] | null> {
-		const result = this.db.collection('appointments').find({ customerID: customerID, deleted: false });
-		const documents = await result.toArray();
-
-		// Return null if no documents found, otherwise return the appointment records
-		//@ts-ignore
-		if (documents == null) {
-			return null;
+	getAppointmentsByCustomerID(customerID: number): AppointmentRecord[] | null {
+		const query = this.db.prepare('SELECT * from appointments WHERE customerID = ?');
+		const result = <DatabaseAppointmentResponse[]>query.all(customerID);
+		const resultArray: AppointmentRecord[] = [];
+		if (result) {
+			for (let item of result) {
+				let data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
+				resultArray.push(data);
+			}
+			return resultArray;
 		} else {
-			return <AppointmentRecord[]>documents;
+			return null;
 		}
 	}
 
 	// Retrieve appointments for a specific user, sorted by time and excluding deleted appointments
-	async getAppointmentsByUserID(userID: string): Promise<AppointmentRecord[] | null> {
-		const result = this.db.collection('appointments').find({ userID: userID, deleted: false }).sort({ 'time.exact': 1 });
-		const documents = await result.toArray();
-
-		// Return null if no documents found, otherwise return the appointment records
-		if (documents == null) {
-			return null;
+	getAppointmentsByUserID(userID: number): AppointmentRecord[] | null {
+		const query = this.db.prepare('SELECT * from appointments WHERE userID = ? and deleted = 0');
+		const result = <DatabaseAppointmentResponse[]>query.all(userID);
+		const resultArray: AppointmentRecord[] = [];
+		if (result) {
+			for (let item of result) {
+				let data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
+				resultArray.push(data);
+			}
+			return resultArray;
 		} else {
-			return <AppointmentRecord[]>documents;
+			return null;
 		}
 	}
 
 	// Update an appointment's information by its ID
-	async updateAppointmentByID(id: string, appointment: object): Promise<boolean> {
-		// Use $set to update only the provided fields, preserving other existing fields
-		const result = await this.db.collection('appointments').updateOne({ _id: new ObjectId(id) }, { $set: appointment });
+	async updateAppointmentByID(id: number, appointment: AppointmentRecord): Promise<boolean> {
+		console.log(appointment);
+		const query = this.db.prepare(
+			'Update appointments set userID = @userID, customerID=@customerID, title=@title, description=@description, address_street= @address_street, address_city=@address_city, address_state=@address_state, address_zip=@address_zip, time_date = @time_date, time_start = @time_start, time_end = @time_end, time_exact = @time_exact, deleted=@deleted where id = @id'
+		);
+		let result = query.run({
+			userID: appointment.userID,
+			customerID: appointment.customerID,
+			title: appointment.title,
+			description: appointment.description,
+			address_street: appointment.address.street,
+			address_city: appointment.address.city,
+			address_state: appointment.address.state,
+			address_zip: appointment.address.zip,
+			time_date: appointment.time.date,
+			time_start: appointment.time.start,
+			time_end: appointment.time.end,
+			time_exact: appointment.time.exact,
+			deleted: 0,
+			id: id
+		});
 
-		// Return true if at least one document was modified, false otherwise
-		return result.acknowledged;
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// Delete an appointment's information by its ID
+	deleteAppointmentByID(id: number): boolean {
+		const query = this.db.prepare('UPDATE appointments SET deleted = 1 WHERE id = ?');
+		const result = query.run(id);
+		if (result.changes == 1) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
 
@@ -327,7 +408,108 @@ const defaultAppointmentDatabase = new DatabaseAppointmentService();
 
 // Exported functions for appointment database operations
 export const Appointment_AddNewAppointment = (appointment: BaseAppointmentRecord) => defaultAppointmentDatabase.addNewAppointment(appointment);
-export const Appointment_GetAppointmentByID = (id: string) => defaultAppointmentDatabase.getAppointmentByID(id);
-export const Appointment_GetAppointmentsByCustomerID = (id: string) => defaultAppointmentDatabase.getAppointmentsByCustomerID(id);
-export const Appointment_GetAppointmentsByUserID = (id: string) => defaultAppointmentDatabase.getAppointmentsByUserID(id);
-export const Appointment_UpdateAppointmentByID = (id: string, appointment: object) => defaultAppointmentDatabase.updateAppointmentByID(id, appointment);
+export const Appointment_GetAppointmentByID = (id: number) => defaultAppointmentDatabase.getAppointmentByID(id);
+export const Appointment_GetAppointmentsByCustomerID = (id: number) => defaultAppointmentDatabase.getAppointmentsByCustomerID(id);
+export const Appointment_GetAppointmentsByUserID = (id: number) => defaultAppointmentDatabase.getAppointmentsByUserID(id);
+export const Appointment_UpdateAppointmentByID = (id: number, appointment: AppointmentRecord) => defaultAppointmentDatabase.updateAppointmentByID(id, appointment);
+export const Appointment_DeleteAppointmentByID = (id: number) => defaultAppointmentDatabase.deleteAppointmentByID(id);
+
+export class DatabaseNoteService {
+	private db;
+
+	constructor(db = getDB()) {
+		this.db = db;
+	}
+
+	private CreateNote(noteData:BaseNote):number{
+		const query = this.db.prepare("INSERT into notes (title, note, createdDate) VALUES (@title, @note, @createdDate)")
+		const result = query.run({
+			title: noteData.title,
+			note: noteData.note,
+			createdDate: noteData.createdDate
+		})
+		return <number>result.lastInsertRowid
+	}
+
+	CreateCustomerNote(customerID: number, noteData: BaseNote){
+		let noteID = this.CreateNote(noteData)
+		const query = this.db.prepare("INSERT into customer_notes (customerID, noteID) VALUES (@customerID, @noteID)")
+		const result = query.run({
+			customerID: customerID,
+			noteID: noteID
+		})
+		if(result.changes){
+			return true
+		} else {
+			return false
+		}
+	}
+
+	GetCustomerNotes(customerID: number): Note[] {
+		const query = this.db.prepare('Select n.* FROM customer_notes cn INNER JOIN notes n ON cn.noteID = n.id WHERE cn.customerID = ?');
+		const result = query.all(customerID);
+		if(result == undefined){
+			return []
+		} else {
+			return <Note[]>result;
+		}
+	}
+
+	GetNoteByID(noteID: number): Note | null {
+		const query = this.db.prepare('Select * FROM notes WHERE id = ?');
+		const result = query.get(noteID);
+		if(result == undefined){
+			return null
+		} else {
+			return <Note>result;
+		}
+	}
+
+	CreateAppointmentNote(appointmentID: number, noteData: BaseNote){
+		let noteID = this.CreateNote(noteData)
+		const query = this.db.prepare("INSERT into appointment_notes (appointmentID, noteID) VALUES (@appointmentID, @noteID)")
+		const result = query.run({
+			appointmentID: appointmentID,
+			noteID: noteID
+		})
+		
+		if(result.changes){
+			return true
+		} else {
+			return false
+		}
+	}
+
+	GetAppointmentNotes(appointmentID: number): Note[] {
+		const query = this.db.prepare('SELECT n.* FROM appointment_notes an INNER JOIN notes n ON an.noteID = n.id WHERE an.appointmentID = ?');
+		const result = query.all(appointmentID);
+		if(result == undefined){
+			return []
+		} else {
+			return <Note[]>result;
+		}
+	}
+
+	UpdateNotesByID(note:Note): boolean {
+		const query = this.db.prepare('Update notes SET title = @title, note = @note WHERE id = @id');
+		const result = query.run({
+			title: note.title,
+			note:note.note,
+			id: note.id
+		});
+		if(result.changes){
+			return true
+		} else {
+			return false
+		}
+	}
+}
+
+const defaultNoteDatabase = new DatabaseNoteService();
+
+export const Notes_CreateAppointmentNote = (appointmentID: number, noteData: BaseNote ) => defaultNoteDatabase.CreateAppointmentNote(appointmentID, noteData)
+export const Notes_CreateCustomerNote = (customerID: number, noteData: BaseNote ) => defaultNoteDatabase.CreateAppointmentNote(customerID, noteData)
+export const Notes_GetAppointmentNotes = (appointmentID: number) => defaultNoteDatabase.GetAppointmentNotes(appointmentID)
+export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabase.GetCustomerNotes(customerID)
+export const Notes_UpdateNotesByID = (note: Note) => defaultNoteDatabase.UpdateNotesByID(note)
+export const Notes_GetNoteByID = (noteID: number) => defaultNoteDatabase.GetNoteByID(noteID)

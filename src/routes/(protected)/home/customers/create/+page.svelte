@@ -8,7 +8,7 @@
 	let { data } = $props();
 
 	let customer: BaseCustomerRecord = $state({
-		userID: data.id,
+		userID: data.userID,
 		firstName: '',
 		lastName: '',
 		email: '',
@@ -19,9 +19,8 @@
 			state: '',
 			zip: 1
 		},
-		deleted: false
+		deleted: 0
 	});
-	$inspect(customer)
 
 	async function onCreate() {
 		const result = await API.createCustomer(customer);
@@ -32,46 +31,48 @@
 </script>
 
 <div class="content">
-	<div class="account">
-		<div class="buttonRow">
-			<div class="fullName">
-				{customer.firstName + ' ' + customer.lastName}
+	<form onsubmit={onCreate}>
+		<div class="account">
+			<div class="buttonRow">
+				<div class="fullName">
+					{customer.firstName + ' ' + customer.lastName}
+				</div>
+				<div class="grow"></div>
+				<button type="submit">Create Customer</button>
 			</div>
-			<div class="grow"></div>
-			<button onclick={onCreate}>Create Customer</button>
-		</div>
 
-		<div class="nameRow">
-			<div>
-				First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} />
+			<div class="nameRow">
+				<div>
+					First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} required/>
+				</div>
+				<div>
+					Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} required/>
+				</div>
 			</div>
-			<div>
-				Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} />
+			<div class="contactRow">
+				<div>
+					Phone: <input type="text" name="phone" id="" bind:value={customer.phone} required />
+				</div>
+				<div>
+					Email: <input type="text" name="email" id="" bind:value={customer.email} required/>
+				</div>
+			</div>
+			<div class="addressRow">
+				<div>
+					Street: <input type="text" name="street" id="" bind:value={customer.address.street} required/>
+				</div>
+				<div>
+					City: <input type="text" name="city" id="" bind:value={customer.address.city} required/>
+				</div>
+				<div>
+					State: <input type="text" name="state" id="" bind:value={customer.address.state} required/>
+				</div>
+				<div>
+					Zip Code: <input type="number" name="zip" id="" bind:value={customer.address.zip} required/>
+				</div>
 			</div>
 		</div>
-		<div class="contactRow">
-			<div>
-				Phone: <input type="text" name="phone" id="" bind:value={customer.phone} />
-			</div>
-			<div>
-				Email: <input type="text" name="email" id="" bind:value={customer.email} />
-			</div>
-		</div>
-		<div class="addressRow">
-			<div>
-				Street: <input type="text" name="street" id="" bind:value={customer.address.street} />
-			</div>
-			<div>
-				City: <input type="text" name="city" id="" bind:value={customer.address.city} />
-			</div>
-			<div>
-				State: <input type="text" name="state" id="" bind:value={customer.address.state} />
-			</div>
-			<div>
-				Zip Code: <input type="text" name="zip" id="" bind:value={customer.address.zip} />
-			</div>
-		</div>
-	</div>
+	</form>
 </div>
 
 <style>

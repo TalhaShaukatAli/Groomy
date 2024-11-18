@@ -12,7 +12,7 @@ export type BaseUserRecord = {
 	firstName: string;
 	lastName: string;
 	email: string;
-	password: string;
+	hashedPassword: string;
 };
 
 export type UserRecord = RecordWithId<BaseUserRecord>;
@@ -54,3 +54,12 @@ export type cookie = {
 	userID: number;
 	expireTime: number;
 };
+
+export type BaseNote = {
+	title: string;
+	note: string;
+	createdDate: number;
+	deleted: number;
+}
+
+export type Note = RecordWithId<BaseNote>

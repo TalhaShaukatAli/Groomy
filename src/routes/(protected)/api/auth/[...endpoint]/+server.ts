@@ -9,11 +9,11 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	try {
 		switch (path) {
 			case 'signup': {
-				// const user = await Auth_GetUserByEmail(data.email);
+				const user = Auth_GetUserByEmail(data.email);
 
-				// if (user != null) {
-				// 	return json({ success: false, message: 'User with email already exists' }, { status: 201 });
-				// }
+				if (user != null) {
+					return json({ success: false, message: 'User with email already exists' }, { status: 201 });
+				}
 				let result = Auth_AddNewUser(data);
 
 				if (result) {
@@ -24,7 +24,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 
 			case 'login': {
-				const user = await Auth_GetUserByEmail(data.email.toLowerCase());
+				const user = Auth_GetUserByEmail(data.email.toLowerCase());
 
 				if (user == null) {
 					return json({ success: false, message: 'No user with this email', data: undefined }, { status: 500 });

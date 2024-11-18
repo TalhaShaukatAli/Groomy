@@ -1,4 +1,4 @@
-import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, UserRecord } from '$lib/types';
+import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, UserRecord, BaseNote, Note } from '$lib/types';
 
 interface LoginResponse {
 	success: boolean;
@@ -30,6 +30,24 @@ interface AppointmentResponse {
 	data: AppointmentRecord;
 }
 
+interface NoteArrayResponse {
+	success: boolean;
+	message: string;
+	data: Note[];
+}
+
+interface NoteResponse {
+	success: boolean;
+	message: string;
+	data: Note | null;
+}
+
+interface NoteCreateResponse {
+	success: boolean;
+	message: string;
+	data: number;
+}
+
 interface BaseResponse {
 	success: boolean;
 	message: string;
@@ -43,7 +61,6 @@ class API {
 	private static async request<T>(endpoint: string, options: RequestInit = {}) {
 		try {
 			const baseURL = import.meta.env.VITE_API_URL;
-			console.log(baseURL);
 			const response = await fetch(`${baseURL}/api${endpoint}`, {
 				...options,
 				headers: {
@@ -152,6 +169,48 @@ class API {
 		return this.request('/appointments/delete', {
 			method: 'POST',
 			body: JSON.stringify(id)
+		});
+	}
+
+	static async createCustomerNote(customerID: number, data: BaseNote): Promise<BaseResponse> {
+		return this.request('/notes/createCustomerNote', {
+			method: 'POST',
+			body: JSON.stringify([customerID, data])
+		});
+	}
+
+	static async createAppointmentNote(appointmentID: number, data: BaseNote): Promise<BaseResponse> {
+		return this.request('/notes/createAppointmentNote', {
+			method: 'POST',
+			body: JSON.stringify([appointmentID, data])
+		});
+	}
+
+	static async getAppointmentNotes(appointmentID: number): Promise<NoteArrayResponse> {
+		return this.request('/notes/getAppointmentNotes', {
+			method: 'POST',
+			body: JSON.stringify(appointmentID)
+		});
+	}
+
+	static async getCustomerNotes(customerID: number): Promise<NoteArrayResponse> {
+		return this.request('/notes/getCustomerNotes', {
+			method: 'POST',
+			body: JSON.stringify(customerID)
+		});
+	}
+
+	static async UpdateNoteByID(note: Note): Promise<BaseResponse> {
+		return this.request('/notes/updateNoteByID', {
+			method: 'POST',
+			body: JSON.stringify(note)
+		});
+	}
+
+	static async GetNoteByID(noteID: number):Promise<NoteResponse> {
+		return this.request('/notes/getNoteByID', {
+			method: 'POST',
+			body: JSON.stringify(noteID)
 		});
 	}
 }
