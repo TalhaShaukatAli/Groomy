@@ -434,6 +434,7 @@ export class DatabaseNoteService {
 
 	CreateCustomerNote(customerID: number, noteData: BaseNote){
 		let noteID = this.CreateNote(noteData)
+		console.log("called")
 		const query = this.db.prepare("INSERT into customer_notes (customerID, noteID) VALUES (@customerID, @noteID)")
 		const result = query.run({
 			customerID: customerID,
@@ -519,7 +520,7 @@ export class DatabaseNoteService {
 const defaultNoteDatabase = new DatabaseNoteService();
 
 export const Notes_CreateAppointmentNote = (appointmentID: number, noteData: BaseNote ) => defaultNoteDatabase.CreateAppointmentNote(appointmentID, noteData)
-export const Notes_CreateCustomerNote = (customerID: number, noteData: BaseNote ) => defaultNoteDatabase.CreateAppointmentNote(customerID, noteData)
+export const Notes_CreateCustomerNote = (customerID: number, noteData: BaseNote ) => defaultNoteDatabase.CreateCustomerNote(customerID, noteData)
 export const Notes_GetAppointmentNotes = (appointmentID: number) => defaultNoteDatabase.GetAppointmentNotes(appointmentID)
 export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabase.GetCustomerNotes(customerID)
 export const Notes_UpdateNotesByID = (note: Note) => defaultNoteDatabase.UpdateNotesByID(note)
