@@ -3,6 +3,7 @@
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import Notes from '$lib/components/Notes_Customer.svelte';
 	page.set('Customer');
 
 	let { data } = $props();
@@ -94,13 +95,15 @@
 			</div>
 		</div>
 	</form>
+<Notes notesID={customer.id}/>
+	
 </div>
 
 <style>
 	.content {
-		display: flex;
+		display: grid;
+		grid-template-columns: 1fr 400px;
 		align-items: center;
-		justify-content: center;
 		height: 100%;
 	}
 	.account {
@@ -108,6 +111,9 @@
 		align-items: start;
 		justify-content: center;
 		flex-direction: column;
+		width: fit-content;
+		margin-left: auto;
+		margin-right: auto;
 		background-color: var(--main);
 		border-radius: 1rem;
 		filter: drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem);
@@ -150,7 +156,7 @@
 
 	input {
 		padding: 0.5rem;
-		width: 10vw;
+		width: 7vw;
 		outline: none;
 		border: 3px solid transparent;
 		border-radius: 0.3rem;
@@ -159,7 +165,7 @@
 
 	input:disabled {
 		padding: 0.5rem;
-		width: 10vw;
+		width: 7vw;
 		outline: none;
 		background: none;
 		color: black;
