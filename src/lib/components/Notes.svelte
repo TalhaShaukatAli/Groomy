@@ -55,6 +55,14 @@
 		setEditModeTo(false)
 	}
 
+	async function deleteNote(noteID:number){
+		let message = confirm("Are you sure you want to delete this note?")
+		if(message){
+			const result = await API.DeleteNoteByID(noteID)
+			reload()
+		}
+	}
+
 </script>
 
 <div class="content">
@@ -105,8 +113,8 @@
 				<div class="buttonRow">
 					{#if editMode}
 						<button onclick={()=>{saveEdit()}}>Save</button>
-						<button>Delete</button>
-						<button onclick={()=>{setEditModeTo(false)}}>Cancel</button>
+						<button onclick={()=>{deleteNote(selectedNote?.id)}}>Delete</button>
+						<button onclick={()=>{setEditModeTo(false); reload();}}>Cancel</button>
 					{:else}
 						<button onclick={()=>{setEditModeTo(true)}}>Edit</button>
 					{/if}

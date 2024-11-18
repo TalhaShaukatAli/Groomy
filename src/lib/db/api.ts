@@ -213,6 +213,13 @@ class API {
 			body: JSON.stringify(noteID)
 		});
 	}
+
+	static async DeleteNoteByID(noteID: number):Promise<BaseResponse> {
+		return this.request('/notes/deleteNoteByID', {
+			method: 'POST',
+			body: JSON.stringify(noteID)
+		});
+	}
 }
 
 export default API;

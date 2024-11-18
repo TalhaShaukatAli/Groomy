@@ -422,11 +422,12 @@ export class DatabaseNoteService {
 	}
 
 	private CreateNote(noteData:BaseNote):number{
-		const query = this.db.prepare("INSERT into notes (title, note, createdDate) VALUES (@title, @note, @createdDate)")
+		const query = this.db.prepare("INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)")
 		const result = query.run({
 			title: noteData.title,
 			note: noteData.note,
-			createdDate: noteData.createdDate
+			createdDate: noteData.createdDate,
+			deleted: 0
 		})
 		return <number>result.lastInsertRowid
 	}
@@ -446,7 +447,7 @@ export class DatabaseNoteService {
 	}
 
 	GetCustomerNotes(customerID: number): Note[] {
-		const query = this.db.prepare('Select n.* FROM customer_notes cn INNER JOIN notes n ON cn.noteID = n.id WHERE cn.customerID = ?');
+		const query = this.db.prepare('Select n.* FROM customer_notes cn INNER JOIN notes n ON cn.noteID = n.id WHERE cn.customerID = ? and deleted = 0');
 		const result = query.all(customerID);
 		if(result == undefined){
 			return []
@@ -470,7 +471,7 @@ export class DatabaseNoteService {
 		const query = this.db.prepare("INSERT into appointment_notes (appointmentID, noteID) VALUES (@appointmentID, @noteID)")
 		const result = query.run({
 			appointmentID: appointmentID,
-			noteID: noteID
+			noteID: noteID,
 		})
 		
 		if(result.changes){
@@ -481,7 +482,7 @@ export class DatabaseNoteService {
 	}
 
 	GetAppointmentNotes(appointmentID: number): Note[] {
-		const query = this.db.prepare('SELECT n.* FROM appointment_notes an INNER JOIN notes n ON an.noteID = n.id WHERE an.appointmentID = ?');
+		const query = this.db.prepare('SELECT n.* FROM appointment_notes an INNER JOIN notes n ON an.noteID = n.id WHERE an.appointmentID = ? and deleted = 0');
 		const result = query.all(appointmentID);
 		if(result == undefined){
 			return []
@@ -503,6 +504,16 @@ export class DatabaseNoteService {
 			return false
 		}
 	}
+
+	DeleteNoteByID(noteID:number):boolean {
+		const query = this.db.prepare('Update notes SET deleted = 1 WHERE id = ?');
+		const result = query.run(noteID);
+		if(result.changes){
+			return true
+		} else {
+			return false
+		}
+	}
 }
 
 const defaultNoteDatabase = new DatabaseNoteService();
@@ -513,3 +524,4 @@ export const Notes_GetAppointmentNotes = (appointmentID: number) => defaultNoteD
 export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabase.GetCustomerNotes(customerID)
 export const Notes_UpdateNotesByID = (note: Note) => defaultNoteDatabase.UpdateNotesByID(note)
 export const Notes_GetNoteByID = (noteID: number) => defaultNoteDatabase.GetNoteByID(noteID)
+export const Notes_DeleteNoteByID = (noteID: number) => defaultNoteDatabase.DeleteNoteByID(noteID	)

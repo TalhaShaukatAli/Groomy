@@ -6,6 +6,7 @@ import {
 	Customer_UpdateCustomerByID,
 	Notes_CreateAppointmentNote,
 	Notes_CreateCustomerNote,
+	Notes_DeleteNoteByID,
 	Notes_GetAppointmentNotes,
 	Notes_GetCustomerNotes,
 	Notes_GetNoteByID,
@@ -57,7 +58,6 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
 			case 'updateNoteByID': {
 				const result = Notes_UpdateNotesByID(data);
-				console.log(result);
 				if (result) {
 					return json({ success: true, message: 'Success' });
 				} else {
@@ -67,11 +67,19 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
 			case 'getNoteByID': {
 				const result = Notes_GetNoteByID(data);
-				console.log(result);
 				if (result) {
 					return json({ success: true, message: 'Success', data: result });
 				} else {
 					return json({ success: false, message: "Couldn't get user" });
+				}
+			}
+
+			case "deleteNoteByID": {
+				const result = Notes_DeleteNoteByID(data)
+				if(result){
+					return json({ success: true, message: 'Success'});
+				} else {
+					return json({ success: false, message: "Couldn't delete user" });
 				}
 			}
 
