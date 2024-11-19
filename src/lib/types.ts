@@ -60,6 +60,6 @@ export type BaseNote = {
 	note: string;
 	createdDate: number;
 	deleted: number;
-}
+};
 
-export type Note = RecordWithId<BaseNote>
+export type Note = RecordWithId<BaseNote>;

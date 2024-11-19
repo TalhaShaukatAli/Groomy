@@ -4,13 +4,11 @@ import { TestMapping } from './Mapping';
 
 test("Make sure you can't go to protected page", async ({ page }) => {
 	const map = new TestMapping(page);
-	await map.GoTo("Customers")
+	await map.GoTo('Customers');
 	await expect(page).toHaveURL('/login');
 });
 
 test.describe('Existing Account', async () => {
-	let email = 'test@gmail.com';
-	let password = 'test123';
 	test('Login Test', async ({ page }) => {
 		const map = new TestMapping(page);
 		await map.Account_Login();
@@ -21,35 +19,35 @@ test.describe('Existing Account', async () => {
 		const map = new TestMapping(page);
 		await map.Account_Login();
 
-		await map.GoTo("Base")
+		await map.GoTo('Base');
 		await expect(page).toHaveURL('/');
-		await map.GoTo("Home")
+		await map.GoTo('Home');
 		await expect(page).toHaveURL('/home');
-		await map.GoTo("Customers")
+		await map.GoTo('Customers');
 		await expect(page).toHaveURL('/home/customers');
-		await map.GoTo("Appointments")
+		await map.GoTo('Appointments');
 		await expect(page).toHaveURL('/home/appointments');
 	});
 
 	test('Incorrect Password', async ({ page }) => {
 		const map = new TestMapping(page);
-		await map.Account_Login(password="sfsdgr");
+		await map.Account_Login((password = 'sfsdgr'));
 		await expect(page.getByText('Incorrect username or password')).toBeVisible();
 	});
 
 	test('Incorrect Email', async ({ page }) => {
 		const map = new TestMapping(page);
-		await map.Account_Login(email="sfsdgr@gmail.com");
+		await map.Account_Login((email = 'sfsdgr@gmail.com'));
 		await expect(page.getByText('Incorrect username or password')).toBeVisible();
 	});
 
 	test('Log Out Test', async ({ page }) => {
-		const map = new TestMapping(page)
-		await map.Account_Login()
+		const map = new TestMapping(page);
+		await map.Account_Login();
 		await expect(page).toHaveURL('/home');
-		await map.Account_Logout()
+		await map.Account_Logout();
 		await expect(page).toHaveURL('/');
-		await map.GoTo("Home")
+		await map.GoTo('Home');
 		await expect(page).toHaveURL('/login');
 	});
 });

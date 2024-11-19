@@ -23,8 +23,8 @@ type DatabaseCustomerResponse = {
 };
 
 function getDB() {
-	const db = Database('mydb.sqlite', { verbose: console.log });
-	db.pragma('journal_mode = WAL');
+	const db = new Database('mydb.sqlite', { verbose: console.log });
+	db.prepare('PRAGMA journal_mode = WAL').run();
 	return db;
 }
 
@@ -55,7 +55,7 @@ export class DatabaseAuthService {
 	// Add a new user to the database
 	addNewUser(user: BaseUserRecord): boolean {
 		const query = this.db.prepare('Insert into users (firstName, lastName, email, hashedPassword, deleted) VALUES (@firstName, @lastName, @email, @hashedPassword, @deleted)');
-		let result = query.run({ firstName: user.firstName, lastName: user.lastName, email: user.email, hashedPassword: user.hashedPassword, deleted: 0 });
+		const result = query.run({ firstName: user.firstName, lastName: user.lastName, email: user.email, hashedPassword: user.hashedPassword, deleted: 0 });
 		if (result.changes == 1) {
 			return true;
 		} else {
@@ -113,8 +113,8 @@ export class DatabaseAuthService {
 
 	// Update the expiration time of a specific cookie
 	updateCookie(cookie: string): boolean {
-		let query = this.db.prepare('Update cookie SET expireTime = ? WHERE id = ?');
-		let result = query.run(Date.now(), cookie);
+		const query = this.db.prepare('Update cookie SET expireTime = ? WHERE id = ?');
+		const result = query.run(Date.now(), cookie);
 		if (result.changes == 1) {
 			return true;
 		} else {
@@ -142,7 +142,7 @@ export class DatabaseCustomerService {
 	}
 
 	private CustomerDatabaseResponseToCustomerRecord(record: DatabaseCustomerResponse): CustomerRecord {
-		let returnData: CustomerRecord = {
+		const returnData: CustomerRecord = {
 			id: record.id,
 			userID: record.userID,
 			firstName: record.firstName,
@@ -165,7 +165,7 @@ export class DatabaseCustomerService {
 		const query = this.db.prepare(
 			'Insert into customers (userID, firstName, lastName, email, phone, address_street, address_city, address_state, address_zip, deleted) VALUES (@userID, @firstName, @lastName, @email, @phone, @address_street, @address_city, @address_state, @address_zip, @deleted)'
 		);
-		let result = query.run({
+		const result = query.run({
 			userID: customer.userID,
 			firstName: customer.firstName,
 			lastName: customer.lastName,
@@ -189,10 +189,10 @@ export class DatabaseCustomerService {
 	getCustomers(userID: number): CustomerRecord[] | null {
 		const query = this.db.prepare('Select * from customers where userID = ? and deleted = 0');
 		const result = <DatabaseCustomerResponse[]>query.all(userID);
-		let resultArray: CustomerRecord[] = [];
+		const resultArray: CustomerRecord[] = [];
 		if (result) {
-			for (let item of result) {
-				let data = this.CustomerDatabaseResponseToCustomerRecord(item);
+			for (const item of result) {
+				const data = this.CustomerDatabaseResponseToCustomerRecord(item);
 				resultArray.push(data);
 			}
 			return resultArray;
@@ -206,7 +206,7 @@ export class DatabaseCustomerService {
 		const query = this.db.prepare('Select * from customers where id = ?');
 		const result = <DatabaseCustomerResponse>query.get(id);
 		if (result) {
-			let data = this.CustomerDatabaseResponseToCustomerRecord(result);
+			const data = this.CustomerDatabaseResponseToCustomerRecord(result);
 			return data;
 		} else {
 			return null;
@@ -268,7 +268,7 @@ export class DatabaseAppointmentService {
 	}
 
 	private AppointmentDatabaseResponseToAppointmentRecord(record: DatabaseAppointmentResponse): AppointmentRecord {
-		let returnData: AppointmentRecord = {
+		const returnData: AppointmentRecord = {
 			id: record.id,
 			userID: record.userID,
 			customerID: record.customerID,
@@ -296,7 +296,7 @@ export class DatabaseAppointmentService {
 		const query = this.db.prepare(
 			'Insert into appointments (userID, customerID, title, description, address_street, address_city, address_state, address_zip, time_date, time_start, time_end, time_exact, deleted) VALUES (@userID, @customerID, @title, @description, @address_street, @address_city, @address_state, @address_zip, @time_date, @time_start, @time_end, @time_exact, @deleted)'
 		);
-		let result = query.run({
+		const result = query.run({
 			userID: appointment.userID,
 			customerID: appointment.customerID,
 			title: appointment.title,
@@ -336,8 +336,8 @@ export class DatabaseAppointmentService {
 		const result = <DatabaseAppointmentResponse[]>query.all(customerID);
 		const resultArray: AppointmentRecord[] = [];
 		if (result) {
-			for (let item of result) {
-				let data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
+			for (const item of result) {
+				const data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
 				resultArray.push(data);
 			}
 			return resultArray;
@@ -352,8 +352,8 @@ export class DatabaseAppointmentService {
 		const result = <DatabaseAppointmentResponse[]>query.all(userID);
 		const resultArray: AppointmentRecord[] = [];
 		if (result) {
-			for (let item of result) {
-				let data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
+			for (const item of result) {
+				const data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
 				resultArray.push(data);
 			}
 			return resultArray;
@@ -368,7 +368,7 @@ export class DatabaseAppointmentService {
 		const query = this.db.prepare(
 			'Update appointments set userID = @userID, customerID=@customerID, title=@title, description=@description, address_street= @address_street, address_city=@address_city, address_state=@address_state, address_zip=@address_zip, time_date = @time_date, time_start = @time_start, time_end = @time_end, time_exact = @time_exact, deleted=@deleted where id = @id'
 		);
-		let result = query.run({
+		const result = query.run({
 			userID: appointment.userID,
 			customerID: appointment.customerID,
 			title: appointment.title,
@@ -421,37 +421,37 @@ export class DatabaseNoteService {
 		this.db = db;
 	}
 
-	private CreateNote(noteData:BaseNote):number{
-		const query = this.db.prepare("INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)")
+	private CreateNote(noteData: BaseNote): number {
+		const query = this.db.prepare('INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)');
 		const result = query.run({
 			title: noteData.title,
 			note: noteData.note,
 			createdDate: noteData.createdDate,
 			deleted: 0
-		})
-		return <number>result.lastInsertRowid
+		});
+		return <number>result.lastInsertRowid;
 	}
 
-	CreateCustomerNote(customerID: number, noteData: BaseNote){
-		let noteID = this.CreateNote(noteData)
-		console.log("called")
-		const query = this.db.prepare("INSERT into customer_notes (customerID, noteID) VALUES (@customerID, @noteID)")
+	CreateCustomerNote(customerID: number, noteData: BaseNote) {
+		const noteID = this.CreateNote(noteData);
+		console.log('called');
+		const query = this.db.prepare('INSERT into customer_notes (customerID, noteID) VALUES (@customerID, @noteID)');
 		const result = query.run({
 			customerID: customerID,
 			noteID: noteID
-		})
-		if(result.changes){
-			return true
+		});
+		if (result.changes) {
+			return true;
 		} else {
-			return false
+			return false;
 		}
 	}
 
 	GetCustomerNotes(customerID: number): Note[] {
 		const query = this.db.prepare('Select n.* FROM customer_notes cn INNER JOIN notes n ON cn.noteID = n.id WHERE cn.customerID = ? and deleted = 0');
 		const result = query.all(customerID);
-		if(result == undefined){
-			return []
+		if (result == undefined) {
+			return [];
 		} else {
 			return <Note[]>result;
 		}
@@ -460,69 +460,69 @@ export class DatabaseNoteService {
 	GetNoteByID(noteID: number): Note | null {
 		const query = this.db.prepare('Select * FROM notes WHERE id = ?');
 		const result = query.get(noteID);
-		if(result == undefined){
-			return null
+		if (result == undefined) {
+			return null;
 		} else {
 			return <Note>result;
 		}
 	}
 
-	CreateAppointmentNote(appointmentID: number, noteData: BaseNote){
-		let noteID = this.CreateNote(noteData)
-		const query = this.db.prepare("INSERT into appointment_notes (appointmentID, noteID) VALUES (@appointmentID, @noteID)")
+	CreateAppointmentNote(appointmentID: number, noteData: BaseNote) {
+		const noteID = this.CreateNote(noteData);
+		const query = this.db.prepare('INSERT into appointment_notes (appointmentID, noteID) VALUES (@appointmentID, @noteID)');
 		const result = query.run({
 			appointmentID: appointmentID,
-			noteID: noteID,
-		})
-		
-		if(result.changes){
-			return true
+			noteID: noteID
+		});
+
+		if (result.changes) {
+			return true;
 		} else {
-			return false
+			return false;
 		}
 	}
 
 	GetAppointmentNotes(appointmentID: number): Note[] {
 		const query = this.db.prepare('SELECT n.* FROM appointment_notes an INNER JOIN notes n ON an.noteID = n.id WHERE an.appointmentID = ? and deleted = 0');
 		const result = query.all(appointmentID);
-		if(result == undefined){
-			return []
+		if (result == undefined) {
+			return [];
 		} else {
 			return <Note[]>result;
 		}
 	}
 
-	UpdateNotesByID(note:Note): boolean {
+	UpdateNotesByID(note: Note): boolean {
 		const query = this.db.prepare('Update notes SET title = @title, note = @note WHERE id = @id');
 		const result = query.run({
 			title: note.title,
-			note:note.note,
+			note: note.note,
 			id: note.id
 		});
-		if(result.changes){
-			return true
+		if (result.changes) {
+			return true;
 		} else {
-			return false
+			return false;
 		}
 	}
 
-	DeleteNoteByID(noteID:number):boolean {
+	DeleteNoteByID(noteID: number): boolean {
 		const query = this.db.prepare('Update notes SET deleted = 1 WHERE id = ?');
 		const result = query.run(noteID);
-		if(result.changes){
-			return true
+		if (result.changes) {
+			return true;
 		} else {
-			return false
+			return false;
 		}
 	}
 }
 
 const defaultNoteDatabase = new DatabaseNoteService();
 
-export const Notes_CreateAppointmentNote = (appointmentID: number, noteData: BaseNote ) => defaultNoteDatabase.CreateAppointmentNote(appointmentID, noteData)
-export const Notes_CreateCustomerNote = (customerID: number, noteData: BaseNote ) => defaultNoteDatabase.CreateCustomerNote(customerID, noteData)
-export const Notes_GetAppointmentNotes = (appointmentID: number) => defaultNoteDatabase.GetAppointmentNotes(appointmentID)
-export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabase.GetCustomerNotes(customerID)
-export const Notes_UpdateNotesByID = (note: Note) => defaultNoteDatabase.UpdateNotesByID(note)
-export const Notes_GetNoteByID = (noteID: number) => defaultNoteDatabase.GetNoteByID(noteID)
-export const Notes_DeleteNoteByID = (noteID: number) => defaultNoteDatabase.DeleteNoteByID(noteID	)
+export const Notes_CreateAppointmentNote = (appointmentID: number, noteData: BaseNote) => defaultNoteDatabase.CreateAppointmentNote(appointmentID, noteData);
+export const Notes_CreateCustomerNote = (customerID: number, noteData: BaseNote) => defaultNoteDatabase.CreateCustomerNote(customerID, noteData);
+export const Notes_GetAppointmentNotes = (appointmentID: number) => defaultNoteDatabase.GetAppointmentNotes(appointmentID);
+export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabase.GetCustomerNotes(customerID);
+export const Notes_UpdateNotesByID = (note: Note) => defaultNoteDatabase.UpdateNotesByID(note);
+export const Notes_GetNoteByID = (noteID: number) => defaultNoteDatabase.GetNoteByID(noteID);
+export const Notes_DeleteNoteByID = (noteID: number) => defaultNoteDatabase.DeleteNoteByID(noteID);

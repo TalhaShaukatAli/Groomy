@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import type { ActionData } from './$types';
 	let { form }: { form: ActionData } = $props();
 
 	let regexEmail = String.raw`((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])`;
-	let login = $state(true);
 
 	type FormMode = 'Login' | 'SignUp';
 	type FormAction = '?/login' | '?/signup';
@@ -25,7 +23,7 @@
 		</button>
 	</div>
 	<form action={formMode} method="post">
-		{#if mode === "SignUp"}
+		{#if mode === 'SignUp'}
 			<div class="inputField">
 				<label for="firstname">First Name</label>
 				<input type="text" placeholder="FirstName" name="firstName" max="20" required />

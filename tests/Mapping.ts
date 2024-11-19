@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 const ROUTE_MAP = {
-    Base: '/',
+	Base: '/',
 	Login: '/login',
 	Home: '/home',
 	Customers: '/home/customers',

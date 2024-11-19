@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import { generateRandomString } from '$lib';
 
 test.describe('Existing Account', async () => {
-	let email = 'test@gmail.com';
-	let password = 'test123';
+	const email = 'test@gmail.com';
+	const password = 'test123';
 	test('Edit existing account', async ({ page }) => {
 		await page.goto('http://localhost:4173/');
 		await page.getByRole('link', { name: 'Login' }).click();
@@ -16,9 +16,7 @@ test.describe('Existing Account', async () => {
 		await page.getByRole('link', { name: 'Customers' }).click();
 		await expect(page.locator('body')).toContainText('Test@gmail.com');
 		await page.getByRole('link', { name: 'View' }).first().click();
-		await expect(page.locator('body')).toContainText(
-			'Ethan Henrickson Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:'
-		);
+		await expect(page.locator('body')).toContainText('Ethan Henrickson Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:');
 		await page.getByRole('button', { name: 'Edit Customer' }).click();
 		await page.locator('input[name="lastName"]').click();
 		await page.locator('input[name="lastName"]').fill('Henrick');
@@ -32,9 +30,7 @@ test.describe('Existing Account', async () => {
 		await page.locator('input[name="city"]').fill('Bemid');
 		await page.getByRole('button', { name: 'Save' }).click();
 		await page.getByRole('link', { name: 'View' }).first().click();
-		await expect(page.locator('body')).toContainText(
-			'Etha Henrick Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:'
-		);
+		await expect(page.locator('body')).toContainText('Etha Henrick Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:');
 		await page.getByRole('button', { name: 'Edit Customer' }).click();
 		await page.locator('input[name="lastName"]').click();
 		await page.locator('input[name="lastName"]').fill('Henrickson');
@@ -48,9 +44,7 @@ test.describe('Existing Account', async () => {
 		await page.locator('input[name="city"]').fill('Bemidji');
 		await page.getByRole('button', { name: 'Save' }).click();
 		await page.getByRole('link', { name: 'View' }).first().click();
-		await expect(page.locator('body')).toContainText(
-			'Ethan Henrickson Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:'
-		);
+		await expect(page.locator('body')).toContainText('Ethan Henrickson Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:');
 	});
 });
 
@@ -105,8 +99,6 @@ test.describe('New Account', async () => {
 			.getByRole('link')
 			.first()
 			.click();
-		await expect(page.locator('body')).toContainText(
-			'Test Test Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:'
-		);
+		await expect(page.locator('body')).toContainText('Test Test Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:');
 	});
 });

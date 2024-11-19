@@ -1,6 +1,6 @@
 /** @type {import('./$types').Actions} */
 
-import { Auth_AddCookie, Auth_AddNewUser, Auth_GetUserByEmail, Auth_RemoveCookie } from '$lib/db/database';
+import { Auth_AddCookie } from '$lib/db/database';
 import { generateRandomString } from '@oslojs/crypto/random';
 import { authenticatedUser } from '$lib/stores.svelte';
 import argon2 from 'argon2';
@@ -36,11 +36,11 @@ export const actions = {
 			});
 		}
 	},
-	signup: async ({ cookies, request }) => {
+	signup: async ({ request }) => {
 		const data = await request.formData();
 		const email = <string>data.get('email');
 		const password = <string>data.get('password');
-		const passwordHash = await argon2.hash(password,{timeCost:2});
+		const passwordHash = await argon2.hash(password, { timeCost: 2 });
 		const firstName = <string>data.get('firstName');
 		const lastName = <string>data.get('lastName');
 

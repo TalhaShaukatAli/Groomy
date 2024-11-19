@@ -42,12 +42,6 @@ interface NoteResponse {
 	data: Note | null;
 }
 
-interface NoteCreateResponse {
-	success: boolean;
-	message: string;
-	data: number;
-}
-
 interface BaseResponse {
 	success: boolean;
 	message: string;
@@ -207,14 +201,14 @@ class API {
 		});
 	}
 
-	static async GetNoteByID(noteID: number):Promise<NoteResponse> {
+	static async GetNoteByID(noteID: number): Promise<NoteResponse> {
 		return this.request('/notes/getNoteByID', {
 			method: 'POST',
 			body: JSON.stringify(noteID)
 		});
 	}
 
-	static async DeleteNoteByID(noteID: number):Promise<BaseResponse> {
+	static async DeleteNoteByID(noteID: number): Promise<BaseResponse> {
 		return this.request('/notes/deleteNoteByID', {
 			method: 'POST',
 			body: JSON.stringify(noteID)

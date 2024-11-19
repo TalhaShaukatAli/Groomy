@@ -1,9 +1,4 @@
 import {
-	Customer_AddNewCustomer,
-	Customer_DeleteCustomerByID,
-	Customer_GetCustomerByID,
-	Customer_GetCustomers,
-	Customer_UpdateCustomerByID,
 	Notes_CreateAppointmentNote,
 	Notes_CreateCustomerNote,
 	Notes_DeleteNoteByID,
@@ -74,10 +69,10 @@ export const POST: RequestHandler = async ({ request, params }) => {
 				}
 			}
 
-			case "deleteNoteByID": {
-				const result = Notes_DeleteNoteByID(data)
-				if(result){
-					return json({ success: true, message: 'Success'});
+			case 'deleteNoteByID': {
+				const result = Notes_DeleteNoteByID(data);
+				if (result) {
+					return json({ success: true, message: 'Success' });
 				} else {
 					return json({ success: false, message: "Couldn't delete user" });
 				}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { AppointmentRecord, CustomerRecord } from '$lib/types';
-	import { authenticatedUser, page } from '$lib/stores.svelte';
+	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	import { DateTimeCombiner } from '$lib';
@@ -84,31 +84,31 @@
 			<div class="topRow">
 				<div class="baseData">
 					<div>
-						Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled={!editView} required/>
+						Title: <input type="text" name="Date" id="" bind:value={appointment.title} disabled={!editView} required />
 					</div>
 					<div>
-						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled={!editView} onchange={updateTime} required/>
+						Date: <input type="date" name="Date" id="" bind:value={appointment.time.date} disabled={!editView} onchange={updateTime} required />
 					</div>
 					<div>
-						Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled={!editView} onchange={updateTime} required/>
+						Time Start: <input type="time" name="timeStart" id="" bind:value={appointment.time.start} disabled={!editView} onchange={updateTime} required />
 					</div>
 					<div>
-						Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled={!editView} onchange={updateTime} required/>
+						Time End: <input type="time" name="timeStart" id="" bind:value={appointment.time.end} disabled={!editView} onchange={updateTime} required />
 					</div>
 				</div>
 				<div class="gap"></div>
 				<div class="baseData">
 					<div>
-						Street: <input type="text" name="street" id="" bind:value={appointment.address.street} disabled={!editView} required/>
+						Street: <input type="text" name="street" id="" bind:value={appointment.address.street} disabled={!editView} required />
 					</div>
 					<div>
-						City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled={!editView} required/>
+						City: <input type="text" name="city" id="" bind:value={appointment.address.city} disabled={!editView} required />
 					</div>
 					<div>
-						State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled={!editView} required/>
+						State: <input type="text" name="state" id="" bind:value={appointment.address.state} disabled={!editView} required />
 					</div>
 					<div>
-						Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled={!editView} required/>
+						Zip Code: <input type="text" name="zip" id="" bind:value={appointment.address.zip} disabled={!editView} required />
 					</div>
 				</div>
 				<div class="baseData">
@@ -149,7 +149,7 @@
 			</div>
 		</div>
 	</form>
-<Notes notesID={appointment.id}/>
+	<Notes notesID={appointment.id} />
 </div>
 
 <style>

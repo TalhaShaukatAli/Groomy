@@ -1,18 +1,6 @@
-import { updated } from '$app/stores';
 import { Auth_GetCookie, Auth_RemoveCookie, Auth_UpdateCookie } from '$lib/db/database';
-import { connect } from '$lib/db/mongo';
 import { authenticatedUser } from '$lib/stores.svelte';
 import { redirect, type Handle } from '@sveltejs/kit';
-
-// Connect to MongoDB before starting the server
-connect()
-	.then((): void => {
-		console.log('MongoDB started');
-	})
-	.catch((e) => {
-		console.log('MongoDB failed to start');
-		console.log(e);
-	});
 
 export const handle: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/api/auth')) {

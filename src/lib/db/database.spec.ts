@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Database from 'better-sqlite3';
-import { DatabaseAuthService, DatabaseCustomerService, DatabaseAppointmentService } from './database';
-import type { BaseCustomerRecord, CustomerRecord, BaseAppointmentRecord, AppointmentRecord } from '$lib/types';
+import { DatabaseAuthService, DatabaseCustomerService, DatabaseAppointmentService, DatabaseNoteService } from './database';
+import type { CustomerRecord, BaseAppointmentRecord, AppointmentRecord } from '$lib/types';
 
 // Mock Database
 vi.mock('better-sqlite3', () => {
@@ -166,7 +166,7 @@ describe('DatabaseCustomerService', () => {
 	describe('addNewCustomer', () => {
 		it('should add a new customer successfully', () => {
 			const mockCustomer: CustomerRecord = {
-				id:1,
+				id: 1,
 				userID: 1,
 				firstName: 'Jane',
 				lastName: 'Doe',
@@ -664,6 +664,230 @@ describe('DatabaseAppointmentService', () => {
 			mockDb.prepare().run.mockReturnValue({ changes: 0 });
 
 			const result = appointmentService.deleteAppointmentByID(1);
+			expect(result).toBe(false);
+		});
+	});
+});
+
+describe('DatabaseNoteService', () => {
+	let noteService: DatabaseNoteService;
+	let mockDb: any;
+
+	beforeEach(() => {
+		mockDb = new Database('mydb.sqlite');
+		noteService = new DatabaseNoteService(mockDb);
+	});
+
+	describe('CreateNote', () => {
+		it('should create a new note and return the inserted row ID', () => {
+			const mockNote = {
+				title: 'Test Note',
+				note: 'This is a test note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValue({ lastInsertRowid: 1 });
+
+			const result = noteService['CreateNote'](mockNote);
+			expect(result).toBe(1);
+			expect(mockDb.prepare).toHaveBeenCalledWith('INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)');
+		});
+	});
+
+	describe('CreateCustomerNote', () => {
+		it('should create a customer note successfully', () => {
+			const mockNote = {
+				title: 'Customer Note',
+				note: 'This is a customer note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 1 });
+
+			const result = noteService.CreateCustomerNote(1, mockNote);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if customer note creation fails', () => {
+			const mockNote = {
+				title: 'Customer Note',
+				note: 'This is a customer note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 0 });
+
+			const result = noteService.CreateCustomerNote(1, mockNote);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('GetCustomerNotes', () => {
+		it('should retrieve customer notes successfully', () => {
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Customer Note 1',
+					note: 'First customer note',
+					createdDate: '2023-06-20',
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Customer Note 2',
+					note: 'Second customer note',
+					createdDate: '2023-06-21',
+					deleted: 0
+				}
+			];
+
+			mockDb.prepare().all.mockReturnValue(mockNotes);
+
+			const result = noteService.GetCustomerNotes(1);
+			expect(result).toEqual(mockNotes);
+		});
+
+		it('should return an empty array if no customer notes are found', () => {
+			mockDb.prepare().all.mockReturnValue(undefined);
+
+			const result = noteService.GetCustomerNotes(1);
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe('GetNoteByID', () => {
+		it('should retrieve a note by ID successfully', () => {
+			const mockNote = {
+				id: 1,
+				title: 'Test Note',
+				note: 'This is a test note',
+				createdDate: '2023-06-20',
+				deleted: 0
+			};
+
+			mockDb.prepare().get.mockReturnValue(mockNote);
+
+			const result = noteService.GetNoteByID(1);
+			expect(result).toEqual(mockNote);
+		});
+
+		it('should return null if no note is found', () => {
+			mockDb.prepare().get.mockReturnValue(undefined);
+
+			const result = noteService.GetNoteByID(1);
+			expect(result).toBeNull();
+		});
+	});
+
+	describe('CreateAppointmentNote', () => {
+		it('should create an appointment note successfully', () => {
+			const mockNote = {
+				title: 'Appointment Note',
+				note: 'This is an appointment note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 1 });
+
+			const result = noteService.CreateAppointmentNote(1, mockNote);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if appointment note creation fails', () => {
+			const mockNote = {
+				title: 'Appointment Note',
+				note: 'This is an appointment note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 0 });
+
+			const result = noteService.CreateAppointmentNote(1, mockNote);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('GetAppointmentNotes', () => {
+		it('should retrieve appointment notes successfully', () => {
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Appointment Note 1',
+					note: 'First appointment note',
+					createdDate: '2023-06-20',
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Appointment Note 2',
+					note: 'Second appointment note',
+					createdDate: '2023-06-21',
+					deleted: 0
+				}
+			];
+
+			mockDb.prepare().all.mockReturnValue(mockNotes);
+
+			const result = noteService.GetAppointmentNotes(1);
+			expect(result).toEqual(mockNotes);
+		});
+
+		it('should return an empty array if no appointment notes are found', () => {
+			mockDb.prepare().all.mockReturnValue(undefined);
+
+			const result = noteService.GetAppointmentNotes(1);
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe('UpdateNotesByID', () => {
+		it('should update a note successfully', () => {
+			const mockNote = {
+				id: 1,
+				title: 'Updated Note',
+				note: 'This is an updated note',
+				createdDate: '2023-06-20',
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = noteService.UpdateNotesByID(mockNote);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if note update fails', () => {
+			const mockNote = {
+				id: 1,
+				title: 'Updated Note',
+				note: 'This is an updated note',
+				createdDate: '2023-06-20',
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = noteService.UpdateNotesByID(mockNote);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('DeleteNoteByID', () => {
+		it('should delete a note successfully', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = noteService.DeleteNoteByID(1);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if note deletion fails', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = noteService.DeleteNoteByID(1);
 			expect(result).toBe(false);
 		});
 	});

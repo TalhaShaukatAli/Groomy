@@ -1,7 +1,5 @@
 import { Customer_AddNewCustomer, Customer_DeleteCustomerByID, Customer_GetCustomerByID, Customer_GetCustomers, Customer_UpdateCustomerByID } from '$lib/db/database';
-import argon2 from 'argon2';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import type { CustomerRecord } from '$lib/types';
 
 export const POST: RequestHandler = async ({ request, params }) => {
 	const data = await request.json();

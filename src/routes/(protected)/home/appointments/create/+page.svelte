@@ -4,7 +4,6 @@
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	import { DateTimeCombiner } from '$lib';
-	import { onMount } from 'svelte';
 	page.set('Appointment');
 
 	let { data } = $props();

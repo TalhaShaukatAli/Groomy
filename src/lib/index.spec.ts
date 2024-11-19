@@ -1,22 +1,21 @@
-import { describe, it, expect, beforeAll, beforeEach, vi, afterEach, assert } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { DateTimeCombiner, generateRandomString } from '$lib';
 
+describe('Index Tests', () => {
+	it('Generate Random String - 10 digit', () => {
+		const length = 10;
+		const randomString = generateRandomString(length);
+		expect(randomString).toBeTypeOf('string');
+		expect(randomString.length).toBe(length);
+	});
 
-describe("Index Tests", () => {
-    it('Generate Random String - 10 digit', () => {
-        let length = 10
-        let randomString = generateRandomString(length)
-        expect(randomString).toBeTypeOf("string")
-        expect(randomString.length).toBe(length)
-    })
-
-    it('Generate Random String - 7 digit', ()=>{
-        let length = 7
-        let randomString = generateRandomString(length)
-        expect(randomString).toBeTypeOf("string")
-        expect(randomString.length).toBe(length)
-    });
-})
+	it('Generate Random String - 7 digit', () => {
+		const length = 7;
+		const randomString = generateRandomString(length);
+		expect(randomString).toBeTypeOf('string');
+		expect(randomString.length).toBe(length);
+	});
+});
 
 describe('DateTimeCombiner Tests', () => {
 	it('should correctly combine valid date and time', () => {
@@ -74,5 +73,4 @@ describe('DateTimeCombiner Tests', () => {
 		const result = DateTimeCombiner(date, time);
 		expect(result).toBeNaN();
 	});
-
 });

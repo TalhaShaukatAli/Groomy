@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 				if (user != null) {
 					return json({ success: false, message: 'User with email already exists' }, { status: 201 });
 				}
-				let result = Auth_AddNewUser(data);
+				const result = Auth_AddNewUser(data);
 
 				if (result) {
 					return json({ success: true, message: 'Success' }, { status: 201 });
@@ -38,7 +38,6 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			}
 			default:
 				return json({ success: false, message: 'Invalid Endpoint' }, { status: 500 });
-
 		}
 	} catch (error) {
 		return json({ success: false, message: 'Server Error' }, { status: 500 });

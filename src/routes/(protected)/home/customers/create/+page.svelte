@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { BaseCustomerRecord } from '$lib/types';
-	import { page, authenticatedUser } from '$lib/stores.svelte';
+	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	page.set('Customer');
@@ -43,10 +43,10 @@
 
 			<div class="nameRow">
 				<div>
-					First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} required/>
+					First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} required />
 				</div>
 				<div>
-					Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} required/>
+					Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} required />
 				</div>
 			</div>
 			<div class="contactRow">
@@ -54,21 +54,21 @@
 					Phone: <input type="text" name="phone" id="" bind:value={customer.phone} required />
 				</div>
 				<div>
-					Email: <input type="text" name="email" id="" bind:value={customer.email} required/>
+					Email: <input type="text" name="email" id="" bind:value={customer.email} required />
 				</div>
 			</div>
 			<div class="addressRow">
 				<div>
-					Street: <input type="text" name="street" id="" bind:value={customer.address.street} required/>
+					Street: <input type="text" name="street" id="" bind:value={customer.address.street} required />
 				</div>
 				<div>
-					City: <input type="text" name="city" id="" bind:value={customer.address.city} required/>
+					City: <input type="text" name="city" id="" bind:value={customer.address.city} required />
 				</div>
 				<div>
-					State: <input type="text" name="state" id="" bind:value={customer.address.state} required/>
+					State: <input type="text" name="state" id="" bind:value={customer.address.state} required />
 				</div>
 				<div>
-					Zip Code: <input type="number" name="zip" id="" bind:value={customer.address.zip} required/>
+					Zip Code: <input type="number" name="zip" id="" bind:value={customer.address.zip} required />
 				</div>
 			</div>
 		</div>

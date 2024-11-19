@@ -5,15 +5,19 @@
 
 	let { notesID: customerID } = $props();
 	let customerArray: Note[] = $state([]);
-	let customerArrayLength = $derived(customerArray.length)
+	let customerArrayLength = $derived(customerArray.length);
 
-	onMount(()=>{
-		API.getCustomerNotes(customerID).then((value)=>{customerArray = value.data})
-	})
+	onMount(() => {
+		API.getCustomerNotes(customerID).then((value) => {
+			customerArray = value.data;
+		});
+	});
 
-	function reload(){
-		API.getCustomerNotes(customerID).then((value)=>{customerArray = value.data})
-		selectedNote = null
+	function reload() {
+		API.getCustomerNotes(customerID).then((value) => {
+			customerArray = value.data;
+		});
+		selectedNote = null;
 	}
 
 	let selectedNote: Note | null = $state(null);
@@ -43,26 +47,25 @@
 		editMode = mode;
 	}
 
-	async function saveNewNote(){
-		const result = await API.createCustomerNote(customerID,newNote)
-		reload()
-		setCreateModeTo(false)
+	async function saveNewNote() {
+		const result = await API.createCustomerNote(customerID, newNote);
+		reload();
+		setCreateModeTo(false);
 	}
 
-	async function saveEdit(){
-		//@ts-ignore
-		const result = await API.UpdateNoteByID(selectedNote)
-		setEditModeTo(false)
+	async function saveEdit() {
+		//@ts-expect-error
+		const result = await API.UpdateNoteByID(selectedNote);
+		setEditModeTo(false);
 	}
 
-	async function deleteNote(noteID:number){
-		let message = confirm("Are you sure you want to delete this note?")
-		if(message){
-			const result = await API.DeleteNoteByID(noteID)
-			reload()
+	async function deleteNote(noteID: number) {
+		let message = confirm('Are you sure you want to delete this note?');
+		if (message) {
+			const result = await API.DeleteNoteByID(noteID);
+			reload();
 		}
 	}
-
 </script>
 
 <div class="content">
@@ -95,16 +98,15 @@
 							changeSelectedNote(i);
 						}}
 						class:highlight={selectedNote?.id == note.id}
-						class="tableItem">
+						class="tableItem"
+					>
 						{i + 1}: {note.title}
 					</div>
 				{/each}
 			{/if}
 		</div>
 	{/if}
-	<div class="header2">
-		Note Viewer
-	</div>
+	<div class="header2">Note Viewer</div>
 	<div class="noteContent">
 		{#if !createMode}
 			{#if selectedNote != null}
@@ -112,24 +114,41 @@
 				<textarea name="" id="" bind:value={selectedNote.note} placeholder="Description" disabled={!editMode}></textarea>
 				<div class="buttonRow">
 					{#if editMode}
-						<button onclick={()=>{saveEdit()}}>Save</button>
-						<button onclick={()=>{deleteNote(selectedNote?.id)}}>Delete</button>
-						<button onclick={()=>{setEditModeTo(false); reload();}}>Cancel</button>
+						<button
+							onclick={() => {
+								saveEdit();
+							}}>Save</button
+						>
+						<button
+							onclick={() => {
+								deleteNote(selectedNote?.id);
+							}}>Delete</button
+						>
+						<button
+							onclick={() => {
+								setEditModeTo(false);
+								reload();
+							}}>Cancel</button
+						>
 					{:else}
-						<button onclick={()=>{setEditModeTo(true)}}>Edit</button>
+						<button
+							onclick={() => {
+								setEditModeTo(true);
+							}}>Edit</button
+						>
 					{/if}
 				</div>
 			{:else}
 				<div class="faint">Select a note to display it</div>
 			{/if}
 		{:else}
-		<form onsubmit={saveNewNote} class="noteContent">
-			<input type="text" bind:value={newNote.title} placeholder="Title" minlength=3 maxlength=20 required/>
-			<textarea name="" id="" bind:value={newNote.note} placeholder="Description" minlength=0 required></textarea>
-			<div class="buttonRow">
-				<button type="submit">Save</button>
-			</div>
-		</form>
+			<form onsubmit={saveNewNote} class="noteContent">
+				<input type="text" bind:value={newNote.title} placeholder="Title" minlength="3" maxlength="20" required />
+				<textarea name="" id="" bind:value={newNote.note} placeholder="Description" minlength="0" required></textarea>
+				<div class="buttonRow">
+					<button type="submit">Save</button>
+				</div>
+			</form>
 		{/if}
 	</div>
 </div>
@@ -155,7 +174,7 @@
 
 	.tableItem {
 		border: 2px solid var(--main);
-		border-radius: .2rem;
+		border-radius: 0.2rem;
 		padding: 1rem;
 		cursor: pointer;
 	}
