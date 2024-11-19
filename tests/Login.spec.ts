@@ -37,7 +37,7 @@ test.describe('Existing Account', async () => {
 
 	test('Incorrect Email', async ({ page }) => {
 		const map = new TestMapping(page);
-		await map.Account_Login((email = 'sfsdgr@gmail.com'));
+		await map.Account_Login(email = 'sfsdgr@gmail.com');
 		await expect(page.getByText('Incorrect username or password')).toBeVisible();
 	});
 

@@ -121,6 +121,7 @@
 						>
 						<button
 							onclick={() => {
+								//@ts-expect-error
 								deleteNote(selectedNote?.id);
 							}}>Delete</button
 						>

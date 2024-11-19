@@ -15,6 +15,35 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
 	try {
 		switch (path) {
+			//Generics
+			case 'getNoteByID': {
+				const result = Notes_GetNoteByID(data);
+				if (result) {
+					return json({ success: true, message: 'Success', data: result });
+				} else {
+					return json({ success: false, message: "Couldn't get user" });
+				}
+			}
+			
+			case 'updateNoteByID': {
+				const result = Notes_UpdateNotesByID(data);
+				if (result) {
+					return json({ success: true, message: 'Success' });
+				} else {
+					return json({ success: false, message: "Couldn't update user" });
+				}
+			}
+
+			case 'deleteNoteByID': {
+				const result = Notes_DeleteNoteByID(data);
+				if (result) {
+					return json({ success: true, message: 'Success' });
+				} else {
+					return json({ success: false, message: "Couldn't delete user" });
+				}
+			}
+
+			//Customers
 			case 'createCustomerNote': {
 				const result = Notes_CreateCustomerNote(data[0], data[1]);
 				if (result) {
@@ -33,6 +62,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 				}
 			}
 
+			//Appointment
 			case 'createAppointmentNote': {
 				const result = Notes_CreateAppointmentNote(data[0], data[1]);
 				if (result) {
@@ -51,30 +81,22 @@ export const POST: RequestHandler = async ({ request, params }) => {
 				}
 			}
 
-			case 'updateNoteByID': {
-				const result = Notes_UpdateNotesByID(data);
+			//Service
+			case 'createServiceNote': {
+				const result = Notes_CreateAppointmentNote(data[0], data[1]);
 				if (result) {
 					return json({ success: true, message: 'Success' });
 				} else {
-					return json({ success: false, message: "Couldn't update user" });
+					return json({ success: false, message: "Couldn't create notes" });
 				}
 			}
 
-			case 'getNoteByID': {
-				const result = Notes_GetNoteByID(data);
+			case 'getServiceNotes': {
+				const result = Notes_GetAppointmentNotes(data);
 				if (result) {
 					return json({ success: true, message: 'Success', data: result });
 				} else {
-					return json({ success: false, message: "Couldn't get user" });
-				}
-			}
-
-			case 'deleteNoteByID': {
-				const result = Notes_DeleteNoteByID(data);
-				if (result) {
-					return json({ success: true, message: 'Success' });
-				} else {
-					return json({ success: false, message: "Couldn't delete user" });
+					return json({ success: false, message: "Couldn't get notes" });
 				}
 			}
 

@@ -63,3 +63,12 @@ export type BaseNote = {
 };
 
 export type Note = RecordWithId<BaseNote>;
+
+export type BaseServiceRecord = {
+	name: string,
+	description: string,
+	price: string,
+	deleted: 0 | 1
+}
+
+export type ServiceRecord = RecordWithId<BaseServiceRecord>
