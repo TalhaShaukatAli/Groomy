@@ -50,7 +50,7 @@ export type AppointmentRecord = RecordWithId<BaseAppointmentRecord>;
 
 //Cookie
 export type cookie = {
-	cookieID: string;
+	id: string;
 	userID: number;
 	expireTime: number;
 };
@@ -65,9 +65,10 @@ export type BaseNote = {
 export type Note = RecordWithId<BaseNote>;
 
 export type BaseServiceRecord = {
+	userID: number,
 	name: string,
 	description: string,
-	price: string,
+	price: number,
 	deleted: 0 | 1
 }
 

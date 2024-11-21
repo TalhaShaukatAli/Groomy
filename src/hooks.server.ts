@@ -17,17 +17,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 			//If expiretime is still good, allow to protected page.
 			if (dbCookie.expireTime > Date.now()) {
-				Auth_UpdateCookie(dbCookie.cookieID);
+				Auth_UpdateCookie(dbCookie.id);
 				event.locals.user = {
 					id: dbCookie.userID
 				};
 				return await resolve(event);
 			}
 			//Remove Cookie otherwise
-			Auth_RemoveCookie(dbCookie.cookieID);
+			Auth_RemoveCookie(dbCookie.id);
 			redirect(302, '/login');
 		}
 		redirect(302, '/login');
+		
 	} else {
 		return await resolve(event);
 	}

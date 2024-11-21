@@ -34,7 +34,6 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
 			case 'update': {
 				const result = await Appointment_UpdateAppointmentByID(data.id, data);
-				console.log(result);
 				if (result) {
 					return json({ success: true }, { status: 201 });
 				} else {

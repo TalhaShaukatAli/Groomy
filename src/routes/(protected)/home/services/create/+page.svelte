@@ -1,96 +1,62 @@
 <script lang="ts">
-	import type { ServiceRecord } from '$lib/types';
+	import type { BaseServiceRecord } from '$lib/types';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
-	import Notes from '$lib/components/Notes_Services.svelte';
 	page.set('Services');
 
 	let { data } = $props();
 
-	let service: ServiceRecord = $state(JSON.parse(data.serviceInfo));
-	let editView: boolean = $state(JSON.parse(data.editView));
+	let service: BaseServiceRecord = $state({
+		name: "",
+		description: "",
+		price: 0,
+		deleted: 0,
+		userID: data.userID,
+	});
 
-	function changeToEdit() {
-		editView = true;
-	}
-
-	async function onCancel() {
-		editView = false;
-		window.location.replace(`/home/services/${service.id}`);
-	}
-
-	async function onSave() {
-		const result = await API.updateService(service);
+	async function onCreate() {
+		const result = await API.createService(service);
 		if (result.success) {
-			goto(`/home/services`);
-		}
-	}
-
-	async function onDelete(id: number) {
-		let confirmResult = confirm('Are you sure you want to delete this service?');
-		if (confirmResult) {
-			const result = await API.deleteService(id);
-			if (result.success) {
-				goto('/home/services');
-			}
+			goto('/home/services');
 		}
 	}
 </script>
 
-
 <div class="content">
-	<form onsubmit={onSave}>
+	<form onsubmit={onCreate}>
 		<div class="account">
 			<div class="buttonRow">
 				<div class="fullName">
 					{service.name}
 				</div>
 				<div class="grow"></div>
-				<div class="grow"></div>
-				{#if !editView}
-					<button onclick={changeToEdit}>Edit Service</button>
-				{:else}
-					<button type="submit">Save</button>
-					<button
-						onclick={() => {
-							onDelete(service.id);
-						}}>Delete</button
-					>
-					<button
-						onclick={() => {
-							onCancel();
-						}}>Cancel</button
-					>
-				{/if}
+				<button type="submit">Create Service</button>
 			</div>
 			<div class="inputs">
 				<div class="left">
 					<div>
-						Name: <input type="text" name="firstName" id="" bind:value={service.name} minlength="2" required  disabled={!editView}/>
+						Name: <input type="text" name="firstName" id="" bind:value={service.name} minlength="2" required />
 					</div>
 					<div>
-						Price: <input type="number" bind:value={service.price} required disabled={!editView}>
+						Price: <input type="number" bind:value={service.price} required>
 					</div>
 				</div>
 				<div class="description">
 					<div>Description:</div>
-					<textarea name="" id="" bind:value={service.description} maxlength="100" disabled={!editView}> </textarea>
+					<textarea name="" id="" bind:value={service.description} maxlength="100"> </textarea>
 				</div>
 				
 			</div>
 		</div>
 	</form>
-    <div>
-        <Notes notesID={service.id}/>
-    </div>
 </div>
 
 <style>
 	.content {
-		display: grid;
-		grid-template-columns: 1fr 400px;
+		display: flex;
 		align-items: center;
+		justify-content: center;
 		height: 100%;
 	}
 
@@ -113,9 +79,6 @@
 		align-items: start;
 		justify-content: center;
 		flex-direction: column;
-        width: fit-content;
-        margin-left: auto;
-        margin-right: auto;
 		background-color: var(--main);
 		border-radius: 1rem;
 		filter: drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem);

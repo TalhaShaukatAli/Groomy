@@ -114,7 +114,7 @@ export class DatabaseAuthService {
 	// Update the expiration time of a specific cookie
 	updateCookie(cookie: string): boolean {
 		const query = this.db.prepare('Update cookie SET expireTime = ? WHERE id = ?');
-		const result = query.run(Date.now(), cookie);
+		const result = query.run(Date.now() + 1000 * 30 * 60, cookie);	
 		if (result.changes == 1) {
 			return true;
 		} else {
@@ -364,7 +364,6 @@ export class DatabaseAppointmentService {
 
 	// Update an appointment's information by its ID
 	async updateAppointmentByID(id: number, appointment: AppointmentRecord): Promise<boolean> {
-		console.log(appointment);
 		const query = this.db.prepare(
 			'Update appointments set userID = @userID, customerID=@customerID, title=@title, description=@description, address_street= @address_street, address_city=@address_city, address_state=@address_state, address_zip=@address_zip, time_date = @time_date, time_start = @time_start, time_end = @time_end, time_exact = @time_exact, deleted=@deleted where id = @id'
 		);
@@ -470,7 +469,6 @@ export class DatabaseNoteService {
 	//Customer Note
 	CreateCustomerNote(customerID: number, noteData: BaseNote) {
 		const noteID = this.CreateNote(noteData);
-		console.log('called');
 		const query = this.db.prepare('INSERT into customer_notes (customerID, noteID) VALUES (@customerID, @noteID)');
 		const result = query.run({
 			customerID: customerID,
@@ -577,9 +575,10 @@ export class DatabaseServiceService {
 	// Add a new appointment to the database
 	addNewService(service: BaseServiceRecord): boolean {
 		const query = this.db.prepare(
-			'Insert into services (name, description, price, deleted) VALUES (@name, @description, @price,  @deleted)'
+			'Insert into services (userID, name, description, price, deleted) VALUES (@userID, @name, @description, @price,  @deleted)'
 		);
 		const result = query.run({
+			userID: service.userID,
 			name: service.name,
 			description: service.description,
 			price: service.price,
