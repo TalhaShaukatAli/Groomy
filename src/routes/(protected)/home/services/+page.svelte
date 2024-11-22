@@ -17,7 +17,6 @@
 		}
 	}
 
-	$inspect(services)
 </script>
 
 <div class="table">
