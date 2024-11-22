@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Create Appointment', async () => {
-	let email = 'test@gmail.com';
-	let password = 'test123';
+	const email = 'test@gmail.com';
+	const password = 'test123';
 	test('existing account', async ({ page }) => {
 		await page.goto('http://localhost:4173/');
 		await page.getByRole('link', { name: 'Login' }).click();
@@ -15,6 +15,5 @@ test.describe('Create Appointment', async () => {
 		await page.getByRole('link', { name: 'Customers' }).click();
 		await expect(page.locator('body')).toContainText('Test@gmail.com');
 		await page.getByRole('link', { name: 'View' }).first().click();
-		
 	});
 });

@@ -7,10 +7,7 @@
 <div class="content">
 	<h2>Unleash the Power of Efficiency in Pet Care</h2>
 
-	<p>
-		Are you ready to transform your dog grooming business? Groomy is the all-in-one SaaS solution
-		designed to simplify your operations and enhance your client experience.
-	</p>
+	<p>Are you ready to transform your dog grooming business? Groomy is the all-in-one SaaS solution designed to simplify your operations and enhance your client experience.</p>
 
 	<h3>Book Appointments with Ease</h3>
 	<ul class="feature-list">
@@ -43,27 +40,20 @@
 	<h2>Why Choose Groomy?</h2>
 	<ul>
 		<li>
-			<strong>User-Friendly</strong>: Designed with groomers in mind, our platform is intuitive and
-			easy to navigate.
+			<strong>User-Friendly</strong>: Designed with groomers in mind, our platform is intuitive and easy to navigate.
 		</li>
 		<li>
-			<strong>Time-Saving</strong>: Automate tedious tasks and focus on what you do best – grooming
-			dogs!
+			<strong>Time-Saving</strong>: Automate tedious tasks and focus on what you do best – grooming dogs!
 		</li>
 		<li>
-			<strong>Scalable</strong>: Whether you're a solo groomer or managing multiple locations,
-			Groomy grows with you.
+			<strong>Scalable</strong>: Whether you're a solo groomer or managing multiple locations, Groomy grows with you.
 		</li>
 		<li>
-			<strong>Secure</strong>: Keep your clients' data safe with our state-of-the-art security
-			measures.
+			<strong>Secure</strong>: Keep your clients' data safe with our state-of-the-art security measures.
 		</li>
 	</ul>
 
 	<h2>Ready to Transform Your Grooming Business?</h2>
 
-	<p>
-		Join thousands of satisfied groomers who have elevated their business with Groomy. Your
-		four-legged clients (and their owners) will thank you!
-	</p>
+	<p>Join thousands of satisfied groomers who have elevated their business with Groomy. Your four-legged clients (and their owners) will thank you!</p>
 </div>

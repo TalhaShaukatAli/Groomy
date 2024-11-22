@@ -10,7 +10,7 @@ export function generateRandomString(length: number) {
 	return result;
 }
 
-export function DateTimeCombiner(date: string, startTime:string){
-	let milliseconds = `${date}T${startTime}`
-	return Date.parse(milliseconds)
+export function DateTimeCombiner(date: string, startTime: string) {
+	const milliseconds = `${date}T${startTime}`;
+	return Date.parse(milliseconds);
 }

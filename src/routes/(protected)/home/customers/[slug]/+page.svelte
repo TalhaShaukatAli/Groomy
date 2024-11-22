@@ -2,7 +2,8 @@
 	import type { CustomerRecord } from '$lib/types';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
+	import Notes from '$lib/components/Notes_Customer.svelte';
 	page.set('Customer');
 
 	let { data } = $props();
@@ -16,7 +17,7 @@
 
 	async function onCancel() {
 		editView = false;
-		window.location.replace(`/home/customers/${customer._id.toString()}`);
+		window.location.replace(`/home/customers/${customer.id}`);
 	}
 
 	async function onSave() {
@@ -26,7 +27,7 @@
 		}
 	}
 
-	async function onDelete(id: string) {
+	async function onDelete(id: number) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
@@ -38,67 +39,70 @@
 </script>
 
 <div class="content">
-	<div class="account">
-		<div class="buttonRow">
-			<div class="fullName">
-				{customer.firstName + ' ' + customer.lastName}
+	<form onsubmit={onSave}>
+		<div class="account">
+			<div class="buttonRow">
+				<div class="fullName">
+					{customer.firstName + ' ' + customer.lastName}
+				</div>
+				<div class="grow"></div>
+				{#if !editView}
+					<button onclick={changeToEdit}>Edit Customer</button>
+				{:else}
+					<button type="submit">Save</button>
+					<button
+						onclick={() => {
+							onDelete(customer.id);
+						}}>Delete</button
+					>
+					<button
+						onclick={() => {
+							onCancel();
+						}}>Cancel</button
+					>
+				{/if}
 			</div>
-			<div class="grow"></div>
-			{#if !editView}
-				<button onclick={changeToEdit}>Edit Customer</button>
-			{:else}
-				<button onclick={onSave}>Save</button>
-				<button
-					onclick={() => {
-						onDelete(customer._id.toString());
-					}}>Delete</button
-				>
-				<button
-					onclick={() => {
-						onCancel();
-					}}>Cancel</button
-				>
-			{/if}
-		</div>
 
-		<div class="nameRow">
-			<div>
-				First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} disabled={!editView} />
+			<div class="nameRow">
+				<div>
+					First Name: <input type="text" name="firstName" id="" bind:value={customer.firstName} disabled={!editView} required />
+				</div>
+				<div>
+					Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} disabled={!editView} required />
+				</div>
 			</div>
-			<div>
-				Last Name: <input type="text" name="lastName" id="" bind:value={customer.lastName} disabled={!editView} />
+			<div class="contactRow">
+				<div>
+					Phone: <input type="text" name="phone" id="" bind:value={customer.phone} disabled={!editView} required />
+				</div>
+				<div>
+					Email: <input type="text" name="email" id="" bind:value={customer.email} disabled={!editView} required />
+				</div>
+			</div>
+			<div class="addressRow">
+				<div>
+					Street: <input type="text" name="street" id="" bind:value={customer.address.street} disabled={!editView} required />
+				</div>
+				<div>
+					City: <input type="text" name="city" id="" bind:value={customer.address.city} disabled={!editView} required />
+				</div>
+				<div>
+					State: <input type="text" name="state" id="" bind:value={customer.address.state} disabled={!editView} required />
+				</div>
+				<div>
+					Zip Code: <input type="number" name="zip" id="" bind:value={customer.address.zip} disabled={!editView} required />
+				</div>
 			</div>
 		</div>
-		<div class="contactRow">
-			<div>
-				Phone: <input type="text" name="phone" id="" bind:value={customer.phone} disabled={!editView} />
-			</div>
-			<div>
-				Email: <input type="text" name="email" id="" bind:value={customer.email} disabled={!editView} />
-			</div>
-		</div>
-		<div class="addressRow">
-			<div>
-				Street: <input type="text" name="street" id="" bind:value={customer.address.street} disabled={!editView} />
-			</div>
-			<div>
-				City: <input type="text" name="city" id="" bind:value={customer.address.city} disabled={!editView} />
-			</div>
-			<div>
-				State: <input type="text" name="state" id="" bind:value={customer.address.state} disabled={!editView} />
-			</div>
-			<div>
-				Zip Code: <input type="text" name="zip" id="" bind:value={customer.address.zip} disabled={!editView} />
-			</div>
-		</div>
-	</div>
+	</form>
+	<Notes notesID={customer.id} />
 </div>
 
 <style>
 	.content {
-		display: flex;
+		display: grid;
+		grid-template-columns: 1fr 400px;
 		align-items: center;
-		justify-content: center;
 		height: 100%;
 	}
 	.account {
@@ -106,6 +110,9 @@
 		align-items: start;
 		justify-content: center;
 		flex-direction: column;
+		width: fit-content;
+		margin-left: auto;
+		margin-right: auto;
 		background-color: var(--main);
 		border-radius: 1rem;
 		filter: drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem);
@@ -148,7 +155,7 @@
 
 	input {
 		padding: 0.5rem;
-		width: 10vw;
+		width: 7vw;
 		outline: none;
 		border: 3px solid transparent;
 		border-radius: 0.3rem;
@@ -157,7 +164,7 @@
 
 	input:disabled {
 		padding: 0.5rem;
-		width: 10vw;
+		width: 7vw;
 		outline: none;
 		background: none;
 		color: black;

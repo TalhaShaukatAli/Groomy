@@ -1,518 +1,894 @@
-import { describe, it, expect, beforeAll, beforeEach, vi, afterEach } from 'vitest';
-import {
-	Auth_AddNewUser,
-	Auth_GetUserByEmail,
-	Auth_AddCookie,
-	Auth_RemoveCookie,
-	Auth_GetCookie,
-	Auth_UpdateCookie,
-	Customer_UpdateCustomerByID,
-	Customer_AddNewCustomer,
-	Customer_GetCustomerByID,
-	Customer_GetCustomers,
-	Appointment_UpdateAppointmentByID,
-	Appointment_GetAppointmentsByUserID,
-	Appointment_AddNewAppointment,
-	Appointment_GetAppointmentByID,
-	Appointment_GetAppointmentsByCustomerID
-} from '$lib/db/database';
-import * as mongoModule from './mongo';
-import type { cookie, CustomerRecord, BaseCustomerRecord, BaseUserRecord, AppointmentRecord, BaseAppointmentRecord, UserRecord } from '$lib/types';
-import { ObjectId } from 'mongodb';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import Database from 'better-sqlite3';
+import { DatabaseAuthService, DatabaseCustomerService, DatabaseAppointmentService, DatabaseNoteService } from './database';
+import type { CustomerRecord, BaseAppointmentRecord, AppointmentRecord } from '$lib/types';
 
-// Mock the mongo module
-vi.mock('./mongo', () => {
-	// Create mock collection
-	const mockCollection = {
-		insertOne: vi.fn(),
-		findOne: vi.fn(),
-		deleteOne: vi.fn(),
-		updateOne: vi.fn()
-	};
-
-	// Create mock db
-	const mockDb = {
-		collection: vi.fn().mockReturnValue(mockCollection)
-	};
-
+// Mock Database
+vi.mock('better-sqlite3', () => {
 	return {
-		getDB: vi.fn().mockReturnValue(mockDb)
+		default: vi.fn(() => ({
+			prepare: vi.fn().mockReturnValue({
+				run: vi.fn(),
+				get: vi.fn(),
+				all: vi.fn()
+			})
+		}))
 	};
 });
 
-describe('Database Functions', () => {
-	const db = mongoModule.getDB();
+describe('DatabaseAuthService', () => {
+	let authService: DatabaseAuthService;
+	let mockDb: any;
 
 	beforeEach(() => {
-		vi.clearAllMocks();
+		mockDb = new Database('mydb.sqlite');
+		authService = new DatabaseAuthService(mockDb);
 	});
 
-	describe('User Functions', () => {
-		const mockNewUser: BaseUserRecord = {
-			email: 'test@example.com',
-			password: 'hashedPassword',
-			firstName: 'testUser',
-			lastName: 'fefs'
-		};
-
-		const mockExistingUser: UserRecord = {
-			_id: new ObjectId('507f1f77bcf86cd799439011'),
-			...mockNewUser
-		};
-
-		describe('AddNewUser', () => {
-			it('should add a new user successfully', async () => {
-				const mockInsertOne = vi.fn().mockResolvedValue({ acknowledged: true });
-				db.collection('users').insertOne = mockInsertOne;
-
-				await Auth_AddNewUser(mockNewUser);
-
-				expect(db.collection).toHaveBeenCalledWith('users');
-				expect(mockInsertOne).toHaveBeenCalledWith(mockNewUser);
-			});
-
-			it('should throw error if insertion fails', async () => {
-				const mockInsertOne = vi.fn().mockRejectedValue(new Error('DB Error'));
-				db.collection('users').insertOne = mockInsertOne;
-
-				await expect(Auth_AddNewUser(mockNewUser)).rejects.toThrow('DB Error');
-			});
-		});
-
-		describe('GetUserByEmail', () => {
-			it('should return user when found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(mockExistingUser);
-				db.collection('users').findOne = mockFindOne;
-
-				const result = await Auth_GetUserByEmail('test@example.com');
-
-				expect(db.collection).toHaveBeenCalledWith('users');
-				expect(mockFindOne).toHaveBeenCalledWith({ email: 'test@example.com' });
-				expect(result).toEqual(mockExistingUser);
-			});
-
-			it('should return undefined when user not found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(null);
-				db.collection('users').findOne = mockFindOne;
-
-				const result = await Auth_GetUserByEmail('nonexistent@example.com');
-
-				expect(result).toBeNull();
-			});
-		});
-	});
-
-	describe('Customer Functions', () => {
-		const mockCustomer: BaseCustomerRecord = {
-			userID: 'testUserId',
-			firstName: 'Test',
-			lastName: 'customer',
-			email: 'customer@example.com',
-			phone: '1234567890',
-			address: {
-				street: '123 Test St',
-				city: 'Test City',
-				state: 'MN',
-				zip: 49596
-			},
-			deleted: false
-		};
-
-		const mockExistingCustomer: CustomerRecord = {
-			_id: new ObjectId('507f1f77bcf86cd799439011'),
-			...mockCustomer
-		};
-
-		describe('AddNewCustomer', () => {
-			it('should add a new customer successfully', async () => {
-				const mockInsertOne = vi.fn().mockResolvedValue({ acknowledged: true });
-				db.collection('customer').insertOne = mockInsertOne;
-
-				await Customer_AddNewCustomer(mockCustomer);
-
-				expect(db.collection).toHaveBeenCalledWith('customer');
-				expect(mockInsertOne).toHaveBeenCalledWith(mockCustomer);
-			});
-
-			it('should throw error if insertion fails', async () => {
-				const mockInsertOne = vi.fn().mockRejectedValue(new Error('DB Error'));
-				db.collection('customer').insertOne = mockInsertOne;
-
-				await expect(Customer_AddNewCustomer(mockCustomer)).rejects.toThrow('DB Error');
-			});
-		});
-
-		describe('GetCustomers', () => {
-			it('should return customers array when found', async () => {
-				const mockCustomers = [mockExistingCustomer];
-				const mockFind = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue(mockCustomers)
-				});
-				db.collection('customer').find = mockFind;
-
-				const result = await Customer_GetCustomers('testUserId');
-
-				expect(db.collection).toHaveBeenCalledWith('customer');
-				expect(mockFind).toHaveBeenCalledWith({ userID: 'testUserId', deleted: false });
-				expect(result).toEqual(mockCustomers);
-			});
-
-			it('should return undefined when no customers found', async () => {
-				const mockFind = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue(null)
-				});
-				db.collection('customer').find = mockFind;
-
-				const result = await Customer_GetCustomers('nonexistentUserId');
-
-				expect(result).toBeNull();
-			});
-		});
-
-		describe('GetCustomerByID', () => {
-			it('should return customer when found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(mockExistingCustomer);
-				db.collection('customer').findOne = mockFindOne;
-
-				const result = await Customer_GetCustomerByID('507f1f77bcf86cd799439011');
-
-				expect(db.collection).toHaveBeenCalledWith('customer');
-				expect(mockFindOne).toHaveBeenCalledWith({
-					_id: new ObjectId('507f1f77bcf86cd799439011')
-				});
-				expect(result).toEqual(mockExistingCustomer);
-			});
-
-			it('should return undefined when customer not found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(null);
-				db.collection('customer').findOne = mockFindOne;
-
-				const result = await Customer_GetCustomerByID('507f1f77bcf86cd799439011');
-
-				expect(result).toBeNull();
-			});
-
-			it('should handle invalid ObjectId', async () => {
-				const mockFindOne = vi.fn();
-				db.collection('customer').findOne = mockFindOne;
-
-				await expect(Customer_GetCustomerByID('invalid-id')).rejects.toThrow();
-			});
-		});
-
-		describe('UpdateCustomerByID', () => {
-			it('should update customer successfully', async () => {
-				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: true });
-				db.collection('customer').updateOne = mockUpdateOne;
-
-				const updatedCustomer = { ...mockExistingCustomer, name: 'Updated Name' };
-				const result = await Customer_UpdateCustomerByID('507f1f77bcf86cd799439011', updatedCustomer);
-
-				expect(db.collection).toHaveBeenCalledWith('customer');
-				expect(result).toBe(true);
-			});
-
-			it('should return false when update fails', async () => {
-				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: false });
-				db.collection('customer').updateOne = mockUpdateOne;
-
-				const result = await Customer_UpdateCustomerByID('507f1f77bcf86cd799439011', mockExistingCustomer);
-
-				expect(result).toBe(false);
-			});
-
-			it('should handle invalid ObjectId', async () => {
-				const mockUpdateOne = vi.fn();
-				db.collection('customer').updateOne = mockUpdateOne;
-
-				await expect(Customer_UpdateCustomerByID('invalid-id', mockExistingCustomer)).rejects.toThrow();
-			});
-		});
-	});
-
-	describe('Cookie Functions', () => {
-		const mockTime = 1000;
-		const mockExpireTime = mockTime + 3600 * 1000;
-
-		beforeEach(() => {
-			vi.setSystemTime(mockTime);
-		});
-
-		afterEach(() => {
-			vi.useRealTimers();
-		});
-
-		describe('AddCookie', () => {
-			it('should add a cookie successfully', async () => {
-				const mockInsertOne = vi.fn().mockResolvedValue(true);
-				db.collection('cookie').insertOne = mockInsertOne;
-
-				const cookieString = 'test-cookie';
-				await Auth_AddCookie(cookieString);
-
-				expect(db.collection).toHaveBeenCalledWith('cookie');
-				expect(mockInsertOne).toHaveBeenCalledWith({
-					cookie: cookieString,
-					expireTime: mockExpireTime
-				});
-			});
-		});
-
-		describe('RemoveCookie', () => {
-			it('should remove a cookie successfully', async () => {
-				const mockDeleteOne = vi.fn().mockResolvedValue(true);
-				db.collection('cookie').deleteOne = mockDeleteOne;
-
-				const cookieString = 'test-cookie';
-				await Auth_RemoveCookie(cookieString);
-
-				expect(db.collection).toHaveBeenCalledWith('cookie');
-				expect(mockDeleteOne).toHaveBeenCalledWith({ cookie: cookieString });
-			});
-		});
-
-		describe('GetCookie', () => {
-			const mockCookie: cookie = {
-				cookie: 'test-cookie',
-				expireTime: mockExpireTime
+	describe('addNewUser', () => {
+		it('should add a new user successfully', () => {
+			const mockUser = {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'john@example.com',
+				hashedPassword: 'hashedPassword'
 			};
 
-			it('should return cookie when found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(mockCookie);
-				db.collection('cookie').findOne = mockFindOne;
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
 
-				const result = await Auth_GetCookie('test-cookie');
-
-				expect(db.collection).toHaveBeenCalledWith('cookie');
-				expect(mockFindOne).toHaveBeenCalledWith({ cookie: 'test-cookie' });
-				expect(result).toEqual(mockCookie);
-			});
-
-			it('should return null when cookie not found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(null);
-				db.collection('cookie').findOne = mockFindOne;
-
-				const result = await Auth_GetCookie('nonexistent-cookie');
-
-				expect(result).toBeNull();
-			});
+			const result = authService.addNewUser(mockUser);
+			expect(result).toBe(true);
+			expect(mockDb.prepare).toHaveBeenCalledWith('Insert into users (firstName, lastName, email, hashedPassword, deleted) VALUES (@firstName, @lastName, @email, @hashedPassword, @deleted)');
 		});
 
-		describe('UpdateCookie', () => {
-			it('should update cookie expiration time', async () => {
-				const mockUpdateOne = vi.fn().mockResolvedValue(true);
-				db.collection('cookie').updateOne = mockUpdateOne;
+		it('should return false if user insertion fails', () => {
+			const mockUser = {
+				id: 1,
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'john@example.com',
+				hashedPassword: 'hashedPassword'
+			};
 
-				const cookieString = 'test-cookie';
-				await Auth_UpdateCookie(cookieString);
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
 
-				expect(db.collection).toHaveBeenCalledWith('cookie');
-				expect(mockUpdateOne).toHaveBeenCalledWith({ cookie: cookieString }, { $set: { expireTime: mockExpireTime } });
-			});
+			const result = authService.addNewUser(mockUser);
+			expect(result).toBe(false);
 		});
 	});
 
-	describe('Appointment Functions', () => {
-		const db = mongoModule.getDB();
+	describe('getUserByEmail', () => {
+		it('should retrieve a user by email', () => {
+			const mockUser = {
+				id: 1,
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'john@example.com',
+				hashedPassword: 'hashedPassword'
+			};
 
-		beforeEach(() => {
-			vi.clearAllMocks();
+			mockDb.prepare().get.mockReturnValue(mockUser);
+
+			const result = authService.getUserByEmail('john@example.com');
+			expect(result).toEqual(mockUser);
 		});
 
-		const mockAppointment: BaseAppointmentRecord = {
-			userID: 'testUserId',
-			customerID: 'testCustomerId',
-			title: 'Test Appointment',
-			description: 'Regular maintenance check',
-			time: {
-				date: '2024-01-01',
-				start: '10:00',
-				end: '11:00',
-				exact: 1704096000000 // Unix timestamp for 2024-01-01 10:00:00
-			},
-			address: {
-				street: '123 Test St',
-				city: 'Test City',
-				state: 'MN',
-				zip: 55123
-			},
-			deleted: false
-		};
+		it('should return null if no user is found', () => {
+			mockDb.prepare().get.mockReturnValue(null);
 
-		const mockExistingAppointment: AppointmentRecord = {
-			_id: new ObjectId('507f1f77bcf86cd799439011'),
-			...mockAppointment
-		};
+			const result = authService.getUserByEmail('nonexistent@example.com');
+			expect(result).toBeNull();
+		});
+	});
 
-		describe('AddNewAppointment', () => {
-			it('should add a new appointment successfully', async () => {
-				const mockInsertOne = vi.fn().mockResolvedValue(true);
-				db.collection('appointments').insertOne = mockInsertOne;
+	describe('addCookie', () => {
+		it('should add a cookie successfully', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
 
-				await Appointment_AddNewAppointment(mockAppointment);
+			const result = authService.addCookie('testCookie', 1);
+			expect(result).toBe(true);
+		});
 
-				expect(db.collection).toHaveBeenCalledWith('appointments');
-				expect(mockInsertOne).toHaveBeenCalledWith(mockAppointment);
-			});
+		it('should return false if cookie insertion fails', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
 
-			it('should throw error if insertion fails', async () => {
-				const mockInsertOne = vi.fn().mockRejectedValue(new Error('DB Error'));
-				db.collection('appointments').insertOne = mockInsertOne;
+			const result = authService.addCookie('testCookie', 1);
+			expect(result).toBe(false);
+		});
+	});
 
-				await expect(Appointment_AddNewAppointment(mockAppointment)).rejects.toThrow('DB Error');
+	describe('removeCookie', () => {
+		it('should remove a cookie successfully', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = authService.removeCookie('testCookie');
+			expect(result).toBe(true);
+			expect(mockDb.prepare).toHaveBeenCalledWith('DELETE FROM cookie WHERE id = ?');
+		});
+
+		it('should return false if cookie removal fails', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = authService.removeCookie('testCookie');
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('getCookie', () => {
+		it('should retrieve a cookie', () => {
+			const mockCookie = {
+				id: 'testCookie',
+				userID: 1,
+				expireTime: Date.now() + 3600 * 1000
+			};
+
+			mockDb.prepare().get.mockReturnValue(mockCookie);
+
+			const result = authService.getCookie('testCookie');
+			expect(result).toEqual(mockCookie);
+		});
+
+		it('should return null if no cookie is found', () => {
+			mockDb.prepare().get.mockReturnValue(null);
+
+			const result = authService.getCookie('nonexistentCookie');
+			expect(result).toBeNull();
+		});
+	});
+
+	describe('updateCookie', () => {
+		it('should update a cookie successfully', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = authService.updateCookie('testCookie');
+			expect(result).toBe(true);
+			expect(mockDb.prepare).toHaveBeenCalledWith('Update cookie SET expireTime = ? WHERE id = ?');
+		});
+
+		it('should return false if cookie update fails', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = authService.updateCookie('testCookie');
+			expect(result).toBe(false);
+		});
+	});
+});
+
+describe('DatabaseCustomerService', () => {
+	let customerService: DatabaseCustomerService;
+	let mockDb: any;
+
+	beforeEach(() => {
+		mockDb = new Database('mydb.sqlite');
+		customerService = new DatabaseCustomerService(mockDb);
+	});
+
+	describe('addNewCustomer', () => {
+		it('should add a new customer successfully', () => {
+			const mockCustomer: CustomerRecord = {
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				email: 'jane@example.com',
+				phone: '1234567890',
+				address: {
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
+				},
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = customerService.addNewCustomer(mockCustomer);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if customer insertion fails', () => {
+			const mockCustomer: CustomerRecord = {
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				email: 'jane@example.com',
+				phone: '1234567890',
+				address: {
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
+				},
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = customerService.addNewCustomer(mockCustomer);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('getCustomers', () => {
+		it('should retrieve customers for a user', () => {
+			const mockCustomers = [
+				{
+					id: 1,
+					userID: 1,
+					firstName: 'Jane',
+					lastName: 'Doe',
+					email: 'jane@example.com',
+					phone: '1234567890',
+					address_street: '123 Test St',
+					address_city: 'Testville',
+					address_state: 'TS',
+					address_zip: 12345,
+					deleted: 0
+				}
+			];
+
+			mockDb.prepare().all.mockReturnValue(mockCustomers);
+
+			const result = customerService.getCustomers(1);
+			expect(result).toHaveLength(1);
+			expect(result?.[0]).toEqual({
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				email: 'jane@example.com',
+				phone: '1234567890',
+				address: {
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
+				},
+				deleted: 0
 			});
 		});
 
-		describe('GetAppointmentByID', () => {
-			it('should return appointment when found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(mockExistingAppointment);
-				db.collection('appointments').findOne = mockFindOne;
+		it('should return null if no customers are found', () => {
+			mockDb.prepare().all.mockReturnValue(null);
 
-				const result = await Appointment_GetAppointmentByID('507f1f77bcf86cd799439011');
+			const result = customerService.getCustomers(1);
+			expect(result).toBeNull();
+		});
+	});
 
-				expect(db.collection).toHaveBeenCalledWith('appointments');
-				expect(mockFindOne).toHaveBeenCalledWith({
-					_id: new ObjectId('507f1f77bcf86cd799439011')
-				});
-				expect(result).toEqual(mockExistingAppointment);
-			});
+	describe('getCustomerByID', () => {
+		it('should retrieve a customer by ID', () => {
+			const mockCustomer = {
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				email: 'jane@example.com',
+				phone: '1234567890',
+				address_street: '123 Test St',
+				address_city: 'Testville',
+				address_state: 'TS',
+				address_zip: 12345,
+				deleted: 0
+			};
 
-			it('should return undefined when appointment not found', async () => {
-				const mockFindOne = vi.fn().mockResolvedValue(null);
-				db.collection('appointments').findOne = mockFindOne;
+			mockDb.prepare().get.mockReturnValue(mockCustomer);
 
-				const result = await Appointment_GetAppointmentByID('507f1f77bcf86cd799439011');
-
-				expect(result).toBeNull();
-			});
-
-			it('should handle invalid ObjectId', async () => {
-				const mockFindOne = vi.fn();
-				db.collection('appointments').findOne = mockFindOne;
-
-				await expect(Appointment_GetAppointmentByID('invalid-id')).rejects.toThrow();
+			const result = customerService.getCustomerByID(1);
+			expect(result).toEqual({
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				email: 'jane@example.com',
+				phone: '1234567890',
+				address: {
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
+				},
+				deleted: 0
 			});
 		});
 
-		describe('GetAppointmentsByCustomerID', () => {
-			it('should return appointments array when found', async () => {
-				const mockAppointments = [mockExistingAppointment];
-				const mockFind = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue(mockAppointments)
-				});
-				db.collection('appointments').find = mockFind;
+		it('should return null if no customer is found', () => {
+			mockDb.prepare().get.mockReturnValue(null);
 
-				const result = await Appointment_GetAppointmentsByCustomerID('testCustomerId');
+			const result = customerService.getCustomerByID(1);
+			expect(result).toBeNull();
+		});
+	});
 
-				expect(db.collection).toHaveBeenCalledWith('appointments');
-				expect(mockFind).toHaveBeenCalledWith({ customerID: 'testCustomerId', deleted: false });
-				expect(result).toEqual(mockAppointments);
-			});
+	describe('updateCustomerByID', () => {
+		it('should update a customer successfully', () => {
+			const mockCustomer: CustomerRecord = {
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Smith',
+				email: 'jane.smith@example.com',
+				phone: '0987654321',
+				address: {
+					street: '456 New St',
+					city: 'Newville',
+					state: 'NS',
+					zip: 54321
+				},
+				deleted: 0
+			};
 
-			it('should return undefined when no appointments found', async () => {
-				const mockFind = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue(null)
-				});
-				db.collection('appointments').find = mockFind;
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
 
-				const result = await Appointment_GetAppointmentsByCustomerID('nonexistentCustomerId');
+			const result = customerService.updateCustomerByID(1, mockCustomer);
+			expect(result).toBe(true);
+		});
 
-				expect(result).toBeNull();
-			});
+		it('should return false if customer update fails', () => {
+			const mockCustomer: CustomerRecord = {
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Smith',
+				email: 'jane.smith@example.com',
+				phone: '0987654321',
+				address: {
+					street: '456 New St',
+					city: 'Newville',
+					state: 'NS',
+					zip: 54321
+				},
+				deleted: 0
+			};
 
-			it('should only return non-deleted appointments', async () => {
-				const mockFind = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue([])
-				});
-				db.collection('appointments').find = mockFind;
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
 
-				await Appointment_GetAppointmentsByCustomerID('testCustomerId');
+			const result = customerService.updateCustomerByID(1, mockCustomer);
+			expect(result).toBe(false);
+		});
+	});
 
-				expect(mockFind).toHaveBeenCalledWith(expect.objectContaining({ deleted: false }));
+	describe('deleteCustomerByID', () => {
+		it('should delete a customer successfully', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = customerService.deleteCustomerByID(1);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if customer deletion fails', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = customerService.deleteCustomerByID(1);
+			expect(result).toBe(false);
+		});
+	});
+});
+
+describe('DatabaseAppointmentService', () => {
+	let appointmentService: DatabaseAppointmentService;
+	let mockDb: any;
+
+	beforeEach(() => {
+		mockDb = new Database('mydb.sqlite');
+		appointmentService = new DatabaseAppointmentService(mockDb);
+	});
+
+	describe('addNewAppointment', () => {
+		it('should add a new appointment successfully', () => {
+			const mockAppointment: BaseAppointmentRecord = {
+				userID: 1,
+				customerID: 1,
+				title: 'Pet Grooming',
+				description: 'Regular grooming session',
+				time: {
+					date: '2023-06-15',
+					start: '10:00',
+					end: '11:00',
+					exact: 1
+				},
+				address: {
+					street: '123 Pet St',
+					city: 'Petville',
+					state: 'PS',
+					zip: 12345
+				},
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = appointmentService.addNewAppointment(mockAppointment);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if appointment insertion fails', () => {
+			const mockAppointment: BaseAppointmentRecord = {
+				userID: 1,
+				customerID: 1,
+				title: 'Pet Grooming',
+				description: 'Regular grooming session',
+				time: {
+					date: '2023-06-15',
+					start: '10:00',
+					end: '11:00',
+					exact: 1
+				},
+				address: {
+					street: '123 Pet St',
+					city: 'Petville',
+					state: 'PS',
+					zip: 12345
+				},
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = appointmentService.addNewAppointment(mockAppointment);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('getAppointmentByID', () => {
+		it('should retrieve an appointment by ID', () => {
+			const mockAppointment = {
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Pet Grooming',
+				description: 'Regular grooming session',
+				time_date: '2023-06-15',
+				time_start: '10:00',
+				time_end: '11:00',
+				time_exact: 1,
+				address_street: '123 Pet St',
+				address_city: 'Petville',
+				address_state: 'PS',
+				address_zip: 12345,
+				deleted: 0
+			};
+
+			mockDb.prepare().get.mockReturnValue(mockAppointment);
+
+			const result = appointmentService.getAppointmentByID(1);
+			expect(result).toEqual({
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Pet Grooming',
+				description: 'Regular grooming session',
+				time: {
+					date: '2023-06-15',
+					start: '10:00',
+					end: '11:00',
+					exact: 1
+				},
+				address: {
+					street: '123 Pet St',
+					city: 'Petville',
+					state: 'PS',
+					zip: 12345
+				},
+				deleted: 0
 			});
 		});
 
-		describe('GetAppointmentsByUserID', () => {
-			it('should return sorted appointments array when found', async () => {
-				const mockAppointments = [mockExistingAppointment];
-				const mockSort = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue(mockAppointments)
-				});
-				const mockFind = vi.fn().mockReturnValue({
-					sort: mockSort
-				});
-				db.collection('appointments').find = mockFind;
+		it('should return null if no appointment is found', () => {
+			mockDb.prepare().get.mockReturnValue(null);
 
-				const result = await Appointment_GetAppointmentsByUserID('testUserId');
+			const result = appointmentService.getAppointmentByID(1);
+			expect(result).toBeNull();
+		});
+	});
 
-				expect(db.collection).toHaveBeenCalledWith('appointments');
-				expect(mockFind).toHaveBeenCalledWith({ userID: 'testUserId', deleted: false });
-				expect(mockSort).toHaveBeenCalledWith({ 'time.exact': 1 });
-				expect(result).toEqual(mockAppointments);
-			});
+	describe('getAppointmentsByCustomerID', () => {
+		it('should retrieve appointments for a customer', () => {
+			const mockAppointments = [
+				{
+					id: 1,
+					userID: 1,
+					customerID: 1,
+					title: 'Pet Grooming',
+					description: 'Regular grooming session',
+					time_date: '2023-06-15',
+					time_start: '10:00',
+					time_end: '11:00',
+					time_exact: 1,
+					address_street: '123 Pet St',
+					address_city: 'Petville',
+					address_state: 'PS',
+					address_zip: 12345,
+					deleted: 0
+				}
+			];
 
-			it('should return undefined when no appointments found', async () => {
-				const mockSort = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue(null)
-				});
-				const mockFind = vi.fn().mockReturnValue({
-					sort: mockSort
-				});
-				db.collection('appointments').find = mockFind;
+			mockDb.prepare().all.mockReturnValue(mockAppointments);
 
-				const result = await Appointment_GetAppointmentsByUserID('nonexistentUserId');
-
-				expect(result).toBeNull();
-			});
-
-			it('should sort appointments by time.exact in ascending order', async () => {
-				const mockSort = vi.fn().mockReturnValue({
-					toArray: vi.fn().mockResolvedValue([])
-				});
-				const mockFind = vi.fn().mockReturnValue({
-					sort: mockSort
-				});
-				db.collection('appointments').find = mockFind;
-
-				await Appointment_GetAppointmentsByUserID('testUserId');
-
-				expect(mockSort).toHaveBeenCalledWith({ 'time.exact': 1 });
+			const result = appointmentService.getAppointmentsByCustomerID(1);
+			expect(result).toHaveLength(1);
+			expect(result?.[0]).toEqual({
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Pet Grooming',
+				description: 'Regular grooming session',
+				time: {
+					date: '2023-06-15',
+					start: '10:00',
+					end: '11:00',
+					exact: 1
+				},
+				address: {
+					street: '123 Pet St',
+					city: 'Petville',
+					state: 'PS',
+					zip: 12345
+				},
+				deleted: 0
 			});
 		});
 
-		describe('UpdateAppointmentByID', () => {
-			it('should update appointment successfully', async () => {
-				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: true });
-				db.collection('appointments').updateOne = mockUpdateOne;
+		it('should return null if no appointments are found', () => {
+			mockDb.prepare().all.mockReturnValue(null);
 
-				const updatedAppointment = {
-					...mockAppointment,
-					title: 'Updated Title',
-					description: 'Updated description'
-				};
+			const result = appointmentService.getAppointmentsByCustomerID(1);
+			expect(result).toBeNull();
+		});
+	});
 
-				const result = await Appointment_UpdateAppointmentByID('507f1f77bcf86cd799439011', updatedAppointment);
+	describe('getAppointmentsByUserID', () => {
+		it('should retrieve appointments for a user', () => {
+			const mockAppointments = [
+				{
+					id: 1,
+					userID: 1,
+					customerID: 1,
+					title: 'Pet Grooming',
+					description: 'Regular grooming session',
+					time_date: '2023-06-15',
+					time_start: '10:00',
+					time_end: '11:00',
+					time_exact: 1,
+					address_street: '123 Pet St',
+					address_city: 'Petville',
+					address_state: 'PS',
+					address_zip: 12345,
+					deleted: 0
+				}
+			];
 
-				expect(db.collection).toHaveBeenCalledWith('appointments');
-				expect(mockUpdateOne).toHaveBeenCalledWith({ _id: new ObjectId('507f1f77bcf86cd799439011') }, { $set: updatedAppointment });
-				expect(result).toBe(true);
+			mockDb.prepare().all.mockReturnValue(mockAppointments);
+
+			const result = appointmentService.getAppointmentsByUserID(1);
+			expect(result).toHaveLength(1);
+			expect(result?.[0]).toEqual({
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Pet Grooming',
+				description: 'Regular grooming session',
+				time: {
+					date: '2023-06-15',
+					start: '10:00',
+					end: '11:00',
+					exact: 1
+				},
+				address: {
+					street: '123 Pet St',
+					city: 'Petville',
+					state: 'PS',
+					zip: 12345
+				},
+				deleted: 0
 			});
+		});
 
-			it('should return false when update fails', async () => {
-				const mockUpdateOne = vi.fn().mockResolvedValue({ acknowledged: false });
-				db.collection('appointments').updateOne = mockUpdateOne;
+		it('should return null if no appointments are found', () => {
+			mockDb.prepare().all.mockReturnValue(null);
 
-				const result = await Appointment_UpdateAppointmentByID('507f1f77bcf86cd799439011', mockAppointment);
+			const result = appointmentService.getAppointmentsByUserID(1);
+			expect(result).toBeNull();
+		});
+	});
 
-				expect(result).toBe(false);
-			});
+	describe('updateAppointmentByID', () => {
+		it('should update an appointment successfully', async () => {
+			const mockAppointment: AppointmentRecord = {
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Updated Pet Grooming',
+				description: 'Updated grooming session',
+				time: {
+					date: '2023-06-16',
+					start: '11:00',
+					end: '12:00',
+					exact: 1
+				},
+				address: {
+					street: '456 New Pet St',
+					city: 'New Petville',
+					state: 'NP',
+					zip: 54321
+				},
+				deleted: 0
+			};
 
-			it('should handle invalid ObjectId', async () => {
-				const mockUpdateOne = vi.fn();
-				db.collection('appointments').updateOne = mockUpdateOne;
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
 
-				await expect(Appointment_UpdateAppointmentByID('invalid-id', mockAppointment)).rejects.toThrow();
-			});
+			const result = await appointmentService.updateAppointmentByID(1, mockAppointment);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if appointment update fails', async () => {
+			const mockAppointment: AppointmentRecord = {
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Updated Pet Grooming',
+				description: 'Updated grooming session',
+				time: {
+					date: '2023-06-16',
+					start: '11:00',
+					end: '12:00',
+					exact: 1
+				},
+				address: {
+					street: '456 New Pet St',
+					city: 'New Petville',
+					state: 'NP',
+					zip: 54321
+				},
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = await appointmentService.updateAppointmentByID(1, mockAppointment);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('deleteAppointmentByID', () => {
+		it('should delete an appointment successfully', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = appointmentService.deleteAppointmentByID(1);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if appointment deletion fails', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = appointmentService.deleteAppointmentByID(1);
+			expect(result).toBe(false);
+		});
+	});
+});
+
+describe('DatabaseNoteService', () => {
+	let noteService: DatabaseNoteService;
+	let mockDb: any;
+
+	beforeEach(() => {
+		mockDb = new Database('mydb.sqlite');
+		noteService = new DatabaseNoteService(mockDb);
+	});
+
+	describe('CreateNote', () => {
+		it('should create a new note and return the inserted row ID', () => {
+			const mockNote = {
+				title: 'Test Note',
+				note: 'This is a test note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValue({ lastInsertRowid: 1 });
+
+			const result = noteService['CreateNote'](mockNote);
+			expect(result).toBe(1);
+			expect(mockDb.prepare).toHaveBeenCalledWith('INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)');
+		});
+	});
+
+	describe('CreateCustomerNote', () => {
+		it('should create a customer note successfully', () => {
+			const mockNote = {
+				title: 'Customer Note',
+				note: 'This is a customer note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 1 });
+
+			const result = noteService.CreateCustomerNote(1, mockNote);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if customer note creation fails', () => {
+			const mockNote = {
+				title: 'Customer Note',
+				note: 'This is a customer note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 0 });
+
+			const result = noteService.CreateCustomerNote(1, mockNote);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('GetCustomerNotes', () => {
+		it('should retrieve customer notes successfully', () => {
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Customer Note 1',
+					note: 'First customer note',
+					createdDate: '2023-06-20',
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Customer Note 2',
+					note: 'Second customer note',
+					createdDate: '2023-06-21',
+					deleted: 0
+				}
+			];
+
+			mockDb.prepare().all.mockReturnValue(mockNotes);
+
+			const result = noteService.GetCustomerNotes(1);
+			expect(result).toEqual(mockNotes);
+		});
+
+		it('should return an empty array if no customer notes are found', () => {
+			mockDb.prepare().all.mockReturnValue(undefined);
+
+			const result = noteService.GetCustomerNotes(1);
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe('GetNoteByID', () => {
+		it('should retrieve a note by ID successfully', () => {
+			const mockNote = {
+				id: 1,
+				title: 'Test Note',
+				note: 'This is a test note',
+				createdDate: '2023-06-20',
+				deleted: 0
+			};
+
+			mockDb.prepare().get.mockReturnValue(mockNote);
+
+			const result = noteService.GetNoteByID(1);
+			expect(result).toEqual(mockNote);
+		});
+
+		it('should return null if no note is found', () => {
+			mockDb.prepare().get.mockReturnValue(undefined);
+
+			const result = noteService.GetNoteByID(1);
+			expect(result).toBeNull();
+		});
+	});
+
+	describe('CreateAppointmentNote', () => {
+		it('should create an appointment note successfully', () => {
+			const mockNote = {
+				title: 'Appointment Note',
+				note: 'This is an appointment note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 1 });
+
+			const result = noteService.CreateAppointmentNote(1, mockNote);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if appointment note creation fails', () => {
+			const mockNote = {
+				title: 'Appointment Note',
+				note: 'This is an appointment note',
+				createdDate: '2023-06-20'
+			};
+
+			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
+			mockDb.prepare().run.mockReturnValueOnce({ changes: 0 });
+
+			const result = noteService.CreateAppointmentNote(1, mockNote);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('GetAppointmentNotes', () => {
+		it('should retrieve appointment notes successfully', () => {
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Appointment Note 1',
+					note: 'First appointment note',
+					createdDate: '2023-06-20',
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Appointment Note 2',
+					note: 'Second appointment note',
+					createdDate: '2023-06-21',
+					deleted: 0
+				}
+			];
+
+			mockDb.prepare().all.mockReturnValue(mockNotes);
+
+			const result = noteService.GetAppointmentNotes(1);
+			expect(result).toEqual(mockNotes);
+		});
+
+		it('should return an empty array if no appointment notes are found', () => {
+			mockDb.prepare().all.mockReturnValue(undefined);
+
+			const result = noteService.GetAppointmentNotes(1);
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe('UpdateNotesByID', () => {
+		it('should update a note successfully', () => {
+			const mockNote = {
+				id: 1,
+				title: 'Updated Note',
+				note: 'This is an updated note',
+				createdDate: '2023-06-20',
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = noteService.UpdateNotesByID(mockNote);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if note update fails', () => {
+			const mockNote = {
+				id: 1,
+				title: 'Updated Note',
+				note: 'This is an updated note',
+				createdDate: '2023-06-20',
+				deleted: 0
+			};
+
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = noteService.UpdateNotesByID(mockNote);
+			expect(result).toBe(false);
+		});
+	});
+
+	describe('DeleteNoteByID', () => {
+		it('should delete a note successfully', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+
+			const result = noteService.DeleteNoteByID(1);
+			expect(result).toBe(true);
+		});
+
+		it('should return false if note deletion fails', () => {
+			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+
+			const result = noteService.DeleteNoteByID(1);
+			expect(result).toBe(false);
 		});
 	});
 });

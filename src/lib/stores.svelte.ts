@@ -1,4 +1,4 @@
-import type { CustomerRecord, BaseUserRecord, UserRecord } from './types';
+import type { UserRecord } from './types';
 
 let _page = $state('');
 

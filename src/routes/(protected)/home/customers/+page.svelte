@@ -7,7 +7,7 @@
 	let { data } = $props();
 	let customers: CustomerRecord[] = JSON.parse(data.customers);
 
-	async function DeleteByID(id: string) {
+	async function DeleteByID(id: number) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
@@ -27,7 +27,7 @@
 	</div>
 </div>
 
-{#snippet customerRow(data: customerRecord)}
+{#snippet customerRow(data: CustomerRecord)}
 	<div class="row">
 		<div class="top">
 			<div class="fullName">
@@ -42,11 +42,11 @@
 		</div>
 		<div class="bottom">
 			<div class="edit">
-				<a href="/home/customers/{data._id}">View</a>
-				<a href="/home/customers/{data._id}?edit=true">Edit</a>
+				<a href="/home/customers/{data.id}">View</a>
+				<a href="/home/customers/{data.id}?edit=true">Edit</a>
 				<button
 					onclick={() => {
-						DeleteByID(data._id.toString());
+						DeleteByID(data.id);
 					}}>Delete</button
 				>
 			</div>

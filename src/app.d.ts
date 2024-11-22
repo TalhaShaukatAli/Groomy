@@ -4,8 +4,8 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			user?: {
-				id: string;
+			user: {
+				id: number;
 				// Add other user properties as needed
 			};
 		}
