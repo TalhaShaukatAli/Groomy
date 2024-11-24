@@ -1,13 +1,5 @@
-import type { cookie, CustomerRecord, BaseUserRecord, BaseAppointmentRecord, AppointmentRecord, UserRecord, Note, BaseNote, ServiceRecord, BaseServiceRecord } from '$lib/types';
+import type { cookie, CustomerRecord, BaseUserRecord, BaseAppointmentRecord, AppointmentRecord, UserRecord, Note, BaseNote, ServiceRecord, BaseServiceRecord, DatabaseResponse, DatabaseDataResponse } from '$lib/types';
 import Database from 'better-sqlite3';
-
-type Address = {
-	street: string;
-	city: string;
-	state: string;
-	zip: number;
-};
-
 type DatabaseCustomerResponse = {
 	id: number;
 	userID: number;
@@ -21,12 +13,6 @@ type DatabaseCustomerResponse = {
 	address_zip: number;
 	deleted: number;
 };
-
-function getDB() {
-	const db = new Database('mydb.sqlite', { verbose: console.log });
-	db.prepare('PRAGMA journal_mode = WAL').run();
-	return db;
-}
 
 type DatabaseAppointmentResponse = {
 	id: number;
@@ -45,100 +31,161 @@ type DatabaseAppointmentResponse = {
 	deleted: number;
 };
 
-export class DatabaseAuthService {
-	private db;
+function getDB() {
+	const db = new Database('mydb.sqlite', { verbose: console.log });
+	db.prepare('PRAGMA journal_mode = WAL').run();
+	return db;
+}
 
-	constructor(db = getDB()) {
-		this.db = db;
+class BaseDatabaseService {
+	protected db: Database.Database;
+	private static dbInstance: Database.Database | null = null;
+
+	constructor() {
+		//Check if ddbInstance is null
+		if (!BaseDatabaseService.dbInstance) {
+			//Create Database and assign it too dbInstance
+			try {
+				BaseDatabaseService.dbInstance = new Database('mydb.sqlite', { verbose: console.log });
+				BaseDatabaseService.dbInstance.prepare('PRAGMA journal_mode = WAL').run();
+			} catch (error) {
+				console.error('Database initialization failed:', error);
+				throw error;
+			}
+		}
+		//Set database equal to the single db instance
+		this.db = BaseDatabaseService.dbInstance;
 	}
+}
 
+class AuthService extends BaseDatabaseService {
+	constructor() {
+		super();
+	}
 	// Add a new user to the database
-	addNewUser(user: BaseUserRecord): boolean {
+	createUser(user: BaseUserRecord): DatabaseResponse {
+		const existingUser = this.getUserByEmail(user.email);
+		if(existingUser.success){
+			return {
+				success: false,
+				message: 'Email already in use'
+			};
+		}
 		const query = this.db.prepare('Insert into users (firstName, lastName, email, hashedPassword, deleted) VALUES (@firstName, @lastName, @email, @hashedPassword, @deleted)');
 		const result = query.run({ firstName: user.firstName, lastName: user.lastName, email: user.email, hashedPassword: user.hashedPassword, deleted: 0 });
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: 'User was created successfully'
+			};
 		} else {
-			return false;
+			console.error('Failed cookie creation - BaseUserRecord:', user);
+			return {
+				success: false,
+				message: 'User creation failed'
+			};
 		}
 	}
 
 	// Retrieve a user by their email address
-	getUserByEmail(email: string): UserRecord | null {
+	getUserByEmail(email: string): DatabaseDataResponse<UserRecord> {
 		const query = this.db.prepare('Select * from users WHERE email = ?');
-		const result = query.get(email);
+		const result = <UserRecord | null>query.get(email);
 		if (result) {
-			return <UserRecord>result;
+			return {
+				success: true,
+				message: 'User was retrieved successfully',
+				data: result
+			};
 		} else {
-			return null;
+			return {
+				success: false,
+				message: "Couldn't find user"
+			};
 		}
 	}
 
-	// Add a new cookie to the database with an expiration time
-	addCookie(cookie: string, userID: number): boolean {
+	createCookie(cookieID: string, userID: number): DatabaseResponse {
 		const query = this.db.prepare('Insert into cookie (id, userID, expireTime) values (@id, @userID, @expireTime)');
 		const result = query.run({
-			id: cookie,
+			id: cookieID,
 			userID: userID,
 			expireTime: Date.now() + 3600 * 1000 // Cookie expires in 1 hour
 		});
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: 'Successful cookie creation'
+			};
 		} else {
-			return false;
+			console.error('Failed cookie creation - UserID:', userID);
+			return {
+				success: false,
+				message: 'Failed cookie creation'
+			};
 		}
 	}
 
 	// Remove a specific cookie from the database
-	removeCookie(cookie: string): boolean {
+	removeCookie(userID: string): DatabaseResponse {
 		const query = this.db.prepare('DELETE FROM cookie WHERE id = ?');
-		const result = query.run(cookie);
+		const result = query.run(userID);
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: 'Successful cookie deletion'
+			};
 		} else {
-			return false;
+			console.error('Failed to remove cookie - userID:', userID);
+			return {
+				success: false,
+				message: 'Failed cookie deletion'
+			};
 		}
 	}
 
-	// Retrieve a cookie by its value
-	getCookie(cookie: string): cookie | null {
+	// Retrieve a cookie by the userID
+	getCookie(userID: string): DatabaseDataResponse<cookie> {
 		const query = this.db.prepare('Select * from cookie WHERE id = ?');
-		const result = query.get(cookie);
+		const result = <cookie | null>query.get(userID);
 		if (result) {
-			return <cookie>result;
+			return {
+				success: true,
+				message: 'Found cookie successfully',
+				data: result
+			};
 		} else {
-			return null;
+			console.error('Failed cookie finding - userID:', userID);
+			return {
+				success: false,
+				message: 'Failed to find cookie'
+			};
 		}
 	}
 
 	// Update the expiration time of a specific cookie
-	updateCookie(cookie: string): boolean {
+	updateCookie(cookieID: string): DatabaseResponse {
 		const query = this.db.prepare('Update cookie SET expireTime = ? WHERE id = ?');
-		const result = query.run(Date.now() + 1000 * 30 * 60, cookie);	
+		const result = query.run(Date.now() + 1000 * 30 * 60, cookieID);
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: 'Updated cookie successfully'
+			};
 		} else {
-			return false;
+			console.error('Failed cookie updating - cookieID:', cookieID);
+
+			return {
+				success: false,
+				message: 'Failed to update cookie'
+			};
 		}
 	}
 }
 
-const defaultAuthDatabase = new DatabaseAuthService();
-
-// Exported functions for authentication database operations
-export const Auth_AddNewUser = (user: BaseUserRecord) => defaultAuthDatabase.addNewUser(user);
-export const Auth_GetUserByEmail = (email: string) => defaultAuthDatabase.getUserByEmail(email);
-export const Auth_AddCookie = (cookie: string, userID: number) => defaultAuthDatabase.addCookie(cookie, userID);
-export const Auth_RemoveCookie = (cookie: string) => defaultAuthDatabase.removeCookie(cookie);
-export const Auth_GetCookie = (cookie: string) => defaultAuthDatabase.getCookie(cookie);
-export const Auth_UpdateCookie = (cookie: string) => defaultAuthDatabase.updateCookie(cookie);
-
-// Create a class to handle database operations for customer-related functions
-export class DatabaseCustomerService {
-	private db;
-
-	constructor(db = getDB()) {
-		this.db = db;
+class CustomerService extends BaseDatabaseService {
+	constructor() {
+		super();
 	}
 
 	private CustomerDatabaseResponseToCustomerRecord(record: DatabaseCustomerResponse): CustomerRecord {
@@ -161,7 +208,7 @@ export class DatabaseCustomerService {
 	}
 
 	// Add a new customer to the database
-	addNewCustomer(customer: CustomerRecord): boolean {
+	createCustomer(customer: CustomerRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'Insert into customers (userID, firstName, lastName, email, phone, address_street, address_city, address_state, address_zip, deleted) VALUES (@userID, @firstName, @lastName, @email, @phone, @address_street, @address_city, @address_state, @address_zip, @deleted)'
 		);
@@ -179,42 +226,65 @@ export class DatabaseCustomerService {
 		});
 
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: 'Created customer successfully'
+			};
 		} else {
-			return false;
+			console.error('Failed to create customer - Customer', customer);
+			return {
+				success: false,
+				message: 'Failed to create customer'
+			};
 		}
 	}
 
 	// Retrieve customers for a specific user, excluding deleted customers
-	getCustomers(userID: number): CustomerRecord[] | null {
+	getCustomers(userID: number): DatabaseDataResponse<CustomerRecord[]> {
 		const query = this.db.prepare('Select * from customers where userID = ? and deleted = 0');
-		const result = <DatabaseCustomerResponse[]>query.all(userID);
+		const response = <DatabaseCustomerResponse[] | null>query.all(userID);
 		const resultArray: CustomerRecord[] = [];
-		if (result) {
-			for (const item of result) {
+
+		if (response != null) {
+			for (const item of response) {
 				const data = this.CustomerDatabaseResponseToCustomerRecord(item);
 				resultArray.push(data);
 			}
-			return resultArray;
+			return {
+				success: true,
+				message: 'Got customers successfully',
+				data: resultArray
+			};
 		} else {
-			return null;
+			console.error('Failed to get customer - UserID:', userID);
+			return {
+				success: false,
+				message: 'Failed to get customers'
+			};
 		}
 	}
-
 	// Retrieve a specific customer by their ID
-	getCustomerByID(id: number): CustomerRecord | null {
+	getCustomer(id: number): DatabaseDataResponse<CustomerRecord> {
 		const query = this.db.prepare('Select * from customers where id = ?');
 		const result = <DatabaseCustomerResponse>query.get(id);
 		if (result) {
 			const data = this.CustomerDatabaseResponseToCustomerRecord(result);
-			return data;
+			return {
+				success: true,
+				message: 'Successfully got customers',
+				data: data
+			};
 		} else {
-			return null;
+			console.error('Failed to get customer - id:', id);
+			return {
+				success: false,
+				message: 'Failed to get customer'
+			};
 		}
 	}
 
 	// Update a customer's information by their ID
-	updateCustomerByID(id: number, customer: CustomerRecord): boolean {
+	updateCustomer(customerID: number, customer: CustomerRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'UPDATE customers SET firstName = @firstName, lastName = @lastName, email = @email, phone = @phone, address_street = @address_street, address_city= @address_city, address_state = @address_state, address_zip = @address_zip, deleted = @deleted WHERE id = @id'
 		);
@@ -229,35 +299,42 @@ export class DatabaseCustomerService {
 			address_state: customer.address.state,
 			address_zip: customer.address.zip,
 			deleted: customer.deleted,
-			id: id
+			id: customerID
 		});
 
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: 'Updated customer successfully'
+			};
 		} else {
-			return false;
+			console.error('Failed to update customer - customerID:', customerID);
+			return {
+				success: false,
+				message: 'Failed to update customer'
+			};
 		}
 	}
 
-	deleteCustomerByID(id: number): boolean {
+	deleteCustomer(customerID: number): DatabaseResponse {
 		const query = this.db.prepare('UPDATE customers SET deleted = 1 WHERE id = ?');
-		const result = query.run(id);
+		const result = query.run(customerID);
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: 'Customer was deleted successfully'
+			};
 		} else {
-			return false;
+			return {
+				success: false,
+				message: 'Failed to delete customer'
+			};
 		}
 	}
 }
 
-const defaultCustomerDatabase = new DatabaseCustomerService();
-
-// Exported functions for customer database operations
-export const Customer_AddNewCustomer = (customer: CustomerRecord) => defaultCustomerDatabase.addNewCustomer(customer);
-export const Customer_GetCustomers = (userID: number) => defaultCustomerDatabase.getCustomers(userID);
-export const Customer_GetCustomerByID = (id: number) => defaultCustomerDatabase.getCustomerByID(id);
-export const Customer_UpdateCustomerByID = (id: number, customer: CustomerRecord) => defaultCustomerDatabase.updateCustomerByID(id, customer);
-export const Customer_DeleteCustomerByID = (id: number) => defaultCustomerDatabase.deleteCustomerByID(id);
+export const AuthDatabaseService = new AuthService();
+export const CustomerDatabaseService = new CustomerService();
 
 // Create a class to handle database operations for appointment-related functions
 export class DatabaseAppointmentService {
@@ -533,7 +610,7 @@ export class DatabaseNoteService {
 		}
 	}
 
-	GetServiceNotes(serviceID: number){
+	GetServiceNotes(serviceID: number) {
 		const query = this.db.prepare('SELECT n.* FROM service_notes sn INNER JOIN notes n ON sn.noteID = n.id WHERE sn.serviceID = ? and deleted = 0');
 		const result = query.all(serviceID);
 		if (result == undefined) {
@@ -560,23 +637,19 @@ export const Notes_CreateCustomerNote = (customerID: number, noteData: BaseNote)
 export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabase.GetCustomerNotes(customerID);
 
 //Services
-export const Notes_CreateServiceNote = (serviceID: number, noteData: BaseNote) => defaultNoteDatabase.CreateServiceNote(serviceID, noteData)
-export const Notes_GetServiceNotes = (serviceID: number) => defaultNoteDatabase.GetServiceNotes(serviceID)
-
-
+export const Notes_CreateServiceNote = (serviceID: number, noteData: BaseNote) => defaultNoteDatabase.CreateServiceNote(serviceID, noteData);
+export const Notes_GetServiceNotes = (serviceID: number) => defaultNoteDatabase.GetServiceNotes(serviceID);
 
 export class DatabaseServiceService {
 	private db;
 
-	constructor(db = getDB()){
-		this.db = db
+	constructor(db = getDB()) {
+		this.db = db;
 	}
 
 	// Add a new appointment to the database
 	addNewService(service: BaseServiceRecord): boolean {
-		const query = this.db.prepare(
-			'Insert into services (userID, name, description, price, deleted) VALUES (@userID, @name, @description, @price,  @deleted)'
-		);
+		const query = this.db.prepare('Insert into services (userID, name, description, price, deleted) VALUES (@userID, @name, @description, @price,  @deleted)');
 		const result = query.run({
 			userID: service.userID,
 			name: service.name,
@@ -597,7 +670,7 @@ export class DatabaseServiceService {
 		const query = this.db.prepare('SELECT * from services WHERE id = ?');
 		const result = <ServiceRecord>query.get(id);
 		if (result) {
-			return result
+			return result;
 		} else {
 			return null;
 		}
@@ -616,9 +689,7 @@ export class DatabaseServiceService {
 
 	// Update an appointment's information by its ID
 	updateServiceByID(serviceID: number, service: ServiceRecord): boolean {
-		const query = this.db.prepare(
-			'Update services set name = @name, description=@description, price=@price, deleted = @deleted WHERE id = @id'
-		);
+		const query = this.db.prepare('Update services set name = @name, description=@description, price=@price, deleted = @deleted WHERE id = @id');
 		const result = query.run({
 			id: serviceID,
 			name: service.name,
@@ -647,9 +718,8 @@ export class DatabaseServiceService {
 }
 const defaultServiceDatabase = new DatabaseServiceService();
 
-export const Service_AddNewService = (serviceData: BaseServiceRecord) => defaultServiceDatabase.addNewService(serviceData)
-export const Service_GetServicesByID = (serviceID: number) => defaultServiceDatabase.getServiceByID(serviceID)
-export const Service_GetServicesByUserID = (userID: number) => defaultServiceDatabase.getServicesByUserID(userID)
-export const Service_UpdateByID = (serviceID: number, record:ServiceRecord) => defaultServiceDatabase.updateServiceByID(serviceID,record)
-export const Service_DeleteByID = (serviceID: number) => defaultServiceDatabase.deleteServiceByID(serviceID)
-
+export const Service_AddNewService = (serviceData: BaseServiceRecord) => defaultServiceDatabase.addNewService(serviceData);
+export const Service_GetServicesByID = (serviceID: number) => defaultServiceDatabase.getServiceByID(serviceID);
+export const Service_GetServicesByUserID = (userID: number) => defaultServiceDatabase.getServicesByUserID(userID);
+export const Service_UpdateByID = (serviceID: number, record: ServiceRecord) => defaultServiceDatabase.updateServiceByID(serviceID, record);
+export const Service_DeleteByID = (serviceID: number) => defaultServiceDatabase.deleteServiceByID(serviceID);

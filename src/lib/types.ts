@@ -1,3 +1,26 @@
+export type DatabaseResponse = {
+	success: boolean;
+	message: string;
+};
+
+export type DatabaseDataResponse<T> =
+	| {
+			success: true;
+			message: string;
+			/**
+			 *  The returned data
+			 * @remarks
+			 * This field is only available when success is true.
+			 * You must check the success field before accessing data.
+			 */
+			data: T;
+	  }
+	| {
+			success: false;
+			message: string;
+			data?: undefined;
+	  };
+
 type Address = {
 	street: string;
 	city: string;

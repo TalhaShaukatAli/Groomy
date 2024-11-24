@@ -1,4 +1,4 @@
-import { Customer_GetCustomerByID } from '$lib/db/database';
+import { CustomerDatabaseService } from '$lib/db/database';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -6,10 +6,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	const customerID = params.slug;
 	const editView = url.searchParams.get('edit') ? true : false;
 
-	const result = Customer_GetCustomerByID(parseInt(customerID));
-	if (result != null) {
+	const result = CustomerDatabaseService.getCustomer(parseInt(customerID));
+	if (result.success) {
 		return {
-			customerInfo: JSON.stringify(result),
+			customerInfo: JSON.stringify(result.data),
 			editView: JSON.stringify(editView)
 		};
 	} else {

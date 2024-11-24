@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { generateRandomString } from '$lib';
 import { TestMapping } from './Mapping';
+import { CustomerDataObject, Customers } from './DataObjects';
 
 test.describe('Existing Account', async () => {
 	const email = 'test@gmail.com';
@@ -8,24 +9,23 @@ test.describe('Existing Account', async () => {
 	test('Edit existing account', async ({ page }) => {
 		const map = new TestMapping(page);
 		await map.Account_Login(email, password);
-		await page.getByRole('link', { name: 'Customers' }).click();
-		await expect(page.locator('body')).toContainText('Ethan Henrickson test@gmail.com 218-123-1234 View Edit Delete');
-		await page.getByRole('link', { name: 'View' }).click();
-		await expect(page.locator('form')).toContainText('Ethan Henrickson Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:');
-		await page.getByRole('button', { name: 'Edit Customer' }).click();
-		await page.locator('input[name="firstName"]').click();
-		await page.locator('input[name="firstName"]').fill('Etha');
-		await page.locator('input[name="state"]').click();
-		await page.locator('input[name="state"]').fill('M');
-		await page.getByRole('button', { name: 'Save' }).click();
-		await page.getByRole('link', { name: 'View' }).click();
-		await expect(page.locator('form')).toContainText('Etha Henrickson Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:');
-		await page.getByRole('button', { name: 'Edit Customer' }).click();
-		await page.locator('input[name="firstName"]').click();
-		await page.locator('input[name="firstName"]').fill('Ethan');
-		await page.locator('input[name="state"]').click();
-		await page.locator('input[name="state"]').fill('MN');
-		await page.getByRole('button', { name: 'Save' }).click();
+		
+		await map.AssertCustomer(CustomerDataObject.YoungProfessional);
+		await map.Customer_Edit(CustomerDataObject.YoungProfessional.phone, CustomerDataObject.SuburbanMom)
+		await map.AssertCustomer(CustomerDataObject.SuburbanMom);
+		await map.Customer_Edit(CustomerDataObject.SuburbanMom.phone, CustomerDataObject.YoungProfessional)
+		await map.AssertCustomer(CustomerDataObject.YoungProfessional);
+
+	});
+
+	test('Delete account', async ({ page }) => {
+		const map = new TestMapping(page);
+		await map.Account_Login(email, password);
+		
+		await map.Customer_Create(CustomerDataObject.SeniorCustomer);
+		await map.AssertCustomer(CustomerDataObject.SeniorCustomer);
+		await map.Customer_Delete(CustomerDataObject.SeniorCustomer.phone)
+		await map.AssertNotCustomer(CustomerDataObject.YoungProfessional);
 	});
 });
 
@@ -41,31 +41,10 @@ test.describe('New Account', async () => {
 		await map.Account_Register(FirstName, LastName, Email, Password);
 		await map.Account_Login(Email, Password);
 
-		await page.getByRole('link', { name: 'Customers' }).click();
-		await page.getByRole('link', { name: 'Add New Customer >' }).click();
-		await page.locator('input[name="firstName"]').click();
-		await page.locator('input[name="firstName"]').fill('Test');
-		await page.locator('input[name="lastName"]').click();
-		await page.locator('input[name="lastName"]').fill('Test');
-		await page.locator('input[name="phone"]').click();
-		await page.locator('input[name="phone"]').fill('1234567890');
-		await page.locator('input[name="email"]').click();
-		await page.locator('input[name="email"]').fill('test@gmail.com');
-		await page.locator('input[name="street"]').click();
-		await page.locator('input[name="street"]').fill('1234 fish st');
-		await page.locator('input[name="city"]').click();
-		await page.locator('input[name="city"]').fill('test');
-		await page.locator('input[name="state"]').click();
-		await page.locator('input[name="state"]').fill('test');
-		await page.locator('input[name="zip"]').click();
-		await page.locator('input[name="zip"]').fill('10123');
-		await page.getByRole('button', { name: 'Create Customer' }).click();
-		await page
-			.locator('div')
-			.filter({ hasText: /^Test Test test@gmail\.com 1234567890 View Edit Delete$/ })
-			.getByRole('link')
-			.first()
-			.click();
-		await expect(page.locator('body')).toContainText('Test Test Edit Customer First Name: Last Name: Phone: Email: Street: City: State: Zip Code:');
+		await map.Customer_Create(CustomerDataObject.BasicFemale);
+		await map.AssertCustomer(CustomerDataObject.BasicFemale);
+
+		await map.Customer_Edit(CustomerDataObject.BasicFemale.phone, CustomerDataObject.BasicMale);
+		await map.AssertCustomer(CustomerDataObject.BasicMale)
 	});
 });

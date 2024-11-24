@@ -1,22 +1,4 @@
-import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, UserRecord, BaseNote, Note, ServiceRecord, BaseServiceRecord } from '$lib/types';
-
-interface LoginResponse {
-	success: boolean;
-	message: string;
-	data: UserRecord;
-}
-
-interface CustomerArrayResponse {
-	success: boolean;
-	message: string;
-	data: CustomerRecord[];
-}
-
-interface CustomerResponse {
-	success: boolean;
-	message: string;
-	data: CustomerRecord;
-}
+import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, UserRecord, BaseNote, Note, ServiceRecord, BaseServiceRecord, DatabaseResponse, DatabaseDataResponse } from '$lib/types';
 
 interface AppointmentArrayResponse {
 	success: boolean;
@@ -87,51 +69,36 @@ class API {
 		}
 	}
 
-	//Auth
-	static async login(credentials: { email: string; password: string }): Promise<LoginResponse> {
-		return this.request('/auth/login', {
-			method: 'POST',
-			body: JSON.stringify(credentials)
-		});
-	}
-
-	static async signup(data: BaseUserRecord): Promise<BaseResponse> {
-		return this.request('/auth/signup', {
-			method: 'POST',
-			body: JSON.stringify(data)
-		});
-	}
-
 	//Customer
-	static async updateCustomer(data: BaseCustomerRecord): Promise<BaseResponse> {
+	static async updateCustomer(data: BaseCustomerRecord): Promise<DatabaseResponse> {
 		return this.request('/customers/update', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async deleteCustomer(id: number): Promise<BaseResponse> {
+	static async deleteCustomer(id: number): Promise<DatabaseResponse> {
 		return this.request('/customers/delete', {
 			method: 'POST',
 			body: JSON.stringify(id)
 		});
 	}
 
-	static async createCustomer(data: BaseCustomerRecord): Promise<BaseResponse> {
+	static async createCustomer(data: BaseCustomerRecord): Promise<DatabaseResponse> {
 		return this.request('/customers/create', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async getCustomers(userid: number): Promise<CustomerArrayResponse> {
+	static async getCustomers(userid: number): Promise<DatabaseDataResponse<CustomerRecord>> {
 		return this.request('/customers/getCustomersByUserID', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});
 	}
 
-	static async getCustomerByID(userid: number): Promise<CustomerResponse> {
+	static async getCustomerByID(userid: number): Promise<DatabaseDataResponse<CustomerRecord[]>> {
 		return this.request('/customers/getCustomerByUserID', {
 			method: 'POST',
 			body: JSON.stringify(userid)

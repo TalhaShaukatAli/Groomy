@@ -1,4 +1,4 @@
-import { Auth_GetCookie, Auth_RemoveCookie, Auth_UpdateCookie } from '$lib/db/database';
+import { AuthDatabaseService } from '$lib/db/database';
 import { authenticatedUser } from '$lib/stores.svelte';
 import { redirect, type Handle } from '@sveltejs/kit';
 
@@ -12,25 +12,24 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (!cookieID) {
 		redirect(302, '/login');
 	}
-	console.log(cookieID)
 
 	//Get cookie from database
-	const databaseCookie = Auth_GetCookie(cookieID);
-	if (databaseCookie == null || !authenticatedUser.get()) {
+	const databaseCookie = AuthDatabaseService.getCookie(cookieID);
+	if (!databaseCookie.success || !authenticatedUser.get()) {
 		redirect(302, '/login');
 	}
 
 	//Check if cookie is valid
-	const cookieValid = databaseCookie.expireTime > Date.now();
+	const cookieValid = databaseCookie.data.expireTime > Date.now();
 	if (cookieValid) {
 		//Refresh Cookie
-		Auth_UpdateCookie(databaseCookie.id);
+		AuthDatabaseService.updateCookie(databaseCookie.data.id);
 		event.locals.user = {
-			id: databaseCookie.userID
+			id: databaseCookie.data.userID
 		};
 		return await resolve(event);
 
 	} else {
-		Auth_RemoveCookie(databaseCookie.id);
+		AuthDatabaseService.removeCookie(databaseCookie.data.id);
 	}
 };

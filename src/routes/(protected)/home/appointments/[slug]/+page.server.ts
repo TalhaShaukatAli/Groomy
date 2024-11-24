@@ -1,4 +1,4 @@
-import { Appointment_GetAppointmentByID, Customer_GetCustomers } from '$lib/db/database';
+import { Appointment_GetAppointmentByID, AuthDatabaseService, CustomerDatabaseService } from '$lib/db/database';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const editView = url.searchParams.get('edit') ? true : false;
 
 	const appointments = Appointment_GetAppointmentByID(appointmentID);
-	const customers = Customer_GetCustomers(locals.user?.id);
+	const customers = CustomerDatabaseService.getCustomers(locals.user?.id);
 
 	if (customers == null) {
 		redirect(302, '/home/customers');
