@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { generateRandomString } from '$lib';
 import { TestMapping } from './Mapping';
-import { CustomerDataObject, Customers } from './DataObjects';
+import { CustomerDataObject } from './DataObjects';
 
 test.describe('Existing Account', async () => {
 	const email = 'test@gmail.com';
@@ -18,13 +18,23 @@ test.describe('Existing Account', async () => {
 
 	});
 
-	test('Delete account', async ({ page }) => {
+	test('Delete account from main page', async ({ page }) => {
 		const map = new TestMapping(page);
 		await map.Account_Login(email, password);
 		
 		await map.Customer_Create(CustomerDataObject.SeniorCustomer);
 		await map.AssertCustomer(CustomerDataObject.SeniorCustomer);
 		await map.Customer_Delete(CustomerDataObject.SeniorCustomer.phone)
+		await map.AssertNotCustomer(CustomerDataObject.YoungProfessional);
+	});
+
+	test('Delete account from edit page', async ({ page }) => {
+		const map = new TestMapping(page);
+		await map.Account_Login(email, password);
+		
+		await map.Customer_Create(CustomerDataObject.SeniorCustomer);
+		await map.AssertCustomer(CustomerDataObject.SeniorCustomer);
+		await map.Customer_DeleteFromEdit(CustomerDataObject.SeniorCustomer.phone)
 		await map.AssertNotCustomer(CustomerDataObject.YoungProfessional);
 	});
 });

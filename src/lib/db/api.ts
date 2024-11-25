@@ -106,42 +106,42 @@ class API {
 	}
 
 	//Appointments
-	static async getAppointmentsByUserID(userid: number): Promise<AppointmentArrayResponse> {
+	static async getAppointmentsByUserID(userid: number): Promise<DatabaseDataResponse<AppointmentRecord[]>> {
 		return this.request('/appointments/getByUserID', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});
 	}
 
-	static async getAppointmentsByCustomerID(customerid: number): Promise<AppointmentArrayResponse> {
+	static async getAppointmentsByCustomerID(customerid: number): Promise<DatabaseDataResponse<AppointmentRecord[]>> {
 		return this.request('/appointments/getByCustomerID', {
 			method: 'POST',
 			body: JSON.stringify(customerid)
 		});
 	}
 
-	static async getAppointmentByID(id: number): Promise<AppointmentResponse> {
+	static async getAppointmentByID(id: number): Promise<DatabaseDataResponse<AppointmentRecord>> {
 		return this.request('/appointments/getByAppointmentID', {
 			method: 'POST',
 			body: JSON.stringify(id)
 		});
 	}
 
-	static async createAppointment(data: BaseAppointmentRecord): Promise<BaseResponse> {
+	static async createAppointment(data: BaseAppointmentRecord): Promise<DatabaseResponse> {
 		return this.request('/appointments/create', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async updateAppointment(data: AppointmentRecord): Promise<BaseResponse> {
+	static async updateAppointment(data: AppointmentRecord): Promise<DatabaseResponse> {
 		return this.request('/appointments/update', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async deleteAppointment(id: number): Promise<BaseResponse> {
+	static async deleteAppointment(id: number): Promise<DatabaseResponse> {
 		return this.request('/appointments/delete', {
 			method: 'POST',
 			body: JSON.stringify(id)

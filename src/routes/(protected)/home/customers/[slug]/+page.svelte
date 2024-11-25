@@ -4,11 +4,13 @@
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	import Notes from '$lib/components/Notes_Customer.svelte';
+	import { preventDefault } from 'svelte/legacy';
+	import { redirect } from '@sveltejs/kit';
 	page.set('Customer');
 
 	let { data } = $props();
 
-	let customer: CustomerRecord = $state(JSON.parse(data.customerInfo));
+	let customer: CustomerRecord = $state(JSON.parse(data.customerInfo) as CustomerRecord);
 	let editView: boolean = $state(JSON.parse(data.editView));
 
 	function changeToEdit() {
@@ -27,12 +29,12 @@
 		}
 	}
 
-	async function onDelete(id: number) {
+	async function DeleteByID(id: number) {
 		let confirmResult = confirm('Are you sure you want to delete this user?');
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
 			if (result.success) {
-				goto('/home/customers');
+				redirect(302,"/home/customers")
 			}
 		}
 	}
@@ -47,15 +49,18 @@
 				</div>
 				<div class="grow"></div>
 				{#if !editView}
-					<button onclick={changeToEdit}>Edit Customer</button>
+					<button type="button" onclick={changeToEdit}>Edit Customer</button>
 				{:else}
 					<button type="submit">Save</button>
 					<button
-						onclick={() => {
-							onDelete(customer.id);
+						type="button"
+						onclick={(e) => {
+							e.preventDefault;
+							e.stopPropagation;
+							DeleteByID(customer.id);
 						}}>Delete</button
 					>
-					<button
+					<button type="button"
 						onclick={() => {
 							onCancel();
 						}}>Cancel</button

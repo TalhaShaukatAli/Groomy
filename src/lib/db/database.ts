@@ -325,6 +325,7 @@ class CustomerService extends BaseDatabaseService {
 				message: 'Customer was deleted successfully'
 			};
 		} else {
+			console.error('Failed to delete customer - customerID:', customerID);
 			return {
 				success: false,
 				message: 'Failed to delete customer'
@@ -333,15 +334,9 @@ class CustomerService extends BaseDatabaseService {
 	}
 }
 
-export const AuthDatabaseService = new AuthService();
-export const CustomerDatabaseService = new CustomerService();
-
-// Create a class to handle database operations for appointment-related functions
-export class DatabaseAppointmentService {
-	private db;
-
-	constructor(db = getDB()) {
-		this.db = db;
+class AppointmentService extends BaseDatabaseService {
+	constructor() {
+		super();
 	}
 
 	private AppointmentDatabaseResponseToAppointmentRecord(record: DatabaseAppointmentResponse): AppointmentRecord {
@@ -369,7 +364,7 @@ export class DatabaseAppointmentService {
 	}
 
 	// Add a new appointment to the database
-	addNewAppointment(appointment: BaseAppointmentRecord): boolean {
+	createAppointment(appointment: BaseAppointmentRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'Insert into appointments (userID, customerID, title, description, address_street, address_city, address_state, address_zip, time_date, time_start, time_end, time_exact, deleted) VALUES (@userID, @customerID, @title, @description, @address_street, @address_city, @address_state, @address_zip, @time_date, @time_start, @time_end, @time_exact, @deleted)'
 		);
@@ -389,26 +384,42 @@ export class DatabaseAppointmentService {
 			deleted: 0
 		});
 
-		if (result.changes == 1) {
-			return true;
+		if(result.changes == 1){
+			return {
+				success: true,
+				message: 'Appointment was created successfully'
+			};
 		} else {
-			return false;
+			console.error('Failed to create appointment - appointment:', appointment);
+			return {
+				success: false,
+				message: 'Appointment creation failed'
+			};
 		}
 	}
 
 	// Retrieve a specific appointment by its ID
-	getAppointmentByID(id: number): AppointmentRecord | null {
+	getAppointment(appointmentID: number): DatabaseDataResponse<AppointmentRecord> {
 		const query = this.db.prepare('SELECT * from appointments WHERE id = ?');
-		const result = <DatabaseAppointmentResponse>query.get(id);
+		const result = <DatabaseAppointmentResponse>query.get(appointmentID);
 		if (result) {
-			return this.AppointmentDatabaseResponseToAppointmentRecord(result);
+			
+			return {
+				success: true,
+				message: 'Appointment was retrieved successfully',
+				data: this.AppointmentDatabaseResponseToAppointmentRecord(result)
+			};
 		} else {
-			return null;
+			console.error('Failed to retrieve appointment - appointmentID:', appointmentID);
+			return {
+				success: false,
+				message: "Appointment couldn't be found",
+			};
 		}
 	}
 
 	// Retrieve appointments for a specific customer, excluding deleted appointments
-	getAppointmentsByCustomerID(customerID: number): AppointmentRecord[] | null {
+	getAppointmentsByCustomerID(customerID: number): DatabaseDataResponse<AppointmentRecord[]>{
 		const query = this.db.prepare('SELECT * from appointments WHERE customerID = ?');
 		const result = <DatabaseAppointmentResponse[]>query.all(customerID);
 		const resultArray: AppointmentRecord[] = [];
@@ -417,14 +428,22 @@ export class DatabaseAppointmentService {
 				const data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
 				resultArray.push(data);
 			}
-			return resultArray;
+			return {
+				success: true,
+				message: "Appointments couldn't be found",
+				data:resultArray
+			};
 		} else {
-			return null;
+			console.error('Failed to retrieve appointments - customerID:', customerID);
+			return {
+				success: false,
+				message: "Appointments couldn't be found",
+			};
 		}
 	}
 
 	// Retrieve appointments for a specific user, sorted by time and excluding deleted appointments
-	getAppointmentsByUserID(userID: number): AppointmentRecord[] | null {
+	getAppointmentsByUserID(userID: number): DatabaseDataResponse<AppointmentRecord[]> {
 		const query = this.db.prepare('SELECT * from appointments WHERE userID = ? and deleted = 0');
 		const result = <DatabaseAppointmentResponse[]>query.all(userID);
 		const resultArray: AppointmentRecord[] = [];
@@ -433,14 +452,22 @@ export class DatabaseAppointmentService {
 				const data = this.AppointmentDatabaseResponseToAppointmentRecord(item);
 				resultArray.push(data);
 			}
-			return resultArray;
+			return {
+				success: true,
+				message: "Appointments couldn't be found",
+				data: resultArray
+			};
 		} else {
-			return null;
+			console.error('Failed to retrieve appointments - userID:', userID);
+			return {
+				success: false,
+				message: "Appointments couldn't be found",
+			};
 		}
 	}
 
 	// Update an appointment's information by its ID
-	async updateAppointmentByID(id: number, appointment: AppointmentRecord): Promise<boolean> {
+	updateAppointmentByID(appointmentID: number, appointment: AppointmentRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'Update appointments set userID = @userID, customerID=@customerID, title=@title, description=@description, address_street= @address_street, address_city=@address_city, address_state=@address_state, address_zip=@address_zip, time_date = @time_date, time_start = @time_start, time_end = @time_end, time_exact = @time_exact, deleted=@deleted where id = @id'
 		);
@@ -458,37 +485,45 @@ export class DatabaseAppointmentService {
 			time_end: appointment.time.end,
 			time_exact: appointment.time.exact,
 			deleted: 0,
-			id: id
+			id: appointmentID
 		});
 
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: "Appointment was updated",
+			};
 		} else {
-			return false;
+			console.error('Failed to update appointment - appointmentID:', appointmentID);
+			return {
+				success: false,
+				message: "Appointment couldn't be updates",
+			};
 		}
 	}
 
 	// Delete an appointment's information by its ID
-	deleteAppointmentByID(id: number): boolean {
+	deleteAppointment(appointmentID: number): DatabaseResponse {
 		const query = this.db.prepare('UPDATE appointments SET deleted = 1 WHERE id = ?');
-		const result = query.run(id);
+		const result = query.run(appointmentID);
 		if (result.changes == 1) {
-			return true;
+			return {
+				success: true,
+				message: "Appointment was deleted",
+			};
 		} else {
-			return false;
+			console.error('Failed to delete appointment - appointmentID:', appointmentID);
+			return {
+				success: false,
+				message: "Appointment couldn't be deleted",
+			};
 		}
 	}
 }
 
-const defaultAppointmentDatabase = new DatabaseAppointmentService();
-
-// Exported functions for appointment database operations
-export const Appointment_AddNewAppointment = (appointment: BaseAppointmentRecord) => defaultAppointmentDatabase.addNewAppointment(appointment);
-export const Appointment_GetAppointmentByID = (id: number) => defaultAppointmentDatabase.getAppointmentByID(id);
-export const Appointment_GetAppointmentsByCustomerID = (id: number) => defaultAppointmentDatabase.getAppointmentsByCustomerID(id);
-export const Appointment_GetAppointmentsByUserID = (id: number) => defaultAppointmentDatabase.getAppointmentsByUserID(id);
-export const Appointment_UpdateAppointmentByID = (id: number, appointment: AppointmentRecord) => defaultAppointmentDatabase.updateAppointmentByID(id, appointment);
-export const Appointment_DeleteAppointmentByID = (id: number) => defaultAppointmentDatabase.deleteAppointmentByID(id);
+export const AuthDatabaseService = new AuthService();
+export const CustomerDatabaseService = new CustomerService();
+export const AppointmentDatabaseService = new AppointmentService()
 
 export class DatabaseNoteService {
 	private db;

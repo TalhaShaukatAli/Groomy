@@ -79,7 +79,13 @@ export class TestMapping {
 		await this.GoTo('Customers');
 		await this.page.on('dialog', dialog => dialog.accept());
 		await this.page.locator('.row').filter({ hasText: customerPhone }).getByText('Delete').click();
+	}
 
+	async Customer_DeleteFromEdit(customerPhone: string){
+		await this.GoTo('Customers');
+		await this.page.locator('.row').filter({ hasText: customerPhone }).getByText('Edit').click();
+		await this.page.on('dialog', dialog => dialog.accept());
+		await this.page.getByText('Delete').click();
 	}
 
 	async AssertCustomer(customerRecord: BaseCustomerRecord) {
