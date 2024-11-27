@@ -2,6 +2,7 @@
 	import type { CustomerRecord } from '$lib/types.js';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
+	import { redirect } from '@sveltejs/kit';
 	page.set('Customer');
 
 	let { data } = $props();
@@ -12,7 +13,7 @@
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
 			if (result.success) {
-				window.location.reload();
+				window.location.reload()
 			}
 		}
 	}

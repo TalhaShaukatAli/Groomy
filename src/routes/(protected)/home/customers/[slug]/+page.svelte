@@ -4,8 +4,6 @@
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	import Notes from '$lib/components/Notes_Customer.svelte';
-	import { preventDefault } from 'svelte/legacy';
-	import { redirect } from '@sveltejs/kit';
 	page.set('Customer');
 
 	let { data } = $props();
@@ -34,7 +32,7 @@
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
 			if (result.success) {
-				redirect(302,"/home/customers")
+				goto("/home/customers")
 			}
 		}
 	}
@@ -54,9 +52,7 @@
 					<button type="submit">Save</button>
 					<button
 						type="button"
-						onclick={(e) => {
-							e.preventDefault;
-							e.stopPropagation;
+						onclick={() => {
 							DeleteByID(customer.id);
 						}}>Delete</button
 					>

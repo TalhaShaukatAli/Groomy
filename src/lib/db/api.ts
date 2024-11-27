@@ -1,17 +1,5 @@
 import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, UserRecord, BaseNote, Note, ServiceRecord, BaseServiceRecord, DatabaseResponse, DatabaseDataResponse } from '$lib/types';
 
-interface AppointmentArrayResponse {
-	success: boolean;
-	message: string;
-	data: AppointmentRecord[];
-}
-
-interface AppointmentResponse {
-	success: boolean;
-	message: string;
-	data: AppointmentRecord;
-}
-
 interface ServiceResponse {
 	success: boolean;
 	message: string;
@@ -150,35 +138,35 @@ class API {
 
 
 	//Services
-	static async getServicesByUserID(userID: number): Promise<ServiceArrayResponse> {
+	static async getServicesByUserID(userID: number): Promise<DatabaseDataResponse<ServiceRecord[]>> {
 		return this.request('/services/getServicesByUserID', {
 			method: 'POST',
 			body: JSON.stringify(userID)
 		});
 	}
 
-	static async getServiceByID(serviceID: number): Promise<ServiceResponse> {
+	static async getServiceByID(serviceID: number): Promise<DatabaseDataResponse<ServiceRecord>> {
 		return this.request('/services/getServiceByID', {
 			method: 'POST',
 			body: JSON.stringify(serviceID)
 		});
 	}
 
-	static async createService(data: BaseServiceRecord): Promise<BaseResponse> {
+	static async createService(data: BaseServiceRecord): Promise<DatabaseResponse> {
 		return this.request('/services/create', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async updateService(data: ServiceRecord): Promise<BaseResponse> {
+	static async updateService(data: ServiceRecord): Promise<DatabaseResponse> {
 		return this.request('/services/update', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});
 	}
 
-	static async deleteService(serviceID: number): Promise<BaseResponse> {
+	static async deleteService(serviceID: number): Promise<DatabaseResponse> {
 		return this.request('/services/delete', {
 			method: 'POST',
 			body: JSON.stringify(serviceID)

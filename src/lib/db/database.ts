@@ -521,9 +521,122 @@ class AppointmentService extends BaseDatabaseService {
 	}
 }
 
+class ServiceService extends BaseDatabaseService{
+	constructor(){
+		super()
+	}
+
+	// Add a new appointment to the database
+	createService(service: BaseServiceRecord): DatabaseResponse {
+		const query = this.db.prepare('Insert into services (userID, name, description, price, deleted) VALUES (@userID, @name, @description, @price,  @deleted)');
+		const result = query.run({
+			userID: service.userID,
+			name: service.name,
+			description: service.description,
+			price: service.price,
+			deleted: 0
+		});
+
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: "Service created",
+			};
+		} else {
+			console.error('Failed to create service - service:', service);
+			return {
+				success: false,
+				message: "Service couldn't be created",
+			};
+		}
+	}
+
+	// Retrieve a specific appointment by its ID
+	getService(serviceID: number): DatabaseDataResponse<ServiceRecord> {
+		const query = this.db.prepare('SELECT * from services WHERE id = ?');
+		const result = <ServiceRecord>query.get(serviceID);
+		if (result) {
+			return {
+				success: true,
+				message: "Service found successfully",
+				data: result
+			};
+		} else {
+			console.error('Failed to get service - serviceID:', serviceID);
+			return {
+				success: false,
+				message: "Service wasn't found",
+			};
+		}
+	}
+
+	// Retrieve appointments for a specific user, sorted by time and excluding deleted appointments
+	getServicesByUserID(userID: number): DatabaseDataResponse<ServiceRecord[]> {
+		const query = this.db.prepare('SELECT * from services WHERE userID = ? and deleted = 0');
+		const result = <ServiceRecord[]>query.all(userID);
+		if (result) {
+			return {
+				success: true,
+				message: "Service found",
+				data: result
+			};
+		} else {
+			console.error('Failed to get service - userID:', userID);
+			return {
+				success: false,
+				message: "Service wasn't found",
+			};
+		}
+	}
+
+	// Update an appointment's information by its ID
+	updateServiceByID(serviceID: number, service: ServiceRecord): DatabaseResponse {
+		const query = this.db.prepare('Update services set name = @name, description=@description, price=@price, deleted = @deleted WHERE id = @id');
+		const result = query.run({
+			id: serviceID,
+			name: service.name,
+			description: service.description,
+			price: service.price,
+			deleted: 0
+		});
+
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: "Service was updated",
+			};
+		} else {
+			console.error('Failed to update service - serviceID:', serviceID);
+			return {
+				success: false,
+				message: "Service wasn't updated",
+			};
+		}
+	}
+
+	// Delete an appointment's information by its ID
+	deleteService(serviceID: number): DatabaseResponse {
+		const query = this.db.prepare('UPDATE services SET deleted = 1 WHERE id = ?');
+		const result = query.run(serviceID);
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: "Service was deleted",
+			};
+		} else {
+			console.error('Failed to delete service - serviceID:', serviceID);
+			return {
+				success: false,
+				message: "Service wasn't updated",
+			};
+		}
+	}
+}
+
 export const AuthDatabaseService = new AuthService();
 export const CustomerDatabaseService = new CustomerService();
 export const AppointmentDatabaseService = new AppointmentService()
+export const ServiceDatabaseService = new ServiceService()
 
 export class DatabaseNoteService {
 	private db;
@@ -674,87 +787,3 @@ export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabas
 //Services
 export const Notes_CreateServiceNote = (serviceID: number, noteData: BaseNote) => defaultNoteDatabase.CreateServiceNote(serviceID, noteData);
 export const Notes_GetServiceNotes = (serviceID: number) => defaultNoteDatabase.GetServiceNotes(serviceID);
-
-export class DatabaseServiceService {
-	private db;
-
-	constructor(db = getDB()) {
-		this.db = db;
-	}
-
-	// Add a new appointment to the database
-	addNewService(service: BaseServiceRecord): boolean {
-		const query = this.db.prepare('Insert into services (userID, name, description, price, deleted) VALUES (@userID, @name, @description, @price,  @deleted)');
-		const result = query.run({
-			userID: service.userID,
-			name: service.name,
-			description: service.description,
-			price: service.price,
-			deleted: 0
-		});
-
-		if (result.changes == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	// Retrieve a specific appointment by its ID
-	getServiceByID(id: number): ServiceRecord | null {
-		const query = this.db.prepare('SELECT * from services WHERE id = ?');
-		const result = <ServiceRecord>query.get(id);
-		if (result) {
-			return result;
-		} else {
-			return null;
-		}
-	}
-
-	// Retrieve appointments for a specific user, sorted by time and excluding deleted appointments
-	getServicesByUserID(userID: number): ServiceRecord[] | null {
-		const query = this.db.prepare('SELECT * from services WHERE userID = ? and deleted = 0');
-		const result = <ServiceRecord[]>query.all(userID);
-		if (result) {
-			return result;
-		} else {
-			return null;
-		}
-	}
-
-	// Update an appointment's information by its ID
-	updateServiceByID(serviceID: number, service: ServiceRecord): boolean {
-		const query = this.db.prepare('Update services set name = @name, description=@description, price=@price, deleted = @deleted WHERE id = @id');
-		const result = query.run({
-			id: serviceID,
-			name: service.name,
-			description: service.description,
-			price: service.price,
-			deleted: 0
-		});
-
-		if (result.changes == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	// Delete an appointment's information by its ID
-	deleteServiceByID(id: number): boolean {
-		const query = this.db.prepare('UPDATE services SET deleted = 1 WHERE id = ?');
-		const result = query.run(id);
-		if (result.changes == 1) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-}
-const defaultServiceDatabase = new DatabaseServiceService();
-
-export const Service_AddNewService = (serviceData: BaseServiceRecord) => defaultServiceDatabase.addNewService(serviceData);
-export const Service_GetServicesByID = (serviceID: number) => defaultServiceDatabase.getServiceByID(serviceID);
-export const Service_GetServicesByUserID = (userID: number) => defaultServiceDatabase.getServicesByUserID(userID);
-export const Service_UpdateByID = (serviceID: number, record: ServiceRecord) => defaultServiceDatabase.updateServiceByID(serviceID, record);
-export const Service_DeleteByID = (serviceID: number) => defaultServiceDatabase.deleteServiceByID(serviceID);

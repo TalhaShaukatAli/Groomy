@@ -12,7 +12,6 @@ const config: PlaywrightTestConfig = {
 	testDir: 'tests',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
 	retries: 1,
-	fullyParallel: true,
 	outputDir: 'test-results',
 	reporter: 'html'
 };
