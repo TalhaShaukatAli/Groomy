@@ -1,16 +1,4 @@
-import type { BaseUserRecord, BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, UserRecord, BaseNote, Note, ServiceRecord, BaseServiceRecord, DatabaseResponse, DatabaseDataResponse } from '$lib/types';
-
-interface ServiceResponse {
-	success: boolean;
-	message: string;
-	data: AppointmentRecord;
-}
-
-interface ServiceArrayResponse {
-	success: boolean;
-	message: string;
-	data: AppointmentRecord[];
-}
+import type { BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, BaseNote, Note, ServiceRecord, BaseServiceRecord, DatabaseResponse, DatabaseDataResponse } from '$lib/types';
 
 interface NoteArrayResponse {
 	success: boolean;

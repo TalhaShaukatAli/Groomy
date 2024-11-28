@@ -2,14 +2,12 @@
 
 import { AuthDatabaseService } from '$lib/db/database';
 import { generateRandomString } from '@oslojs/crypto/random';
-import { authenticatedUser } from '$lib/stores.svelte';
 import argon2 from 'argon2';
 import type { BaseUserRecord } from '$lib/types';
 import type { Actions } from './$types';
 
 import type { RandomReader } from '@oslojs/crypto/random';
 import { fail, redirect } from '@sveltejs/kit';
-import API from '$lib/db/api';
 
 const random: RandomReader = {
 	read(bytes: Uint8Array): void {
@@ -30,7 +28,6 @@ export const actions = {
 				const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
 				AuthDatabaseService.createCookie(cookieID, user.data.id);
 				cookies.set('sessionID', cookieID, { path: '/' });
-				authenticatedUser.set(user.data);
 				redirect(302, '/home');
 			}
 		}

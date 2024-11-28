@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { generateRandomString } from '$lib';
 import { TestMapping } from './Mapping';
 import { CustomerDataObject } from './DataObjects';
@@ -25,7 +25,7 @@ test.describe('Existing Account', async () => {
 		await map.Customer_Create(CustomerDataObject.SeniorCustomer);
 		await map.AssertCustomer(CustomerDataObject.SeniorCustomer);
 		await map.Customer_Delete(CustomerDataObject.SeniorCustomer.phone)
-		await map.AssertNotCustomer(CustomerDataObject.YoungProfessional);
+		await map.AssertNotCustomer(CustomerDataObject.SeniorCustomer);
 	});
 
 	test('Delete account from edit page', async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe('Existing Account', async () => {
 		await map.Customer_Create(CustomerDataObject.SeniorCustomer);
 		await map.AssertCustomer(CustomerDataObject.SeniorCustomer);
 		await map.Customer_DeleteFromEdit(CustomerDataObject.SeniorCustomer.phone)
-		await map.AssertNotCustomer(CustomerDataObject.YoungProfessional);
+		await map.AssertNotCustomer(CustomerDataObject.SeniorCustomer);
 	});
 });
 

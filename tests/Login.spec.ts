@@ -9,10 +9,8 @@ test("Make sure you can't go to protected page", async ({ page }) => {
 });
 
 test.describe('Existing Account', async () => {
-	let testEmail = 'test@gmail.com';
-	let testPassword = 'test123';
-	let firstName = 'Test';
-	let lastName = 'Test';
+	const testEmail = 'test@gmail.com';
+	const testPassword = 'test123';
 
 	test('Login Test', async ({ page }) => {
 		const map = new TestMapping(page);

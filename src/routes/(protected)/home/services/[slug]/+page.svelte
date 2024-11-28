@@ -49,15 +49,15 @@
 				<div class="grow"></div>
 				<div class="grow"></div>
 				{#if !editView}
-					<button onclick={changeToEdit}>Edit Service</button>
+					<button onclick={changeToEdit} type="button">Edit Service</button>
 				{:else}
 					<button type="submit">Save</button>
-					<button
+					<button type="button"
 						onclick={() => {
 							onDelete(service.id);
 						}}>Delete</button
 					>
-					<button
+					<button type="button"
 						onclick={() => {
 							onCancel();
 						}}>Cancel</button
@@ -70,7 +70,7 @@
 						Name: <input type="text" name="firstName" id="" bind:value={service.name} minlength="2" required  disabled={!editView}/>
 					</div>
 					<div>
-						Price: <input type="number" bind:value={service.price} required disabled={!editView}>
+						Price: <input type="number" bind:value={service.price} required disabled={!editView} step=".01">
 					</div>
 				</div>
 				<div class="description">
@@ -121,25 +121,6 @@
 		filter: drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem);
 
 		padding: 2rem 4rem 4rem 4rem;
-		gap: 20px;
-	}
-
-	.nameRow {
-		display: flex;
-		flex-direction: row;
-		gap: 20px;
-	}
-
-	.contactRow {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: nowrap;
-		gap: 20px;
-	}
-
-	.addressRow {
-		display: flex;
-		flex-direction: row;
 		gap: 20px;
 	}
 

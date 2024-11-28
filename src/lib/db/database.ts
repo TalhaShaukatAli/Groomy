@@ -1,4 +1,17 @@
-import type { cookie, CustomerRecord, BaseUserRecord, BaseAppointmentRecord, AppointmentRecord, UserRecord, Note, BaseNote, ServiceRecord, BaseServiceRecord, DatabaseResponse, DatabaseDataResponse } from '$lib/types';
+import type {
+	cookie,
+	CustomerRecord,
+	BaseUserRecord,
+	BaseAppointmentRecord,
+	AppointmentRecord,
+	UserRecord,
+	Note,
+	BaseNote,
+	ServiceRecord,
+	BaseServiceRecord,
+	DatabaseResponse,
+	DatabaseDataResponse
+} from '$lib/types';
 import Database from 'better-sqlite3';
 type DatabaseCustomerResponse = {
 	id: number;
@@ -65,7 +78,7 @@ class AuthService extends BaseDatabaseService {
 	// Add a new user to the database
 	createUser(user: BaseUserRecord): DatabaseResponse {
 		const existingUser = this.getUserByEmail(user.email);
-		if(existingUser.success){
+		if (existingUser.success) {
 			return {
 				success: false,
 				message: 'Email already in use'
@@ -110,7 +123,7 @@ class AuthService extends BaseDatabaseService {
 		const result = query.run({
 			id: cookieID,
 			userID: userID,
-			expireTime: Date.now() + 3600 * 1000 // Cookie expires in 1 hour
+			expireTime: Date.now() + 60 * 60 * 1000 // Cookie expires in 1 hour
 		});
 		if (result.changes == 1) {
 			return {
@@ -127,16 +140,16 @@ class AuthService extends BaseDatabaseService {
 	}
 
 	// Remove a specific cookie from the database
-	removeCookie(userID: string): DatabaseResponse {
+	removeCookie(id: string): DatabaseResponse {
 		const query = this.db.prepare('DELETE FROM cookie WHERE id = ?');
-		const result = query.run(userID);
+		const result = query.run(id);
 		if (result.changes == 1) {
 			return {
 				success: true,
 				message: 'Successful cookie deletion'
 			};
 		} else {
-			console.error('Failed to remove cookie - userID:', userID);
+			console.error('Failed to remove cookie - userID:', id);
 			return {
 				success: false,
 				message: 'Failed cookie deletion'
@@ -384,7 +397,7 @@ class AppointmentService extends BaseDatabaseService {
 			deleted: 0
 		});
 
-		if(result.changes == 1){
+		if (result.changes == 1) {
 			return {
 				success: true,
 				message: 'Appointment was created successfully'
@@ -403,7 +416,6 @@ class AppointmentService extends BaseDatabaseService {
 		const query = this.db.prepare('SELECT * from appointments WHERE id = ?');
 		const result = <DatabaseAppointmentResponse>query.get(appointmentID);
 		if (result) {
-			
 			return {
 				success: true,
 				message: 'Appointment was retrieved successfully',
@@ -413,13 +425,13 @@ class AppointmentService extends BaseDatabaseService {
 			console.error('Failed to retrieve appointment - appointmentID:', appointmentID);
 			return {
 				success: false,
-				message: "Appointment couldn't be found",
+				message: "Appointment couldn't be found"
 			};
 		}
 	}
 
 	// Retrieve appointments for a specific customer, excluding deleted appointments
-	getAppointmentsByCustomerID(customerID: number): DatabaseDataResponse<AppointmentRecord[]>{
+	getAppointmentsByCustomerID(customerID: number): DatabaseDataResponse<AppointmentRecord[]> {
 		const query = this.db.prepare('SELECT * from appointments WHERE customerID = ?');
 		const result = <DatabaseAppointmentResponse[]>query.all(customerID);
 		const resultArray: AppointmentRecord[] = [];
@@ -431,13 +443,13 @@ class AppointmentService extends BaseDatabaseService {
 			return {
 				success: true,
 				message: "Appointments couldn't be found",
-				data:resultArray
+				data: resultArray
 			};
 		} else {
 			console.error('Failed to retrieve appointments - customerID:', customerID);
 			return {
 				success: false,
-				message: "Appointments couldn't be found",
+				message: "Appointments couldn't be found"
 			};
 		}
 	}
@@ -461,7 +473,7 @@ class AppointmentService extends BaseDatabaseService {
 			console.error('Failed to retrieve appointments - userID:', userID);
 			return {
 				success: false,
-				message: "Appointments couldn't be found",
+				message: "Appointments couldn't be found"
 			};
 		}
 	}
@@ -491,13 +503,13 @@ class AppointmentService extends BaseDatabaseService {
 		if (result.changes == 1) {
 			return {
 				success: true,
-				message: "Appointment was updated",
+				message: 'Appointment was updated'
 			};
 		} else {
 			console.error('Failed to update appointment - appointmentID:', appointmentID);
 			return {
 				success: false,
-				message: "Appointment couldn't be updates",
+				message: "Appointment couldn't be updates"
 			};
 		}
 	}
@@ -509,21 +521,21 @@ class AppointmentService extends BaseDatabaseService {
 		if (result.changes == 1) {
 			return {
 				success: true,
-				message: "Appointment was deleted",
+				message: 'Appointment was deleted'
 			};
 		} else {
 			console.error('Failed to delete appointment - appointmentID:', appointmentID);
 			return {
 				success: false,
-				message: "Appointment couldn't be deleted",
+				message: "Appointment couldn't be deleted"
 			};
 		}
 	}
 }
 
-class ServiceService extends BaseDatabaseService{
-	constructor(){
-		super()
+class ServiceService extends BaseDatabaseService {
+	constructor() {
+		super();
 	}
 
 	// Add a new appointment to the database
@@ -540,13 +552,13 @@ class ServiceService extends BaseDatabaseService{
 		if (result.changes == 1) {
 			return {
 				success: true,
-				message: "Service created",
+				message: 'Service created'
 			};
 		} else {
 			console.error('Failed to create service - service:', service);
 			return {
 				success: false,
-				message: "Service couldn't be created",
+				message: "Service couldn't be created"
 			};
 		}
 	}
@@ -558,14 +570,14 @@ class ServiceService extends BaseDatabaseService{
 		if (result) {
 			return {
 				success: true,
-				message: "Service found successfully",
+				message: 'Service found successfully',
 				data: result
 			};
 		} else {
 			console.error('Failed to get service - serviceID:', serviceID);
 			return {
 				success: false,
-				message: "Service wasn't found",
+				message: "Service wasn't found"
 			};
 		}
 	}
@@ -577,14 +589,14 @@ class ServiceService extends BaseDatabaseService{
 		if (result) {
 			return {
 				success: true,
-				message: "Service found",
+				message: 'Service found',
 				data: result
 			};
 		} else {
 			console.error('Failed to get service - userID:', userID);
 			return {
 				success: false,
-				message: "Service wasn't found",
+				message: "Service wasn't found"
 			};
 		}
 	}
@@ -603,13 +615,13 @@ class ServiceService extends BaseDatabaseService{
 		if (result.changes == 1) {
 			return {
 				success: true,
-				message: "Service was updated",
+				message: 'Service was updated'
 			};
 		} else {
 			console.error('Failed to update service - serviceID:', serviceID);
 			return {
 				success: false,
-				message: "Service wasn't updated",
+				message: "Service wasn't updated"
 			};
 		}
 	}
@@ -621,13 +633,13 @@ class ServiceService extends BaseDatabaseService{
 		if (result.changes == 1) {
 			return {
 				success: true,
-				message: "Service was deleted",
+				message: 'Service was deleted'
 			};
 		} else {
 			console.error('Failed to delete service - serviceID:', serviceID);
 			return {
 				success: false,
-				message: "Service wasn't updated",
+				message: "Service wasn't updated"
 			};
 		}
 	}
@@ -635,8 +647,8 @@ class ServiceService extends BaseDatabaseService{
 
 export const AuthDatabaseService = new AuthService();
 export const CustomerDatabaseService = new CustomerService();
-export const AppointmentDatabaseService = new AppointmentService()
-export const ServiceDatabaseService = new ServiceService()
+export const AppointmentDatabaseService = new AppointmentService();
+export const ServiceDatabaseService = new ServiceService();
 
 export class DatabaseNoteService {
 	private db;

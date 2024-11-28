@@ -39,7 +39,7 @@
 						Name: <input type="text" name="firstName" id="" bind:value={service.name} minlength="2" required />
 					</div>
 					<div>
-						Price: <input type="number" bind:value={service.price} required>
+						Price: <input type="number" bind:value={service.price} step=".01" required>
 					</div>
 				</div>
 				<div class="description">
@@ -84,25 +84,6 @@
 		filter: drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem);
 
 		padding: 2rem 4rem 4rem 4rem;
-		gap: 20px;
-	}
-
-	.nameRow {
-		display: flex;
-		flex-direction: row;
-		gap: 20px;
-	}
-
-	.contactRow {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: nowrap;
-		gap: 20px;
-	}
-
-	.addressRow {
-		display: flex;
-		flex-direction: row;
 		gap: 20px;
 	}
 

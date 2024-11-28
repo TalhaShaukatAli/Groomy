@@ -54,7 +54,6 @@
 	}
 
 	async function saveEdit() {
-		//@ts-ignore
 		const result = await API.UpdateNoteByID(selectedNote);
 		setEditModeTo(false);
 	}

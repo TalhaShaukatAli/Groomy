@@ -2,7 +2,6 @@
 	import type { CustomerRecord } from '$lib/types.js';
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
-	import { redirect } from '@sveltejs/kit';
 	page.set('Customer');
 
 	let { data } = $props();

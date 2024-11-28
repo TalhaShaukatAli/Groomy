@@ -1,7 +1,5 @@
 import { AuthDatabaseService } from '$lib/db/database';
-import argon2 from 'argon2';
 import { json, type RequestHandler } from '@sveltejs/kit';
-import type { DatabaseDataResponse, DatabaseResponse } from '$lib/types';
 
 export const POST: RequestHandler = async ({ request, params }) => {
 	const data = await request.json();

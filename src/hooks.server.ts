@@ -1,5 +1,4 @@
 import { AuthDatabaseService } from '$lib/db/database';
-import { authenticatedUser } from '$lib/stores.svelte';
 import { redirect, type Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -15,7 +14,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	//Get cookie from database
 	const databaseCookie = AuthDatabaseService.getCookie(cookieID);
-	if (!databaseCookie.success || !authenticatedUser.get()) {
+	if (!databaseCookie.success) {
 		redirect(302, '/login');
 	}
 
