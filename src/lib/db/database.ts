@@ -645,20 +645,13 @@ class ServiceService extends BaseDatabaseService {
 	}
 }
 
-export const AuthDatabaseService = new AuthService();
-export const CustomerDatabaseService = new CustomerService();
-export const AppointmentDatabaseService = new AppointmentService();
-export const ServiceDatabaseService = new ServiceService();
-
-export class DatabaseNoteService {
-	private db;
-
-	constructor(db = getDB()) {
-		this.db = db;
+class NoteService extends BaseDatabaseService {
+	constructor() {
+		super();
 	}
 
 	//generics
-	private CreateNote(noteData: BaseNote): number {
+	private CreateNote(noteData: BaseNote): DatabaseDataResponse<number> {
 		const query = this.db.prepare('INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)');
 		const result = query.run({
 			title: noteData.title,
@@ -666,136 +659,210 @@ export class DatabaseNoteService {
 			createdDate: noteData.createdDate,
 			deleted: 0
 		});
-		return <number>result.lastInsertRowid;
-	}
-
-	GetNoteByID(noteID: number): Note | null {
-		const query = this.db.prepare('Select * FROM notes WHERE id = ?');
-		const result = query.get(noteID);
-		if (result == undefined) {
-			return null;
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: 'Note was created',
+				data: <number>result.lastInsertRowid
+			};
 		} else {
-			return <Note>result;
+			console.error('Failed to create note - noteData:', noteData);
+			return {
+				success: false,
+				message: 'Note failed to create'
+			};
 		}
 	}
 
-	UpdateNotesByID(note: Note): boolean {
+	GetNoteByID(noteID: number): DatabaseDataResponse<Note> {
+		const query = this.db.prepare('Select * FROM notes WHERE id = ?');
+		const result = <Note>query.get(noteID);
+		if (result) {
+			return {
+				success: true,
+				message: 'Note found',
+				data: result
+			};
+		} else {
+			console.error('Failed to get Note - noteID:', noteID);
+			return {
+				success: false,
+				message: "Note wasn't found"
+			};
+		}
+	}
+
+	UpdateNotesByID(note: Note): DatabaseResponse {
 		const query = this.db.prepare('Update notes SET title = @title, note = @note WHERE id = @id');
 		const result = query.run({
 			title: note.title,
 			note: note.note,
 			id: note.id
 		});
-		if (result.changes) {
-			return true;
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: 'Note updated'
+			};
 		} else {
-			return false;
+			console.error('Failed to update Note - note:', note);
+			return {
+				success: false,
+				message: "Note couldn't be updated"
+			};
 		}
 	}
 
-	DeleteNoteByID(noteID: number): boolean {
+	DeleteNoteByID(noteID: number): DatabaseResponse {
 		const query = this.db.prepare('Update notes SET deleted = 1 WHERE id = ?');
 		const result = query.run(noteID);
-		if (result.changes) {
-			return true;
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: 'Note deleted'
+			};
 		} else {
-			return false;
+			console.error('Failed to delete note - noteID:', noteID);
+			return {
+				success: false,
+				message: "Note couldn't be deleted"
+			};
 		}
 	}
 
 	//Customer Note
-	CreateCustomerNote(customerID: number, noteData: BaseNote) {
-		const noteID = this.CreateNote(noteData);
-		const query = this.db.prepare('INSERT into customer_notes (customerID, noteID) VALUES (@customerID, @noteID)');
-		const result = query.run({
-			customerID: customerID,
-			noteID: noteID
-		});
-		if (result.changes) {
-			return true;
-		} else {
-			return false;
+	CreateCustomerNote(customerID: number, noteData: BaseNote): DatabaseResponse {
+		const newNote = this.CreateNote(noteData);
+		if (newNote.success) {
+			const query = this.db.prepare('INSERT into customer_notes (customerID, noteID) VALUES (@customerID, @noteID)');
+			const result = query.run({
+				customerID: customerID,
+				noteID: newNote.data
+			});
+			if (result.changes == 1) {
+				return {
+					success: true,
+					message: 'Note created'
+				};
+			}
 		}
+
+		console.error('Failed to create note - note:', noteData);
+		return {
+			success: false,
+			message: "Notes couldn't be found"
+		};
 	}
 
-	GetCustomerNotes(customerID: number): Note[] {
+	GetCustomerNotes(customerID: number): DatabaseDataResponse<Note[]> {
 		const query = this.db.prepare('Select n.* FROM customer_notes cn INNER JOIN notes n ON cn.noteID = n.id WHERE cn.customerID = ? and deleted = 0');
-		const result = query.all(customerID);
-		if (result == undefined) {
-			return [];
+		const result = <Note[]>query.all(customerID);
+		if (result) {
+			return {
+				success: true,
+				message: 'Note created',
+				data: result
+			};
 		} else {
-			return <Note[]>result;
+			console.error('Failed to get note - customerID:', customerID);
+			return {
+				success: false,
+				message: "Notes couldn't be found"
+			};
 		}
 	}
 
 	//Appointment Note
-	CreateAppointmentNote(appointmentID: number, noteData: BaseNote) {
-		const noteID = this.CreateNote(noteData);
-		const query = this.db.prepare('INSERT into appointment_notes (appointmentID, noteID) VALUES (@appointmentID, @noteID)');
-		const result = query.run({
-			appointmentID: appointmentID,
-			noteID: noteID
-		});
+	CreateAppointmentNote(appointmentID: number, noteData: BaseNote): DatabaseResponse {
+		const newNote = this.CreateNote(noteData);
 
-		if (result.changes) {
-			return true;
-		} else {
-			return false;
+		if (newNote.success) {
+			const query = this.db.prepare('INSERT into appointment_notes (appointmentID, noteID) VALUES (@appointmentID, @noteID)');
+
+			const result = query.run({
+				appointmentID: appointmentID,
+				noteID: newNote.data
+			});
+
+			if (result.changes == 1) {
+				return {
+					success: true,
+					message: 'Note created'
+				};
+			}
 		}
+
+		console.error('Failed to create note - note:', noteData);
+		return {
+			success: false,
+			message: "Note couldn't be created"
+		};
 	}
 
-	GetAppointmentNotes(appointmentID: number): Note[] {
+	GetAppointmentNotes(appointmentID: number): DatabaseDataResponse<Note[]> {
 		const query = this.db.prepare('SELECT n.* FROM appointment_notes an INNER JOIN notes n ON an.noteID = n.id WHERE an.appointmentID = ? and deleted = 0');
-		const result = query.all(appointmentID);
-		if (result == undefined) {
-			return [];
+		const result = <Note[]>query.all(appointmentID);
+		if (result) {
+			return {
+				success: true,
+				message: 'Note Found',
+				data: result
+			};
 		} else {
-			return <Note[]>result;
+			console.error('Failed to get note - appointmentID:', appointmentID);
+			return {
+				success: false,
+				message: "Note couldn't be created"
+			};
 		}
 	}
 
 	//Services Notes
-	CreateServiceNote(serviceID: number, noteData: BaseNote) {
-		const noteID = this.CreateNote(noteData);
-		const query = this.db.prepare('INSERT into service_notes (serviceID, noteID) VALUES (@serviceID, @noteID)');
-		const result = query.run({
-			serviceID: serviceID,
-			noteID: noteID
-		});
+	CreateServiceNote(serviceID: number, noteData: BaseNote): DatabaseResponse {
+		const newNote = this.CreateNote(noteData);
+		if (newNote.success) {
+			const query = this.db.prepare('INSERT into service_notes (serviceID, noteID) VALUES (@serviceID, @noteID)');
+			const result = query.run({
+				serviceID: serviceID,
+				noteID: newNote.data
+			});
 
-		if (result.changes) {
-			return true;
-		} else {
-			return false;
+			if (result.changes == 1) {
+				return {
+					success: true,
+					message: 'Note created'
+				};
+			}
 		}
+
+		console.error('Failed to create note - note:', noteData);
+		return {
+			success: false,
+			message: "Note couldn't be created"
+		};
 	}
 
-	GetServiceNotes(serviceID: number) {
+	GetServiceNotes(serviceID: number): DatabaseDataResponse<Note[]> {
 		const query = this.db.prepare('SELECT n.* FROM service_notes sn INNER JOIN notes n ON sn.noteID = n.id WHERE sn.serviceID = ? and deleted = 0');
-		const result = query.all(serviceID);
-		if (result == undefined) {
-			return [];
+		const result = <Note[]>query.all(serviceID);
+		if (result) {
+			return {
+				success: true,
+				message: 'Note Found',
+				data: result
+			};
 		} else {
-			return <Note[]>result;
+			console.error('Failed to get note - serviceID:', serviceID);
+			return {
+				success: false,
+				message: "Note couldn't be found"
+			};
 		}
 	}
 }
 
-const defaultNoteDatabase = new DatabaseNoteService();
-
-//Generic
-export const Notes_GetNoteByID = (noteID: number) => defaultNoteDatabase.GetNoteByID(noteID);
-export const Notes_UpdateNotesByID = (note: Note) => defaultNoteDatabase.UpdateNotesByID(note);
-export const Notes_DeleteNoteByID = (noteID: number) => defaultNoteDatabase.DeleteNoteByID(noteID);
-
-//Appointment
-export const Notes_CreateAppointmentNote = (appointmentID: number, noteData: BaseNote) => defaultNoteDatabase.CreateAppointmentNote(appointmentID, noteData);
-export const Notes_GetAppointmentNotes = (appointmentID: number) => defaultNoteDatabase.GetAppointmentNotes(appointmentID);
-
-//Customer
-export const Notes_CreateCustomerNote = (customerID: number, noteData: BaseNote) => defaultNoteDatabase.CreateCustomerNote(customerID, noteData);
-export const Notes_GetCustomerNotes = (customerID: number) => defaultNoteDatabase.GetCustomerNotes(customerID);
-
-//Services
-export const Notes_CreateServiceNote = (serviceID: number, noteData: BaseNote) => defaultNoteDatabase.CreateServiceNote(serviceID, noteData);
-export const Notes_GetServiceNotes = (serviceID: number) => defaultNoteDatabase.GetServiceNotes(serviceID);
+export const AuthDatabaseService = new AuthService();
+export const CustomerDatabaseService = new CustomerService();
+export const AppointmentDatabaseService = new AppointmentService();
+export const ServiceDatabaseService = new ServiceService();
+export const NoteDatabaseService = new NoteService();

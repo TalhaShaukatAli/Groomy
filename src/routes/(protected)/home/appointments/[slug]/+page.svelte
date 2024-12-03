@@ -4,7 +4,8 @@
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	import { DateTimeCombiner } from '$lib';
-	import Notes from '$lib/components/Notes_Appointment.svelte';
+	import Notes from '$lib/components/Notes.svelte';
+	import { AppointmentNoteServiceSingleton } from '$lib/db/noteHelper.js';
 	page.set('Appointments');
 
 	let { data } = $props();
@@ -152,7 +153,8 @@
 			</div>
 		</div>
 	</form>
-	<Notes notesID={appointment.id} />
+	<Notes notesID={appointment.id} noteHelper={AppointmentNoteServiceSingleton}/>
+
 </div>
 
 <style>

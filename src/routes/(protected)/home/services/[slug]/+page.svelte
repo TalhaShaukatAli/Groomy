@@ -3,7 +3,8 @@
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
-	import Notes from '$lib/components/Notes_Services.svelte';
+	import Notes from '$lib/components/Notes.svelte';
+	import { ServiceNoteServiceSingleton } from '$lib/db/noteHelper.js';
 	page.set('Services');
 
 	let { data } = $props();
@@ -82,7 +83,8 @@
 		</div>
 	</form>
     <div>
-        <Notes notesID={service.id}/>
+		<Notes notesID={service.id} noteHelper={ServiceNoteServiceSingleton}/>
+
     </div>
 </div>
 

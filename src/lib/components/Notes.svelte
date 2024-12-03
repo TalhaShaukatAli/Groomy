@@ -1,22 +1,24 @@
 <script lang="ts">
-	import API from '$lib/db/api';
+	import type { NoteService } from '$lib/db/noteHelper';
 	import type { BaseNote, Note } from '$lib/types';
 	import { onMount } from 'svelte';
 
-	let { notesID: serviceID } = $props();
+	let { notesID, noteHelper }: {notesID: number, noteHelper: NoteService} = $props();
 	let noteArray: Note[] = $state([]);
 	let noteArrayLength = $derived(noteArray.length);
 
-	onMount(() => {
-		API.getServiceNotes(serviceID).then((value) => {
-			noteArray = value.data;
-		});
+	onMount(async () => {
+		let response = await noteHelper.getNotes(notesID)
+        if(response.success){
+            noteArray = response.data
+        }
 	});
 
-	function reload() {
-		API.getServiceNotes(serviceID).then((value) => {
-			noteArray = value.data;
-		});
+	async function reload() {
+		let response = await noteHelper.getNotes(notesID)
+        if(response.success){
+            noteArray = response.data
+        }
 		selectedNote = null;
 	}
 
@@ -25,13 +27,14 @@
 		selectedNote = noteArray[index];
 	}
 
-	let createMode = $state(false);
 	let newNote: BaseNote = $state({
-		title: '',
+        title: '',
 		note: '',
 		createdDate: Date.now(),
 		deleted: 0
 	});
+
+    let createMode = $state(false);
 	function setCreateModeTo(mode: boolean) {
 		createMode = mode;
 		newNote = {
@@ -48,21 +51,22 @@
 	}
 
 	async function saveNewNote() {
-		const result = await API.createServiceNote(serviceID, newNote);
-		reload();
+		const result = await noteHelper.createNote(notesID, newNote)
+		await reload();
 		setCreateModeTo(false);
 	}
 
 	async function saveEdit() {
-		const result = await API.UpdateNoteByID(selectedNote);
+		//@ts-ignore
+		const result = await noteHelper.updateNote(selectedNote)
 		setEditModeTo(false);
 	}
 
 	async function deleteNote(noteID: number) {
 		let message = confirm('Are you sure you want to delete this note?');
 		if (message) {
-			const result = await API.DeleteNoteByID(noteID);
-			reload();
+			const result = await noteHelper.deleteNote(noteID);
+			await reload();
 		}
 	}
 </script>

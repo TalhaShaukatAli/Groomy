@@ -164,21 +164,21 @@ class API {
 	//Notes
 
 	//Generics
-	static async GetNoteByID(noteID: number): Promise<NoteResponse> {
+	static async GetNoteByID(noteID: number): Promise<DatabaseDataResponse<Note>> {
 		return this.request('/notes/getNoteByID', {
 			method: 'POST',
 			body: JSON.stringify(noteID)
 		});
 	}
 
-	static async UpdateNoteByID(note: Note): Promise<BaseResponse> {
+	static async UpdateNoteByID(note: Note): Promise<DatabaseResponse> {
 		return this.request('/notes/updateNoteByID', {
 			method: 'POST',
 			body: JSON.stringify(note)
 		});
 	}
 
-	static async DeleteNoteByID(noteID: number): Promise<BaseResponse> {
+	static async DeleteNoteByID(noteID: number): Promise<DatabaseResponse> {
 		return this.request('/notes/deleteNoteByID', {
 			method: 'POST',
 			body: JSON.stringify(noteID)
@@ -186,14 +186,14 @@ class API {
 	}
 
 	//Appointment Notes
-	static async createAppointmentNote(appointmentID: number, data: BaseNote): Promise<BaseResponse> {
+	static async createAppointmentNote(appointmentID: number, data: BaseNote): Promise<DatabaseResponse> {
 		return this.request('/notes/createAppointmentNote', {
 			method: 'POST',
 			body: JSON.stringify([appointmentID, data])
 		});
 	}
 
-	static async getAppointmentNotes(appointmentID: number): Promise<NoteArrayResponse> {
+	static async getAppointmentNotes(appointmentID: number): Promise<DatabaseDataResponse<Note[]>> {
 		return this.request('/notes/getAppointmentNotes', {
 			method: 'POST',
 			body: JSON.stringify(appointmentID)
@@ -201,14 +201,14 @@ class API {
 	}
 
 	//Customer Notes
-	static async createCustomerNote(customerID: number, data: BaseNote): Promise<BaseResponse> {
+	static async createCustomerNote(customerID: number, data: BaseNote): Promise<DatabaseResponse> {
 		return this.request('/notes/createCustomerNote', {
 			method: 'POST',
 			body: JSON.stringify([customerID, data])
 		});
 	}
 
-	static async getCustomerNotes(customerID: number): Promise<NoteArrayResponse> {
+	static async getCustomerNotes(customerID: number): Promise<DatabaseDataResponse<Note[]>> {
 		return this.request('/notes/getCustomerNotes', {
 			method: 'POST',
 			body: JSON.stringify(customerID)
@@ -216,14 +216,14 @@ class API {
 	}
 
 	//Service Notes
-	static async createServiceNote(serviceID: number, data: BaseNote): Promise<BaseResponse> {
+	static async createServiceNote(serviceID: number, data: BaseNote): Promise<DatabaseResponse> {
 		return this.request('/notes/createServiceNote', {
 			method: 'POST',
 			body: JSON.stringify([serviceID, data])
 		});
 	}
 
-	static async getServiceNotes(serviceID: number): Promise<NoteArrayResponse> {
+	static async getServiceNotes(serviceID: number): Promise<DatabaseDataResponse<Note[]>> {
 		return this.request('/notes/getServiceNotes', {
 			method: 'POST',
 			body: JSON.stringify(serviceID)
