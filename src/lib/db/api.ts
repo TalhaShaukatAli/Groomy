@@ -17,11 +17,28 @@ interface BaseResponse {
 	message: string;
 }
 
+/**
+ * API class providing methods for interacting with backend services
+ * @remarks
+ * This class encapsulates all API calls for managing customers, appointments, services, and notes
+ */
 class API {
+	/**
+	 * Default headers for API requests
+	 * @private
+	 */
 	private static defaultHeaders = {
 		'Content-Type': 'application/json'
 	};
 
+	/**
+	 * Generic method to make API requests
+	 * @param {string} endpoint - The API endpoint to call
+	 * @param {RequestInit} [options={}] - Optional request configuration
+	 * @returns {Promise<any>} The parsed JSON response or true for DELETE operations
+	 * @throws {Error} If the API request fails
+	 * @private
+	 */
 	private static async request(endpoint: string, options: RequestInit = {}) {
 		try {
 			const baseURL = import.meta.env.VITE_API_URL;
@@ -45,7 +62,13 @@ class API {
 		}
 	}
 
-	//Customer
+	//Customer Methods
+
+	/**
+	 * Update an existing customer record
+	 * @param {BaseCustomerRecord} data - The customer data to update
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of the update
+	 */
 	static async updateCustomer(data: BaseCustomerRecord): Promise<DatabaseResponse> {
 		return this.request('/customers/update', {
 			method: 'POST',
@@ -53,6 +76,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Delete a customer by their ID
+	 * @param {number} id - The unique identifier of the customer to delete
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of the deletion
+	 */
 	static async deleteCustomer(id: number): Promise<DatabaseResponse> {
 		return this.request('/customers/delete', {
 			method: 'POST',
@@ -60,6 +88,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Create a new customer record
+	 * @param {BaseCustomerRecord} data - The customer data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of customer creation
+	 */
 	static async createCustomer(data: BaseCustomerRecord): Promise<DatabaseResponse> {
 		return this.request('/customers/create', {
 			method: 'POST',
@@ -67,6 +100,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve all customers for a specific user
+	 * @param {number} userid - The ID of the user whose customers to retrieve
+	 * @returns {Promise<DatabaseDataResponse<CustomerRecord>>} List of customer records
+	 */
 	static async getCustomers(userid: number): Promise<DatabaseDataResponse<CustomerRecord>> {
 		return this.request('/customers/getCustomersByUserID', {
 			method: 'POST',
@@ -74,6 +112,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve a specific customer by user ID
+	 * @param {number} userid - The ID of the user to retrieve customer for
+	 * @returns {Promise<DatabaseDataResponse<CustomerRecord[]>>} Customer record(s) matching the user ID
+	 */
 	static async getCustomerByID(userid: number): Promise<DatabaseDataResponse<CustomerRecord[]>> {
 		return this.request('/customers/getCustomerByUserID', {
 			method: 'POST',
@@ -81,7 +124,13 @@ class API {
 		});
 	}
 
-	//Appointments
+	//Appointment Methods
+
+	/**
+	 * Retrieve appointments for a specific user
+	 * @param {number} userid - The ID of the user whose appointments to retrieve
+	 * @returns {Promise<DatabaseDataResponse<AppointmentRecord[]>>} List of appointment records
+	 */
 	static async getAppointmentsByUserID(userid: number): Promise<DatabaseDataResponse<AppointmentRecord[]>> {
 		return this.request('/appointments/getByUserID', {
 			method: 'POST',
@@ -89,6 +138,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve appointments for a specific customer
+	 * @param {number} customerid - The ID of the customer whose appointments to retrieve
+	 * @returns {Promise<DatabaseDataResponse<AppointmentRecord[]>>} List of appointment records
+	 */
 	static async getAppointmentsByCustomerID(customerid: number): Promise<DatabaseDataResponse<AppointmentRecord[]>> {
 		return this.request('/appointments/getByCustomerID', {
 			method: 'POST',
@@ -96,6 +150,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve a specific appointment by its ID
+	 * @param {number} id - The unique identifier of the appointment
+	 * @returns {Promise<DatabaseDataResponse<AppointmentRecord>>} The appointment record
+	 */
 	static async getAppointmentByID(id: number): Promise<DatabaseDataResponse<AppointmentRecord>> {
 		return this.request('/appointments/getByAppointmentID', {
 			method: 'POST',
@@ -103,6 +162,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Create a new appointment
+	 * @param {BaseAppointmentRecord} data - The appointment data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of appointment creation
+	 */
 	static async createAppointment(data: BaseAppointmentRecord): Promise<DatabaseResponse> {
 		return this.request('/appointments/create', {
 			method: 'POST',
@@ -110,6 +174,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Update an existing appointment
+	 * @param {AppointmentRecord} data - The appointment data to update
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of the update
+	 */
 	static async updateAppointment(data: AppointmentRecord): Promise<DatabaseResponse> {
 		return this.request('/appointments/update', {
 			method: 'POST',
@@ -117,6 +186,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Delete an appointment by its ID
+	 * @param {number} id - The unique identifier of the appointment to delete
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of deletion
+	 */
 	static async deleteAppointment(id: number): Promise<DatabaseResponse> {
 		return this.request('/appointments/delete', {
 			method: 'POST',
@@ -124,8 +198,13 @@ class API {
 		});
 	}
 
+	//Service Methods
 
-	//Services
+	/**
+	 * Retrieve services for a specific user
+	 * @param {number} userID - The ID of the user whose services to retrieve
+	 * @returns {Promise<DatabaseDataResponse<ServiceRecord[]>>} List of service records
+	 */
 	static async getServicesByUserID(userID: number): Promise<DatabaseDataResponse<ServiceRecord[]>> {
 		return this.request('/services/getServicesByUserID', {
 			method: 'POST',
@@ -133,6 +212,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve a specific service by its ID
+	 * @param {number} serviceID - The unique identifier of the service
+	 * @returns {Promise<DatabaseDataResponse<ServiceRecord>>} The service record
+	 */
 	static async getServiceByID(serviceID: number): Promise<DatabaseDataResponse<ServiceRecord>> {
 		return this.request('/services/getServiceByID', {
 			method: 'POST',
@@ -140,6 +224,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Create a new service
+	 * @param {BaseServiceRecord} data - The service data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of service creation
+	 */
 	static async createService(data: BaseServiceRecord): Promise<DatabaseResponse> {
 		return this.request('/services/create', {
 			method: 'POST',
@@ -147,6 +236,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Update an existing service
+	 * @param {ServiceRecord} data - The service data to update
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of the update
+	 */
 	static async updateService(data: ServiceRecord): Promise<DatabaseResponse> {
 		return this.request('/services/update', {
 			method: 'POST',
@@ -154,6 +248,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Delete a service by its ID
+	 * @param {number} serviceID - The unique identifier of the service to delete
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of deletion
+	 */
 	static async deleteService(serviceID: number): Promise<DatabaseResponse> {
 		return this.request('/services/delete', {
 			method: 'POST',
@@ -161,9 +260,13 @@ class API {
 		});
 	}
 
-	//Notes
+	//Note Methods
 
-	//Generics
+	/**
+	 * Retrieve a specific note by its ID
+	 * @param {number} noteID - The unique identifier of the note
+	 * @returns {Promise<DatabaseDataResponse<Note>>} The note record
+	 */
 	static async GetNoteByID(noteID: number): Promise<DatabaseDataResponse<Note>> {
 		return this.request('/notes/getNoteByID', {
 			method: 'POST',
@@ -171,6 +274,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Update an existing note
+	 * @param {Note} note - The note data to update
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of the update
+	 */
 	static async UpdateNoteByID(note: Note): Promise<DatabaseResponse> {
 		return this.request('/notes/updateNoteByID', {
 			method: 'POST',
@@ -178,6 +286,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Delete a note by its ID
+	 * @param {number} noteID - The unique identifier of the note to delete
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of deletion
+	 */
 	static async DeleteNoteByID(noteID: number): Promise<DatabaseResponse> {
 		return this.request('/notes/deleteNoteByID', {
 			method: 'POST',
@@ -185,7 +298,14 @@ class API {
 		});
 	}
 
-	//Appointment Notes
+	//Appointment Notes Methods
+
+	/**
+	 * Create a new note for a specific appointment
+	 * @param {number} appointmentID - The ID of the appointment to add a note to
+	 * @param {BaseNote} data - The note data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of note creation
+	 */
 	static async createAppointmentNote(appointmentID: number, data: BaseNote): Promise<DatabaseResponse> {
 		return this.request('/notes/createAppointmentNote', {
 			method: 'POST',
@@ -193,6 +313,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve notes for a specific appointment
+	 * @param {number} appointmentID - The ID of the appointment to retrieve notes for
+	 * @returns {Promise<DatabaseDataResponse<Note[]>>} List of note records for the appointment
+	 */
 	static async getAppointmentNotes(appointmentID: number): Promise<DatabaseDataResponse<Note[]>> {
 		return this.request('/notes/getAppointmentNotes', {
 			method: 'POST',
@@ -200,7 +325,14 @@ class API {
 		});
 	}
 
-	//Customer Notes
+	//Customer Notes Methods
+
+	/**
+	 * Create a new note for a specific customer
+	 * @param {number} customerID - The ID of the customer to add a note to
+	 * @param {BaseNote} data - The note data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of note creation
+	 */
 	static async createCustomerNote(customerID: number, data: BaseNote): Promise<DatabaseResponse> {
 		return this.request('/notes/createCustomerNote', {
 			method: 'POST',
@@ -208,6 +340,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve notes for a specific customer
+	 * @param {number} customerID - The ID of the customer to retrieve notes for
+	 * @returns {Promise<DatabaseDataResponse<Note[]>>} List of note records for the customer
+	 */
 	static async getCustomerNotes(customerID: number): Promise<DatabaseDataResponse<Note[]>> {
 		return this.request('/notes/getCustomerNotes', {
 			method: 'POST',
@@ -215,7 +352,14 @@ class API {
 		});
 	}
 
-	//Service Notes
+	//Service Notes Methods
+
+	/**
+	 * Create a new note for a specific service
+	 * @param {number} serviceID - The ID of the service to add a note to
+	 * @param {BaseNote} data - The note data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of note creation
+	 */
 	static async createServiceNote(serviceID: number, data: BaseNote): Promise<DatabaseResponse> {
 		return this.request('/notes/createServiceNote', {
 			method: 'POST',
@@ -223,6 +367,11 @@ class API {
 		});
 	}
 
+	/**
+	 * Retrieve notes for a specific service
+	 * @param {number} serviceID - The ID of the service to retrieve notes for
+	 * @returns {Promise<DatabaseDataResponse<Note[]>>} List of note records for the service
+	 */
 	static async getServiceNotes(serviceID: number): Promise<DatabaseDataResponse<Note[]>> {
 		return this.request('/notes/getServiceNotes', {
 			method: 'POST',

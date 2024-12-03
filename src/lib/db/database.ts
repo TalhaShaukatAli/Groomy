@@ -12,7 +12,9 @@ import type {
 	DatabaseResponse,
 	DatabaseDataResponse
 } from '$lib/types';
+
 import Database from 'better-sqlite3';
+
 type DatabaseCustomerResponse = {
 	id: number;
 	userID: number;
@@ -44,21 +46,32 @@ type DatabaseAppointmentResponse = {
 	deleted: number;
 };
 
+/**
+ * Creates and configures a database connection
+ * @returns {Database.Database} A configured SQLite database instance
+ */
 function getDB() {
 	const db = new Database('mydb.sqlite', { verbose: console.log });
 	db.prepare('PRAGMA journal_mode = WAL').run();
 	return db;
 }
 
+/**
+ * Base class for database services providing a singleton database connection
+ * @remarks
+ * Ensures a single database instance is used across all service instances
+ */
 class BaseDatabaseService {
+	/** The database connection instance */
 	protected db: Database.Database;
+	/** Singleton database instance */
 	private static dbInstance: Database.Database | null = null;
 
 	constructor() {
-		//Check if ddbInstance is null
+		// Check if database instance is null and create if necessary
 		if (!BaseDatabaseService.dbInstance) {
-			//Create Database and assign it too dbInstance
 			try {
+				// Create a new database connection
 				BaseDatabaseService.dbInstance = new Database('mydb.sqlite', { verbose: console.log });
 				BaseDatabaseService.dbInstance.prepare('PRAGMA journal_mode = WAL').run();
 			} catch (error) {
@@ -66,16 +79,25 @@ class BaseDatabaseService {
 				throw error;
 			}
 		}
-		//Set database equal to the single db instance
+		// Set database to the single db instance
 		this.db = BaseDatabaseService.dbInstance;
 	}
 }
 
+/**
+ * Service for handling user authentication and cookie management
+ * @extends BaseDatabaseService
+ */
 class AuthService extends BaseDatabaseService {
 	constructor() {
 		super();
 	}
-	// Add a new user to the database
+
+	/**
+	 * Create a new user in the database
+	 * @param {BaseUserRecord} user - The user record to create
+	 * @returns {DatabaseResponse} Response indicating success or failure of user creation
+	 */
 	createUser(user: BaseUserRecord): DatabaseResponse {
 		const existingUser = this.getUserByEmail(user.email);
 		if (existingUser.success) {
@@ -100,7 +122,11 @@ class AuthService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve a user by their email address
+	/**
+	 * Retrieve a user by their email address
+	 * @param {string} email - The email address to search for
+	 * @returns {DatabaseDataResponse<UserRecord>} The user record if found
+	 */
 	getUserByEmail(email: string): DatabaseDataResponse<UserRecord> {
 		const query = this.db.prepare('Select * from users WHERE email = ?');
 		const result = <UserRecord | null>query.get(email);
@@ -118,6 +144,12 @@ class AuthService extends BaseDatabaseService {
 		}
 	}
 
+	/**
+	 * Create a new authentication cookie for a user
+	 * @param {string} cookieID - The unique identifier for the cookie
+	 * @param {number} userID - The ID of the user the cookie belongs to
+	 * @returns {DatabaseResponse} Response indicating success or failure of cookie creation
+	 */
 	createCookie(cookieID: string, userID: number): DatabaseResponse {
 		const query = this.db.prepare('Insert into cookie (id, userID, expireTime) values (@id, @userID, @expireTime)');
 		const result = query.run({
@@ -139,7 +171,11 @@ class AuthService extends BaseDatabaseService {
 		}
 	}
 
-	// Remove a specific cookie from the database
+	/**
+	 * Remove a specific cookie from the database
+	 * @param {string} id - The unique identifier of the cookie to remove
+	 * @returns {DatabaseResponse} Response indicating success or failure of cookie deletion
+	 */
 	removeCookie(id: string): DatabaseResponse {
 		const query = this.db.prepare('DELETE FROM cookie WHERE id = ?');
 		const result = query.run(id);
@@ -157,7 +193,11 @@ class AuthService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve a cookie by the userID
+	/**
+	 * Retrieve a cookie by its ID
+	 * @param {string} userID - The ID of the cookie to retrieve
+	 * @returns {DatabaseDataResponse<cookie>} The cookie record if found
+	 */
 	getCookie(userID: string): DatabaseDataResponse<cookie> {
 		const query = this.db.prepare('Select * from cookie WHERE id = ?');
 		const result = <cookie | null>query.get(userID);
@@ -176,7 +216,11 @@ class AuthService extends BaseDatabaseService {
 		}
 	}
 
-	// Update the expiration time of a specific cookie
+	/**
+	 * Update the expiration time of a specific cookie
+	 * @param {string} cookieID - The unique identifier of the cookie to update
+	 * @returns {DatabaseResponse} Response indicating success or failure of cookie update
+	 */
 	updateCookie(cookieID: string): DatabaseResponse {
 		const query = this.db.prepare('Update cookie SET expireTime = ? WHERE id = ?');
 		const result = query.run(Date.now() + 1000 * 30 * 60, cookieID);
@@ -196,11 +240,21 @@ class AuthService extends BaseDatabaseService {
 	}
 }
 
+/**
+ * Service for managing customer-related database operations
+ * @extends BaseDatabaseService
+ */
 class CustomerService extends BaseDatabaseService {
 	constructor() {
 		super();
 	}
 
+	/**
+	 * Convert database customer response to a CustomerRecord
+	 * @private
+	 * @param {DatabaseCustomerResponse} record - The raw database customer response
+	 * @returns {CustomerRecord} Transformed customer record
+	 */
 	private CustomerDatabaseResponseToCustomerRecord(record: DatabaseCustomerResponse): CustomerRecord {
 		const returnData: CustomerRecord = {
 			id: record.id,
@@ -220,7 +274,11 @@ class CustomerService extends BaseDatabaseService {
 		return returnData;
 	}
 
-	// Add a new customer to the database
+	/**
+	 * Add a new customer to the database
+	 * @param {CustomerRecord} customer - The customer record to create
+	 * @returns {DatabaseResponse} Response indicating success or failure of customer creation
+	 */
 	createCustomer(customer: CustomerRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'Insert into customers (userID, firstName, lastName, email, phone, address_street, address_city, address_state, address_zip, deleted) VALUES (@userID, @firstName, @lastName, @email, @phone, @address_street, @address_city, @address_state, @address_zip, @deleted)'
@@ -252,7 +310,11 @@ class CustomerService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve customers for a specific user, excluding deleted customers
+	/**
+	 * Retrieve customers for a specific user, excluding deleted customers
+	 * @param {number} userID - The ID of the user to retrieve customers for
+	 * @returns {DatabaseDataResponse<CustomerRecord[]>} List of customer records
+	 */
 	getCustomers(userID: number): DatabaseDataResponse<CustomerRecord[]> {
 		const query = this.db.prepare('Select * from customers where userID = ? and deleted = 0');
 		const response = <DatabaseCustomerResponse[] | null>query.all(userID);
@@ -276,7 +338,12 @@ class CustomerService extends BaseDatabaseService {
 			};
 		}
 	}
-	// Retrieve a specific customer by their ID
+
+	/**
+	 * Retrieve a specific customer by their ID
+	 * @param {number} id - The unique identifier of the customer
+	 * @returns {DatabaseDataResponse<CustomerRecord>} The customer record if found
+	 */
 	getCustomer(id: number): DatabaseDataResponse<CustomerRecord> {
 		const query = this.db.prepare('Select * from customers where id = ?');
 		const result = <DatabaseCustomerResponse>query.get(id);
@@ -296,7 +363,12 @@ class CustomerService extends BaseDatabaseService {
 		}
 	}
 
-	// Update a customer's information by their ID
+	/**
+	 * Update a customer's information by their ID
+	 * @param {number} customerID - The unique identifier of the customer to update
+	 * @param {CustomerRecord} customer - The updated customer record
+	 * @returns {DatabaseResponse} Response indicating success or failure of customer update
+	 */
 	updateCustomer(customerID: number, customer: CustomerRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'UPDATE customers SET firstName = @firstName, lastName = @lastName, email = @email, phone = @phone, address_street = @address_street, address_city= @address_city, address_state = @address_state, address_zip = @address_zip, deleted = @deleted WHERE id = @id'
@@ -329,6 +401,11 @@ class CustomerService extends BaseDatabaseService {
 		}
 	}
 
+	/**
+	 * Soft delete a customer by marking them as deleted
+	 * @param {number} customerID - The unique identifier of the customer to delete
+	 * @returns {DatabaseResponse} Response indicating success or failure of customer deletion
+	 */
 	deleteCustomer(customerID: number): DatabaseResponse {
 		const query = this.db.prepare('UPDATE customers SET deleted = 1 WHERE id = ?');
 		const result = query.run(customerID);
@@ -346,12 +423,22 @@ class CustomerService extends BaseDatabaseService {
 		}
 	}
 }
-
+/**
+ * Service for managing appointment-related database operations
+ * @class
+ * @extends BaseDatabaseService
+ */
 class AppointmentService extends BaseDatabaseService {
 	constructor() {
 		super();
 	}
 
+	/**
+	 * Converts a database appointment response to an appointment record
+	 * @private
+	 * @param {DatabaseAppointmentResponse} record - The raw database appointment response
+	 * @returns {AppointmentRecord} Transformed appointment record
+	 */
 	private AppointmentDatabaseResponseToAppointmentRecord(record: DatabaseAppointmentResponse): AppointmentRecord {
 		const returnData: AppointmentRecord = {
 			id: record.id,
@@ -376,7 +463,11 @@ class AppointmentService extends BaseDatabaseService {
 		return returnData;
 	}
 
-	// Add a new appointment to the database
+	/**
+	 * Creates a new appointment in the database
+	 * @param {BaseAppointmentRecord} appointment - The appointment details to create
+	 * @returns {DatabaseResponse} Result of the appointment creation
+	 */
 	createAppointment(appointment: BaseAppointmentRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'Insert into appointments (userID, customerID, title, description, address_street, address_city, address_state, address_zip, time_date, time_start, time_end, time_exact, deleted) VALUES (@userID, @customerID, @title, @description, @address_street, @address_city, @address_state, @address_zip, @time_date, @time_start, @time_end, @time_exact, @deleted)'
@@ -400,7 +491,7 @@ class AppointmentService extends BaseDatabaseService {
 		if (result.changes == 1) {
 			return {
 				success: true,
-				message: 'Appointment was created successfully'
+				message: 'Appointment created'
 			};
 		} else {
 			console.error('Failed to create appointment - appointment:', appointment);
@@ -411,7 +502,11 @@ class AppointmentService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve a specific appointment by its ID
+	/**
+	 * Retrieves a specific appointment by its ID
+	 * @param {number} appointmentID - The unique identifier of the appointment
+	 * @returns {DatabaseDataResponse<AppointmentRecord>} The retrieved appointment or error response
+	 */
 	getAppointment(appointmentID: number): DatabaseDataResponse<AppointmentRecord> {
 		const query = this.db.prepare('SELECT * from appointments WHERE id = ?');
 		const result = <DatabaseAppointmentResponse>query.get(appointmentID);
@@ -430,7 +525,11 @@ class AppointmentService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve appointments for a specific customer, excluding deleted appointments
+	/**
+	 * Retrieves all appointments for a specific customer
+	 * @param {number} customerID - The unique identifier of the customer
+	 * @returns {DatabaseDataResponse<AppointmentRecord[]>} List of customer's appointments or error response
+	 */
 	getAppointmentsByCustomerID(customerID: number): DatabaseDataResponse<AppointmentRecord[]> {
 		const query = this.db.prepare('SELECT * from appointments WHERE customerID = ?');
 		const result = <DatabaseAppointmentResponse[]>query.all(customerID);
@@ -442,7 +541,7 @@ class AppointmentService extends BaseDatabaseService {
 			}
 			return {
 				success: true,
-				message: "Appointments couldn't be found",
+				message: 'Appointments found',
 				data: resultArray
 			};
 		} else {
@@ -454,7 +553,11 @@ class AppointmentService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve appointments for a specific user, sorted by time and excluding deleted appointments
+	/**
+	 * Retrieves all non-deleted appointments for a specific user
+	 * @param {number} userID - The unique identifier of the user
+	 * @returns {DatabaseDataResponse<AppointmentRecord[]>} List of user's appointments or error response
+	 */
 	getAppointmentsByUserID(userID: number): DatabaseDataResponse<AppointmentRecord[]> {
 		const query = this.db.prepare('SELECT * from appointments WHERE userID = ? and deleted = 0');
 		const result = <DatabaseAppointmentResponse[]>query.all(userID);
@@ -466,7 +569,7 @@ class AppointmentService extends BaseDatabaseService {
 			}
 			return {
 				success: true,
-				message: "Appointments couldn't be found",
+				message: 'Appointments found',
 				data: resultArray
 			};
 		} else {
@@ -478,7 +581,12 @@ class AppointmentService extends BaseDatabaseService {
 		}
 	}
 
-	// Update an appointment's information by its ID
+	/**
+	 * Updates an existing appointment's information
+	 * @param {number} appointmentID - The unique identifier of the appointment to update
+	 * @param {AppointmentRecord} appointment - The updated appointment details
+	 * @returns {DatabaseResponse} Result of the update operation
+	 */
 	updateAppointmentByID(appointmentID: number, appointment: AppointmentRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'Update appointments set userID = @userID, customerID=@customerID, title=@title, description=@description, address_street= @address_street, address_city=@address_city, address_state=@address_state, address_zip=@address_zip, time_date = @time_date, time_start = @time_start, time_end = @time_end, time_exact = @time_exact, deleted=@deleted where id = @id'
@@ -509,12 +617,16 @@ class AppointmentService extends BaseDatabaseService {
 			console.error('Failed to update appointment - appointmentID:', appointmentID);
 			return {
 				success: false,
-				message: "Appointment couldn't be updates"
+				message: "Appointment couldn't be updated"
 			};
 		}
 	}
 
-	// Delete an appointment's information by its ID
+	/**
+	 * Soft deletes an appointment by marking it as deleted
+	 * @param {number} appointmentID - The unique identifier of the appointment to delete
+	 * @returns {DatabaseResponse} Result of the delete operation
+	 */
 	deleteAppointment(appointmentID: number): DatabaseResponse {
 		const query = this.db.prepare('UPDATE appointments SET deleted = 1 WHERE id = ?');
 		const result = query.run(appointmentID);
@@ -533,12 +645,21 @@ class AppointmentService extends BaseDatabaseService {
 	}
 }
 
+/**
+ * Service for managing service-related database operations
+ * @class
+ * @extends BaseDatabaseService
+ */
 class ServiceService extends BaseDatabaseService {
 	constructor() {
 		super();
 	}
 
-	// Add a new appointment to the database
+	/**
+	 * Creates a new service in the database
+	 * @param {BaseServiceRecord} service - The service details to create
+	 * @returns {DatabaseResponse} Result of the service creation
+	 */
 	createService(service: BaseServiceRecord): DatabaseResponse {
 		const query = this.db.prepare('Insert into services (userID, name, description, price, deleted) VALUES (@userID, @name, @description, @price,  @deleted)');
 		const result = query.run({
@@ -563,7 +684,11 @@ class ServiceService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve a specific appointment by its ID
+	/**
+	 * Retrieves a specific service by its ID
+	 * @param {number} serviceID - The unique identifier of the service
+	 * @returns {DatabaseDataResponse<ServiceRecord>} The retrieved service or error response
+	 */
 	getService(serviceID: number): DatabaseDataResponse<ServiceRecord> {
 		const query = this.db.prepare('SELECT * from services WHERE id = ?');
 		const result = <ServiceRecord>query.get(serviceID);
@@ -582,7 +707,11 @@ class ServiceService extends BaseDatabaseService {
 		}
 	}
 
-	// Retrieve appointments for a specific user, sorted by time and excluding deleted appointments
+	/**
+	 * Retrieves all non-deleted services for a specific user
+	 * @param {number} userID - The unique identifier of the user
+	 * @returns {DatabaseDataResponse<ServiceRecord[]>} List of user's services or error response
+	 */
 	getServicesByUserID(userID: number): DatabaseDataResponse<ServiceRecord[]> {
 		const query = this.db.prepare('SELECT * from services WHERE userID = ? and deleted = 0');
 		const result = <ServiceRecord[]>query.all(userID);
@@ -601,7 +730,12 @@ class ServiceService extends BaseDatabaseService {
 		}
 	}
 
-	// Update an appointment's information by its ID
+	/**
+	 * Updates an existing service's information
+	 * @param {number} serviceID - The unique identifier of the service to update
+	 * @param {ServiceRecord} service - The updated service details
+	 * @returns {DatabaseResponse} Result of the update operation
+	 */
 	updateServiceByID(serviceID: number, service: ServiceRecord): DatabaseResponse {
 		const query = this.db.prepare('Update services set name = @name, description=@description, price=@price, deleted = @deleted WHERE id = @id');
 		const result = query.run({
@@ -626,7 +760,11 @@ class ServiceService extends BaseDatabaseService {
 		}
 	}
 
-	// Delete an appointment's information by its ID
+	/**
+	 * Soft deletes a service by marking it as deleted
+	 * @param {number} serviceID - The unique identifier of the service to delete
+	 * @returns {DatabaseResponse} Result of the delete operation
+	 */
 	deleteService(serviceID: number): DatabaseResponse {
 		const query = this.db.prepare('UPDATE services SET deleted = 1 WHERE id = ?');
 		const result = query.run(serviceID);
@@ -645,12 +783,22 @@ class ServiceService extends BaseDatabaseService {
 	}
 }
 
+/**
+ * Service for managing note-related database operations
+ * @class
+ * @extends BaseDatabaseService
+ */
 class NoteService extends BaseDatabaseService {
 	constructor() {
 		super();
 	}
 
-	//generics
+	/**
+	 * Creates a new note in the database
+	 * @private
+	 * @param {BaseNote} noteData - The note details to create
+	 * @returns {DatabaseDataResponse<number>} Result of note creation with inserted note ID
+	 */
 	private CreateNote(noteData: BaseNote): DatabaseDataResponse<number> {
 		const query = this.db.prepare('INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)');
 		const result = query.run({
@@ -674,6 +822,11 @@ class NoteService extends BaseDatabaseService {
 		}
 	}
 
+	/**
+	 * Retrieves a specific note by its ID
+	 * @param {number} noteID - The unique identifier of the note
+	 * @returns {DatabaseDataResponse<Note>} The retrieved note or error response
+	 */
 	GetNoteByID(noteID: number): DatabaseDataResponse<Note> {
 		const query = this.db.prepare('Select * FROM notes WHERE id = ?');
 		const result = <Note>query.get(noteID);
@@ -692,6 +845,11 @@ class NoteService extends BaseDatabaseService {
 		}
 	}
 
+	/**
+	 * Updates an existing note's information
+	 * @param {Note} note - The updated note details
+	 * @returns {DatabaseResponse} Result of the update operation
+	 */
 	UpdateNotesByID(note: Note): DatabaseResponse {
 		const query = this.db.prepare('Update notes SET title = @title, note = @note WHERE id = @id');
 		const result = query.run({
@@ -713,6 +871,11 @@ class NoteService extends BaseDatabaseService {
 		}
 	}
 
+	/**
+	 * Soft deletes a note by marking it as deleted
+	 * @param {number} noteID - The unique identifier of the note to delete
+	 * @returns {DatabaseResponse} Result of the delete operation
+	 */
 	DeleteNoteByID(noteID: number): DatabaseResponse {
 		const query = this.db.prepare('Update notes SET deleted = 1 WHERE id = ?');
 		const result = query.run(noteID);
@@ -730,7 +893,12 @@ class NoteService extends BaseDatabaseService {
 		}
 	}
 
-	//Customer Note
+	/**
+	 * Creates a new note associated with a specific customer
+	 * @param {number} customerID - The unique identifier of the customer
+	 * @param {BaseNote} noteData - The note details to create
+	 * @returns {DatabaseResponse} Result of customer note creation
+	 */
 	CreateCustomerNote(customerID: number, noteData: BaseNote): DatabaseResponse {
 		const newNote = this.CreateNote(noteData);
 		if (newNote.success) {
@@ -754,13 +922,18 @@ class NoteService extends BaseDatabaseService {
 		};
 	}
 
+	/**
+	 * Retrieves all non-deleted notes for a specific customer
+	 * @param {number} customerID - The unique identifier of the customer
+	 * @returns {DatabaseDataResponse<Note[]>} List of customer's notes or error response
+	 */
 	GetCustomerNotes(customerID: number): DatabaseDataResponse<Note[]> {
 		const query = this.db.prepare('Select n.* FROM customer_notes cn INNER JOIN notes n ON cn.noteID = n.id WHERE cn.customerID = ? and deleted = 0');
 		const result = <Note[]>query.all(customerID);
 		if (result) {
 			return {
 				success: true,
-				message: 'Note created',
+				message: 'Note found',
 				data: result
 			};
 		} else {
@@ -772,7 +945,12 @@ class NoteService extends BaseDatabaseService {
 		}
 	}
 
-	//Appointment Note
+	/**
+	 * Creates a new note associated with a specific appointment
+	 * @param {number} appointmentID - The unique identifier of the appointment
+	 * @param {BaseNote} noteData - The note details to create
+	 * @returns {DatabaseResponse} Result of appointment note creation
+	 */
 	CreateAppointmentNote(appointmentID: number, noteData: BaseNote): DatabaseResponse {
 		const newNote = this.CreateNote(noteData);
 
@@ -799,6 +977,11 @@ class NoteService extends BaseDatabaseService {
 		};
 	}
 
+	/**
+	 * Retrieves all non-deleted notes for a specific appointment
+	 * @param {number} appointmentID - The unique identifier of the appointment
+	 * @returns {DatabaseDataResponse<Note[]>} List of appointment's notes or error response
+	 */
 	GetAppointmentNotes(appointmentID: number): DatabaseDataResponse<Note[]> {
 		const query = this.db.prepare('SELECT n.* FROM appointment_notes an INNER JOIN notes n ON an.noteID = n.id WHERE an.appointmentID = ? and deleted = 0');
 		const result = <Note[]>query.all(appointmentID);
@@ -817,7 +1000,12 @@ class NoteService extends BaseDatabaseService {
 		}
 	}
 
-	//Services Notes
+	/**
+	 * Creates a new note associated with a specific service
+	 * @param {number} serviceID - The unique identifier of the service
+	 * @param {BaseNote} noteData - The note details to create
+	 * @returns {DatabaseResponse} Result of service note creation
+	 */
 	CreateServiceNote(serviceID: number, noteData: BaseNote): DatabaseResponse {
 		const newNote = this.CreateNote(noteData);
 		if (newNote.success) {
@@ -842,6 +1030,11 @@ class NoteService extends BaseDatabaseService {
 		};
 	}
 
+	/**
+	 * Retrieves all non-deleted notes for a specific service
+	 * @param {number} serviceID - The unique identifier of the service
+	 * @returns {DatabaseDataResponse<Note[]>} List of service's notes or error response
+	 */
 	GetServiceNotes(serviceID: number): DatabaseDataResponse<Note[]> {
 		const query = this.db.prepare('SELECT n.* FROM service_notes sn INNER JOIN notes n ON sn.noteID = n.id WHERE sn.serviceID = ? and deleted = 0');
 		const result = <Note[]>query.all(serviceID);
@@ -866,3 +1059,5 @@ export const CustomerDatabaseService = new CustomerService();
 export const AppointmentDatabaseService = new AppointmentService();
 export const ServiceDatabaseService = new ServiceService();
 export const NoteDatabaseService = new NoteService();
+
+export { AuthService, CustomerService, AppointmentService, ServiceService, NoteService };
