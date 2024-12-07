@@ -16,7 +16,6 @@
 			}
 		}
 	}
-
 </script>
 
 <div class="table">
@@ -40,7 +39,7 @@
 			</div>
 		</div>
 		<div class="email">
-			{"$" + data.price}
+			{'$' + data.price}
 		</div>
 		<div class="phone">
 			{data.description}

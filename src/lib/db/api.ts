@@ -1,21 +1,15 @@
-import type { BaseCustomerRecord, BaseAppointmentRecord, AppointmentRecord, CustomerRecord, BaseNote, Note, ServiceRecord, BaseServiceRecord, DatabaseResponse, DatabaseDataResponse } from '$lib/types';
-
-interface NoteArrayResponse {
-	success: boolean;
-	message: string;
-	data: Note[];
-}
-
-interface NoteResponse {
-	success: boolean;
-	message: string;
-	data: Note | null;
-}
-
-interface BaseResponse {
-	success: boolean;
-	message: string;
-}
+import type {
+	BaseCustomerRecord,
+	BaseAppointmentRecord,
+	AppointmentRecord,
+	CustomerRecord,
+	BaseNote,
+	Note,
+	ServiceRecord,
+	BaseServiceRecord,
+	DatabaseResponse,
+	DatabaseDataResponse
+} from '$lib/types';
 
 /**
  * API class providing methods for interacting with backend services
@@ -41,8 +35,7 @@ class API {
 	 */
 	private static async request(endpoint: string, options: RequestInit = {}) {
 		try {
-			const baseURL = import.meta.env.VITE_API_URL;
-			const response = await fetch(`${baseURL}/api${endpoint}`, {
+			const response = await fetch(`/api${endpoint}`, {
 				...options,
 				headers: {
 					...this.defaultHeaders,

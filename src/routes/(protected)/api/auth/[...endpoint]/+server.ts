@@ -9,18 +9,20 @@ export const POST: RequestHandler = async ({ request, params }) => {
 		switch (path) {
 			case 'signup': {
 				const result = AuthDatabaseService.createUser(data);
-				return json(result)
+				return json(result);
 			}
 
 			case 'login': {
 				const user = AuthDatabaseService.getUserByEmail(data.email.toLowerCase());
-				return json(user)
+				return json(user);
 			}
 
 			default:
+				console.error(path, ' is an invalid path');
 				return json({ success: false, message: 'Invalid Endpoint' }, { status: 500 });
 		}
 	} catch (error) {
+		console.error(error);
 		return json({ success: false, message: 'Server Error' }, { status: 500 });
 	}
 };

@@ -3,22 +3,22 @@
 	import type { BaseNote, Note } from '$lib/types';
 	import { onMount } from 'svelte';
 
-	let { notesID, noteHelper }: {notesID: number, noteHelper: NoteService} = $props();
+	let { notesID, noteHelper }: { notesID: number; noteHelper: NoteService } = $props();
 	let noteArray: Note[] = $state([]);
 	let noteArrayLength = $derived(noteArray.length);
 
 	onMount(async () => {
-		let response = await noteHelper.getNotes(notesID)
-        if(response.success){
-            noteArray = response.data
-        }
+		let response = await noteHelper.getNotes(notesID);
+		if (response.success) {
+			noteArray = response.data;
+		}
 	});
 
 	async function reload() {
-		let response = await noteHelper.getNotes(notesID)
-        if(response.success){
-            noteArray = response.data
-        }
+		let response = await noteHelper.getNotes(notesID);
+		if (response.success) {
+			noteArray = response.data;
+		}
 		selectedNote = null;
 	}
 
@@ -28,13 +28,13 @@
 	}
 
 	let newNote: BaseNote = $state({
-        title: '',
+		title: '',
 		note: '',
 		createdDate: Date.now(),
 		deleted: 0
 	});
 
-    let createMode = $state(false);
+	let createMode = $state(false);
 	function setCreateModeTo(mode: boolean) {
 		createMode = mode;
 		newNote = {
@@ -51,21 +51,22 @@
 	}
 
 	async function saveNewNote() {
-		const result = await noteHelper.createNote(notesID, newNote)
+		await noteHelper.createNote(notesID, newNote);
 		await reload();
 		setCreateModeTo(false);
 	}
 
 	async function saveEdit() {
-		//@ts-ignore
-		const result = await noteHelper.updateNote(selectedNote)
-		setEditModeTo(false);
+		if (selectedNote) {
+			await noteHelper.updateNote(selectedNote);
+			setEditModeTo(false);
+		}
 	}
 
 	async function deleteNote(noteID: number) {
 		let message = confirm('Are you sure you want to delete this note?');
 		if (message) {
-			const result = await noteHelper.deleteNote(noteID);
+			await noteHelper.deleteNote(noteID);
 			await reload();
 		}
 	}

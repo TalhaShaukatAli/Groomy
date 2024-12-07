@@ -202,7 +202,7 @@ export class TestMapping {
 		await this.page.waitForTimeout(100);
 	}
 
-	async Edit_Service(oldServiceTitle:string, service: BaseServiceRecord) {
+	async Edit_Service(oldServiceTitle: string, service: BaseServiceRecord) {
 		await this.GoTo('Services');
 
 		await this.page.locator('.row').filter({ hasText: oldServiceTitle }).getByText('Edit').click();
@@ -213,14 +213,14 @@ export class TestMapping {
 		await this.page.waitForTimeout(100);
 	}
 
-	async Service_Delete(serviceTitle: string){
+	async Service_Delete(serviceTitle: string) {
 		await this.GoTo('Services');
 		await this.page.on('dialog', (dialog) => dialog.accept());
 		await this.page.locator('.row').filter({ hasText: serviceTitle }).getByText('Delete').click();
 		await this.page.waitForTimeout(100);
 	}
 
-	async Service_DeleteFromEdit(serviceTitle: string){
+	async Service_DeleteFromEdit(serviceTitle: string) {
 		await this.GoTo('Services');
 		await this.page.locator('.row').filter({ hasText: serviceTitle }).getByText('Edit').click();
 		await this.page.on('dialog', (dialog) => dialog.accept());
@@ -228,17 +228,17 @@ export class TestMapping {
 		await this.page.waitForTimeout(100);
 	}
 
-	async AssertService(service: BaseServiceRecord){
+	async AssertService(service: BaseServiceRecord) {
 		await this.GoTo('Services');
 
 		await this.page.locator('.row').filter({ hasText: service.name }).getByText('View').click();
-		await expect(this.page.locator('input[name="firstName"]')).toHaveValue(service.name)
-		await expect(this.page.getByRole('spinbutton')).toHaveValue(service.price.toString())
-		await expect(this.page.locator('textarea')).toHaveValue(service.description)
+		await expect(this.page.locator('input[name="firstName"]')).toHaveValue(service.name);
+		await expect(this.page.getByRole('spinbutton')).toHaveValue(service.price.toString());
+		await expect(this.page.locator('textarea')).toHaveValue(service.description);
 		await this.page.waitForTimeout(100);
 	}
 
-	async AssertNotService(service: BaseServiceRecord){
+	async AssertNotService(service: BaseServiceRecord) {
 		await this.GoTo('Services');
 
 		await expect(this.page.locator('.row').filter({ hasText: service.name })).toBeHidden();

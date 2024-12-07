@@ -9,32 +9,31 @@ test.describe('Existing Account', async () => {
 	test('Edit existing account', async ({ page }) => {
 		const map = new TestMapping(page);
 		await map.Account_Login(email, password);
-		
-		await map.AssertCustomer(CustomerDataObject.YoungProfessional);
-		await map.Customer_Edit(CustomerDataObject.YoungProfessional.phone, CustomerDataObject.SuburbanMom)
-		await map.AssertCustomer(CustomerDataObject.SuburbanMom);
-		await map.Customer_Edit(CustomerDataObject.SuburbanMom.phone, CustomerDataObject.YoungProfessional)
-		await map.AssertCustomer(CustomerDataObject.YoungProfessional);
 
+		await map.AssertCustomer(CustomerDataObject.YoungProfessional);
+		await map.Customer_Edit(CustomerDataObject.YoungProfessional.phone, CustomerDataObject.SuburbanMom);
+		await map.AssertCustomer(CustomerDataObject.SuburbanMom);
+		await map.Customer_Edit(CustomerDataObject.SuburbanMom.phone, CustomerDataObject.YoungProfessional);
+		await map.AssertCustomer(CustomerDataObject.YoungProfessional);
 	});
 
 	test('Delete account from main page', async ({ page }) => {
 		const map = new TestMapping(page);
 		await map.Account_Login(email, password);
-		
+
 		await map.Customer_Create(CustomerDataObject.SeniorCustomer);
 		await map.AssertCustomer(CustomerDataObject.SeniorCustomer);
-		await map.Customer_Delete(CustomerDataObject.SeniorCustomer.phone)
+		await map.Customer_Delete(CustomerDataObject.SeniorCustomer.phone);
 		await map.AssertNotCustomer(CustomerDataObject.SeniorCustomer);
 	});
 
 	test('Delete account from edit page', async ({ page }) => {
 		const map = new TestMapping(page);
 		await map.Account_Login(email, password);
-		
+
 		await map.Customer_Create(CustomerDataObject.SeniorCustomer);
 		await map.AssertCustomer(CustomerDataObject.SeniorCustomer);
-		await map.Customer_DeleteFromEdit(CustomerDataObject.SeniorCustomer.phone)
+		await map.Customer_DeleteFromEdit(CustomerDataObject.SeniorCustomer.phone);
 		await map.AssertNotCustomer(CustomerDataObject.SeniorCustomer);
 	});
 });
@@ -55,6 +54,6 @@ test.describe('New Account', async () => {
 		await map.AssertCustomer(CustomerDataObject.BasicFemale);
 
 		await map.Customer_Edit(CustomerDataObject.BasicFemale.phone, CustomerDataObject.BasicMale);
-		await map.AssertCustomer(CustomerDataObject.BasicMale)
+		await map.AssertCustomer(CustomerDataObject.BasicMale);
 	});
 });

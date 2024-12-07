@@ -33,7 +33,7 @@
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
 			if (result.success) {
-				goto("/home/customers")
+				goto('/home/customers');
 			}
 		}
 	}
@@ -57,7 +57,8 @@
 							DeleteByID(customer.id);
 						}}>Delete</button
 					>
-					<button type="button"
+					<button
+						type="button"
 						onclick={() => {
 							onCancel();
 						}}>Cancel</button
@@ -97,7 +98,7 @@
 			</div>
 		</div>
 	</form>
-	<Notes notesID={customer.id} noteHelper={CustomerNoteServiceSingleton}/>
+	<Notes notesID={customer.id} noteHelper={CustomerNoteServiceSingleton} />
 </div>
 
 <style>

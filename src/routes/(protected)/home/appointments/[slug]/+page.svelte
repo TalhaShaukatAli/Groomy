@@ -57,7 +57,7 @@
 					</div>
 					<div class="grow"></div>
 					<button
-					type="button"
+						type="button"
 						onclick={() => {
 							changeToEdit();
 						}}>Edit</button
@@ -71,13 +71,13 @@
 					<div class="grow"></div>
 					<button type="submit">Save</button>
 					<button
-					type="button"
+						type="button"
 						onclick={() => {
 							onDelete(appointment.id);
 						}}>Delete</button
 					>
 					<button
-					type="button"
+						type="button"
 						onclick={() => {
 							cancel();
 						}}>Cancel</button
@@ -153,8 +153,7 @@
 			</div>
 		</div>
 	</form>
-	<Notes notesID={appointment.id} noteHelper={AppointmentNoteServiceSingleton}/>
-
+	<Notes notesID={appointment.id} noteHelper={AppointmentNoteServiceSingleton} />
 </div>
 
 <style>

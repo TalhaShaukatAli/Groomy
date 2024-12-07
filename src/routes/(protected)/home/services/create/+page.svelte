@@ -8,11 +8,11 @@
 	let { data } = $props();
 
 	let service: BaseServiceRecord = $state({
-		name: "",
-		description: "",
+		name: '',
+		description: '',
 		price: 0,
 		deleted: 0,
-		userID: data.userID,
+		userID: data.userID
 	});
 
 	async function onCreate() {
@@ -39,14 +39,13 @@
 						Name: <input type="text" name="firstName" id="" bind:value={service.name} minlength="2" required />
 					</div>
 					<div>
-						Price: <input type="number" bind:value={service.price} step=".01" required>
+						Price: <input type="number" bind:value={service.price} step=".01" required />
 					</div>
 				</div>
 				<div class="description">
 					<div>Description:</div>
 					<textarea name="" id="" bind:value={service.description} maxlength="100"> </textarea>
 				</div>
-				
 			</div>
 		</div>
 	</form>

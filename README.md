@@ -30,6 +30,7 @@ This document outlines the technical specifications for a web-based business man
 ### Color System
 
 #### Base Colors
+
 - Main Green: `#b7ddb7` - Primary interface elements
 - Secondary Green: `#5c7c51` - Accents and secondary elements
 - Hover Green: `#97c7a2` - Interactive state for buttons and elements
@@ -37,23 +38,26 @@ This document outlines the technical specifications for a web-based business man
 - Text: `black` - Primary text color
 
 #### Usage Patterns
+
 - Content Areas: Main green (`#b7ddb7`) for cards and primary containers
-- Interactive Elements: 
+- Interactive Elements:
   - Default: Main green
   - Hover: Hover green
   - Active/Selected: Secondary green
-- Borders: 
+- Borders:
   - Default: 2px solid transparent
   - Active: 2px/5px solid main green
 
 ### Component Styling
 
 #### Cards & Containers
+
 - Background: Main green
 - Border Radius: 1rem for main containers, 0.5rem for smaller elements
 - Shadow: `drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem)`
 
 #### Forms & Input Fields
+
 - Border: 2px solid main green
 - Border Radius: 0.2rem
 - Background: White or transparent depending on context

@@ -1,5 +1,5 @@
-/** 
- * Represents a basic database operation response 
+/**
+ * Represents a basic database operation response
  * @description Indicates the success status and provides a message about the operation
  */
 export type DatabaseResponse = {
@@ -7,8 +7,8 @@ export type DatabaseResponse = {
 	message: string;
 };
 
-/** 
- * Represents a database response that may include data 
+/**
+ * Represents a database response that may include data
  * @description A generic type that provides a type-safe way to return data from database operations
  * @template T The type of data that may be returned
  */
@@ -30,8 +30,8 @@ export type DatabaseDataResponse<T> =
 			data?: undefined;
 	  };
 
-/** 
- * Represents a physical address 
+/**
+ * Represents a physical address
  * @description Captures the components of a standard postal address
  */
 type Address = {
@@ -41,15 +41,15 @@ type Address = {
 	zip: number;
 };
 
-/** 
- * Adds an ID to a given type 
+/**
+ * Adds an ID to a given type
  * @description A utility type that adds an 'id' property to any type
  * @template T The base type to augment with an ID
  */
 type RecordWithId<T> = { id: number } & T;
 
-/** 
- * Represents the base user record without an ID 
+/**
+ * Represents the base user record without an ID
  * @description Contains core user information before database storage
  */
 export type BaseUserRecord = {
@@ -59,14 +59,14 @@ export type BaseUserRecord = {
 	hashedPassword: string;
 };
 
-/** 
- * Represents a complete user record with an ID 
+/**
+ * Represents a complete user record with an ID
  * @description A user record as stored in the database
  */
 export type UserRecord = RecordWithId<BaseUserRecord>;
 
-/** 
- * Represents the base customer record without an ID 
+/**
+ * Represents the base customer record without an ID
  * @description Contains detailed customer information before database storage
  */
 export type BaseCustomerRecord = {
@@ -79,14 +79,14 @@ export type BaseCustomerRecord = {
 	deleted: number;
 };
 
-/** 
- * Represents a complete customer record with an ID 
+/**
+ * Represents a complete customer record with an ID
  * @description A customer record as stored in the database
  */
 export type CustomerRecord = RecordWithId<BaseCustomerRecord>;
 
-/** 
- * Represents the base appointment record without an ID 
+/**
+ * Represents the base appointment record without an ID
  * @description Contains detailed appointment information before database storage
  */
 export type BaseAppointmentRecord = {
@@ -104,14 +104,14 @@ export type BaseAppointmentRecord = {
 	deleted: number;
 };
 
-/** 
- * Represents a complete appointment record with an ID 
+/**
+ * Represents a complete appointment record with an ID
  * @description An appointment record as stored in the database
  */
 export type AppointmentRecord = RecordWithId<BaseAppointmentRecord>;
 
-/** 
- * Represents a authentication cookie 
+/**
+ * Represents a authentication cookie
  * @description Stores information about a user's session cookie
  */
 export type cookie = {
@@ -120,8 +120,8 @@ export type cookie = {
 	expireTime: number;
 };
 
-/** 
- * Represents the base note record without an ID 
+/**
+ * Represents the base note record without an ID
  * @description Contains core note information before database storage
  */
 export type BaseNote = {
@@ -131,26 +131,26 @@ export type BaseNote = {
 	deleted: number;
 };
 
-/** 
- * Represents a complete note record with an ID 
+/**
+ * Represents a complete note record with an ID
  * @description A note record as stored in the database
  */
 export type Note = RecordWithId<BaseNote>;
 
-/** 
- * Represents the base service record without an ID 
+/**
+ * Represents the base service record without an ID
  * @description Contains detailed service information before database storage
  */
 export type BaseServiceRecord = {
-	userID: number,
-	name: string,
-	description: string,
-	price: number,
-	deleted: 0 | 1
-}
+	userID: number;
+	name: string;
+	description: string;
+	price: number;
+	deleted: 0 | 1;
+};
 
-/** 
- * Represents a complete service record with an ID 
+/**
+ * Represents a complete service record with an ID
  * @description A service record as stored in the database
  */
-export type ServiceRecord = RecordWithId<BaseServiceRecord>
+export type ServiceRecord = RecordWithId<BaseServiceRecord>;

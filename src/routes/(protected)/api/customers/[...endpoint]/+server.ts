@@ -14,31 +14,30 @@ export const POST: RequestHandler = async ({ request, params }) => {
 
 			case 'delete': {
 				const result = CustomerDatabaseService.deleteCustomer(data);
-				return json(result)
+				return json(result);
 			}
 
 			case 'update': {
 				const result = CustomerDatabaseService.updateCustomer(data.id, data);
-				return json(result)
-
+				return json(result);
 			}
 
 			case 'getCustomersByUserID': {
 				const result = CustomerDatabaseService.getCustomers(data);
-				return json(result)
-
+				return json(result);
 			}
 
 			case 'getCustomerByUserID': {
 				const result = CustomerDatabaseService.getCustomer(data);
-				return json(result)
-
+				return json(result);
 			}
 
 			default:
+				console.error(path, ' is an invalid path');
 				return json({ success: false, message: 'Invalid Endpoint' });
 		}
 	} catch (error) {
+		console.error(error);
 		return json({ success: false, message: 'Server Error' }, { status: 500 });
 	}
 };

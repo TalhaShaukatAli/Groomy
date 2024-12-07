@@ -47,16 +47,6 @@ type DatabaseAppointmentResponse = {
 };
 
 /**
- * Creates and configures a database connection
- * @returns {Database.Database} A configured SQLite database instance
- */
-function getDB() {
-	const db = new Database('mydb.sqlite', { verbose: console.log });
-	db.prepare('PRAGMA journal_mode = WAL').run();
-	return db;
-}
-
-/**
  * Base class for database services providing a singleton database connection
  * @remarks
  * Ensures a single database instance is used across all service instances

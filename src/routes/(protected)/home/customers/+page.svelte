@@ -12,7 +12,7 @@
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
 			if (result.success) {
-				window.location.reload()
+				window.location.reload();
 			}
 		}
 	}
