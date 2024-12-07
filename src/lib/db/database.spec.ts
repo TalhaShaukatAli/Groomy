@@ -259,7 +259,7 @@ describe('AppointmentDatabaseService', () => {
             const result = AppointmentDatabaseService.createAppointment(appointment);
 
             expect(result.success).toBe(true);
-            expect(result.message).toBe('Appointment was created successfully');
+            expect(result.message).toBe('Appointment created');
         });
 
         it('should fail to create an appointment', () => {
