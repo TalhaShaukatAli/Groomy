@@ -20,7 +20,7 @@
 
 <div class="table">
 	<a class="createNew" href="/home/services/create"> Add New Service > </a>
-	{#if services == null || services.length == 0}
+	{#if services == null || services.length === 0}
 		You have no services created yet
 	{:else}
 		<div class="rows">

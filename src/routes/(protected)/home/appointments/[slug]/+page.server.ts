@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const appointments = AppointmentDatabaseService.getAppointment(appointmentID);
 	const customers = CustomerDatabaseService.getCustomers(locals.user?.id);
 
-	if (customers == null) {
+	if (customers === null) {
 		redirect(302, '/home/customers');
 	}
 

@@ -91,7 +91,7 @@
 	</div>
 	{#if !createMode}
 		<div class="table">
-			{#if noteArrayLength == 0}
+			{#if noteArrayLength === 0}
 				<div class="faint">No notes created yet. Create a note to get started.</div>
 			{:else}
 				{#each noteArray as note, i}
@@ -101,7 +101,7 @@
 						onclick={() => {
 							changeSelectedNote(i);
 						}}
-						class:highlight={selectedNote?.id == note.id}
+						class:highlight={selectedNote?.id === note.id}
 						class="tableItem"
 					>
 						{i + 1}: {note.title}

@@ -24,7 +24,7 @@
 	async function onSave() {
 		const result = await API.updateCustomer(customer);
 		if (result.success) {
-			goto(`/home/customers`);
+			await goto(`/home/customers`);
 		}
 	}
 
@@ -33,7 +33,7 @@
 		if (confirmResult) {
 			const result = await API.deleteCustomer(id);
 			if (result.success) {
-				goto('/home/customers');
+				await goto('/home/customers');
 			}
 		}
 	}

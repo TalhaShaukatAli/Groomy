@@ -30,8 +30,7 @@ export abstract class NoteService {
 	 * @returns {Promise<DatabaseDataResponse<Note>>} A promise resolving to the requested note
 	 */
 	async getNote(noteID: number) {
-		const response = await API.GetNoteByID(noteID);
-		return response;
+		return await API.GetNoteByID(noteID);
 	}
 
 	/**

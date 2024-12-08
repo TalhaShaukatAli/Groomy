@@ -24,7 +24,7 @@
 	async function onSave() {
 		const result = await API.updateService(service);
 		if (result.success) {
-			goto(`/home/services`);
+			await goto(`/home/services`);
 		}
 	}
 
@@ -33,7 +33,7 @@
 		if (confirmResult) {
 			const result = await API.deleteService(id);
 			if (result.success) {
-				goto('/home/services');
+				await goto('/home/services');
 			}
 		}
 	}

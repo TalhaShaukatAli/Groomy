@@ -25,7 +25,7 @@
 	async function onSave() {
 		const result = await API.updateAppointment(appointment);
 		if (result.success) {
-			goto(`/home/appointments`);
+			await goto(`/home/appointments`);
 		}
 	}
 
@@ -34,7 +34,7 @@
 		if (confirmResult) {
 			const result = await API.deleteAppointment(id);
 			if (result.success) {
-				goto('/home/appointments');
+				await goto('/home/appointments');
 			}
 		}
 	}

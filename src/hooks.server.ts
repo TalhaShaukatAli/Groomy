@@ -14,7 +14,7 @@ import { redirect, type Handle } from '@sveltejs/kit';
 export const handle: Handle = async ({ event, resolve }) => {
 	// Skip authentication for auth routes or non-home routes
 	if (event.url.pathname.startsWith('/api/auth') || !event.url.pathname.startsWith('/home')) {
-		return await resolve(event);
+		return resolve(event);
 	}
 
 	// Retrieve the session cookie from the browser
@@ -43,7 +43,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		};
 
 		// Continue with the request processing
-		return await resolve(event);
+		return resolve(event);
 	} else {
 		// Session has expired - remove the invalid cookie
 		AuthDatabaseService.removeCookie(databaseCookie.data.id);

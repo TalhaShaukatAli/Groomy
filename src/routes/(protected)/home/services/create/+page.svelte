@@ -18,7 +18,7 @@
 	async function onCreate() {
 		const result = await API.createService(service);
 		if (result.success) {
-			goto('/home/services');
+			await goto('/home/services');
 		}
 	}
 </script>

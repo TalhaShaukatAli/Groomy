@@ -25,7 +25,7 @@
 	async function onCreate() {
 		const result = await API.createCustomer(customer);
 		if (result.success) {
-			goto('/home/customers');
+			await goto('/home/customers');
 		}
 	}
 </script>

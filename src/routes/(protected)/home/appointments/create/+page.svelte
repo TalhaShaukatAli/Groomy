@@ -32,7 +32,7 @@
 	async function createAppointment() {
 		const result = await API.createAppointment(appointment);
 		if (result.success) {
-			goto(`/home/appointments`);
+			await goto(`/home/appointments`);
 		}
 	}
 
