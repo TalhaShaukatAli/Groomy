@@ -1,5 +1,7 @@
-import { describe, expect, beforeEach, afterEach, vi, it } from 'vitest';
-import type { BaseUserRecord, CustomerRecord, BaseAppointmentRecord, BaseServiceRecord, BaseNote } from '$lib/types';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { BaseAppointmentRecord, BaseNote, BaseServiceRecord, BaseUserRecord, CustomerRecord } from '$lib/types';
+// Import your database services after the mock setup
+import { AppointmentService, AuthService, CustomerService, NoteService, ServiceService } from './database';
 
 // Get the mock functions before the module is mocked
 const mockedDB = vi.hoisted(() => ({
@@ -24,9 +26,6 @@ vi.mock('better-sqlite3', () => {
 		}))
 	};
 });
-
-// Import your database services after the mock setup
-import { AuthService, CustomerService, AppointmentService, ServiceService, NoteService } from './database';
 
 // Create instances for testing
 const AuthDatabaseService = new AuthService();
@@ -327,6 +326,83 @@ describe('AppointmentDatabaseService', () => {
 			mockedDB.mockAll.mockReturnValueOnce(null);
 
 			const result = AppointmentDatabaseService.getAppointmentsByUserID(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Appointments couldn't be found");
+		});
+	});
+
+	describe('getAppointment', () => {
+		it('should retrieve appointments successfully', () => {
+			const mockAppointment = {
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Test Appointment',
+				description: 'A test appointment',
+				time_date: '2023-01-01',
+				time_start: '10:00',
+				time_end: '11:00',
+				time_exact: 0,
+				address_street: '123 Test St',
+				address_city: 'Testville',
+				address_state: 'TS',
+				address_zip: 12345,
+				deleted: 0
+			};
+
+			mockedDB.mockGet.mockReturnValueOnce(mockAppointment);
+
+			const result = AppointmentDatabaseService.getAppointment(1);
+			console.log(result);
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data!.title).toBe('Test Appointment');
+		});
+
+		it('should handle no appointments found', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			const result = AppointmentDatabaseService.getAppointment(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Appointment couldn't be found");
+		});
+	});
+
+	describe('getAppointmentsByCustomerID', () => {
+		it('should retrieve appointments successfully', () => {
+			const mockAppointments = [
+				{
+					id: 1,
+					userID: 1,
+					customerID: 1,
+					title: 'Test Appointment',
+					description: 'A test appointment',
+					time_date: '2023-01-01',
+					time_start: '10:00',
+					time_end: '11:00',
+					time_exact: 0,
+					address_street: '123 Test St',
+					address_city: 'Testville',
+					address_state: 'TS',
+					address_zip: 12345,
+					deleted: 0
+				}
+			];
+			mockedDB.mockAll.mockReturnValueOnce(mockAppointments);
+
+			const result = AppointmentDatabaseService.getAppointmentsByCustomerID(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data![0].title).toBe('Test Appointment');
+		});
+
+		it('should handle no appointments found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = AppointmentDatabaseService.getAppointmentsByCustomerID(1);
 
 			expect(result.success).toBe(false);
 			expect(result.message).toBe("Appointments couldn't be found");

@@ -224,6 +224,7 @@ export class TestMapping {
 		await this.GoTo('Services');
 		await this.page.locator('.row').filter({ hasText: serviceTitle }).getByText('Edit').click();
 		await this.page.on('dialog', (dialog) => dialog.accept());
+		await this.page.waitForTimeout(100);
 		await this.page.getByText('Delete').click();
 		await this.page.waitForTimeout(100);
 	}

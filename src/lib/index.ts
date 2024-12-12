@@ -11,10 +11,6 @@
  * @throws {Error} If length is less than or equal to 0.
  */
 export function generateRandomString(length: number) {
-	if (length <= 0) {
-		throw new Error('Length must be a positive integer');
-	}
-
 	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	let result = '';
 
