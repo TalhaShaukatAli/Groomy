@@ -577,7 +577,7 @@ class AppointmentService extends BaseDatabaseService {
 	 * @param {AppointmentRecord} appointment - The updated appointment details
 	 * @returns {DatabaseResponse} Result of the update operation
 	 */
-	updateAppointmentByID(appointmentID: number, appointment: AppointmentRecord): DatabaseResponse {
+	updateAppointmentByID(appointmentID: number, appointment: BaseAppointmentRecord): DatabaseResponse {
 		const query = this.db.prepare(
 			'Update appointments set userID = @userID, customerID=@customerID, title=@title, description=@description, address_street= @address_street, address_city=@address_city, address_state=@address_state, address_zip=@address_zip, time_date = @time_date, time_start = @time_start, time_end = @time_end, time_exact = @time_exact, deleted=@deleted where id = @id'
 		);
@@ -726,7 +726,7 @@ class ServiceService extends BaseDatabaseService {
 	 * @param {ServiceRecord} service - The updated service details
 	 * @returns {DatabaseResponse} Result of the update operation
 	 */
-	updateServiceByID(serviceID: number, service: ServiceRecord): DatabaseResponse {
+	updateServiceByID(serviceID: number, service: BaseServiceRecord): DatabaseResponse {
 		const query = this.db.prepare('Update services set name = @name, description=@description, price=@price, deleted = @deleted WHERE id = @id');
 		const result = query.run({
 			id: serviceID,
