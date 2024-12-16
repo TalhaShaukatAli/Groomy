@@ -1,16 +1,18 @@
 import type {
+	AppointmentRecord,
+	BaseAppointmentRecord,
+	BaseInvoiceRecord,
+	BaseNote,
+	BaseServiceRecord,
+	BaseUserRecord,
 	cookie,
 	CustomerRecord,
-	BaseUserRecord,
-	BaseAppointmentRecord,
-	AppointmentRecord,
-	UserRecord,
-	Note,
-	BaseNote,
-	ServiceRecord,
-	BaseServiceRecord,
+	DatabaseDataResponse,
 	DatabaseResponse,
-	DatabaseDataResponse
+	InvoiceRecord,
+	Note,
+	ServiceRecord,
+	UserRecord
 } from '$lib/types';
 
 import Database from 'better-sqlite3';
@@ -1044,10 +1046,154 @@ class NoteService extends BaseDatabaseService {
 	}
 }
 
+/**
+ * Service for managing invoice-related database operations
+ * @class
+ * @extends BaseDatabaseService
+ */
+class InvoiceService extends BaseDatabaseService {
+	constructor() {
+		super();
+	}
+
+	/**
+	 * Creates a new invoice in the database
+	 * @returns {DatabaseResponse} Result of the invoice creation
+	 * @param invoice
+	 */
+	createInvoice(invoice: BaseInvoiceRecord): DatabaseResponse {
+		const query = this.db.prepare('Insert into invoices (createdDate, dueDate, customerID, total, paid, serviceItems, deleted) VALUES (@createdDate, @dueDate, @customerID, @total,  @paid, @serviceItems, @deleted)');
+		const result = query.run({
+			createdDate: invoice.createdDate,
+			dueDate: invoice.dueDate,
+			customerID: invoice.customerID,
+			total: invoice.total,
+			paid: invoice.paid,
+			serviceItems: invoice.serviceItems,
+			deleted: 0
+		});
+
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: 'Invoice created'
+			};
+		} else {
+			console.error('Failed to create invoice - Invoice:', invoice);
+			return {
+				success: false,
+				message'Invoice couldn\'t be created'd"
+			};
+		}
+	}
+
+	/**
+	 * Retrieves a specific invoice by its ID
+	 * @param {number} invoiceID - The unique identifier of the invoice
+	 * @returns {DatabaseDataResponse<ServiceRecord>} The retrieved invoice or error response
+	 */
+	getInvoice(invoiceID: number): DatabaseDataResponse<InvoiceRecord> {
+		const query = this.db.prepare('SELECT * from invoices WHERE id = ?');
+		const result = <InvoiceRecord>query.get(invoiceID);
+		if (result) {
+			return {
+				success: true,
+				message: 'Invoice found successfully',
+				data: result
+			};
+		} else {
+			console.error('Failed to get invoice - InvoiceID:', invoiceID);
+			return {
+				success: false,
+				message'invoice wasn\'t found'd"
+			};
+		}
+	}
+
+	/**
+	 * Retrieves all non-deleted services for a specific user
+	 * @param {number} userID - The unique identifier of the user
+	 * @returns {DatabaseDataResponse<ServiceRecord[]>} List of user's services or error response
+	 */
+	getInvoicesByUserID(userID: number): DatabaseDataResponse<InvoiceRecord[]> {
+		const query = this.db.prepare('SELECT * from invoices WHERE userID = ? and deleted = 0');
+		const result = <InvoiceRecord[]>query.all(userID);
+		if (result) {
+			return {
+				success: true,
+				message: 'Invoice found',
+				data: result
+			};
+		} else {
+			console.error('Failed to get invoice - invoiceID:', userID);
+			return {
+				success: false,
+				message'Invoice wasn\'t found'd"
+			};
+		}
+	}
+
+	/**
+	 * Updates an existing invoices's information
+	 * @param {number} invoiceID - The unique identifier of the invoice to update
+	 * @param {InvoiceRecord} invoice - The updated invoice details
+	 * @returns {DatabaseResponse} Result of the update operation
+	 */
+	updateInvoiceByID(invoiceID: number, invoice: InvoiceRecord): DatabaseResponse {
+		const query = this.db.prepare('Update invoices set createdDate = @createdDate, dueDate=@dueDate, customerID=@customerID, total = @total, paid = @paid, serviceItems = @serviceItems, deleted = @deleted, WHERE id = @id');
+		const result = query.run({
+			createdDate: invoice.createdDate,
+			dueDate: invoice.dueDate,
+			customerID: invoice.customerID,
+			total: invoice.total,
+			paid: invoice.paid,
+			serviceItems: invoice.serviceItems,
+			deleted: 0,
+			id: invoiceID
+		});
+
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: 'Invoice was updated'
+			};
+		} else {
+			console.error('Failed to update invoice - invoiceID:', invoiceID);
+			return {
+				success: false,
+				message'Invoice wasn\'t updated'd"
+			};
+		}
+	}
+
+	/**
+	 * Soft deletes a service by marking it as deleted
+	 * @param {number} invoiceID - The unique identifier of the invoice to delete
+	 * @returns {DatabaseResponse} Result of the delete operation
+	 */
+	deleteInvoice(invoiceID: number): DatabaseResponse {
+		const query = this.db.prepare('UPDATE invoices SET deleted = 1 WHERE id = ?');
+		const result = query.run(invoiceID);
+		if (result.changes == 1) {
+			return {
+				success: true,
+				message: 'Invoice was deleted'
+			};
+		} else {
+			console.error('Failed to delete invoice - invoiceID:', invoiceID);
+			return {
+				success: false,
+				message'Invoice wasn\'t updated'd"
+			};
+		}
+	}
+}
+
 export const AuthDatabaseService = new AuthService();
 export const CustomerDatabaseService = new CustomerService();
 export const AppointmentDatabaseService = new AppointmentService();
 export const ServiceDatabaseService = new ServiceService();
 export const NoteDatabaseService = new NoteService();
+export const InvoiceDatabaseService = new InvoiceService();
 
-export { AuthService, CustomerService, AppointmentService, ServiceService, NoteService };
+export { AuthService, CustomerService, AppointmentService, ServiceService, NoteService, InvoiceService };

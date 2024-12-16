@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BaseAppointmentRecord, BaseNote, BaseServiceRecord, BaseUserRecord, CustomerRecord } from '$lib/types';
-// Import your database services after the mock setup
+// Import database services after the mock setup
 import { AppointmentService, AuthService, CustomerService, NoteService, ServiceService } from './database';
 
 // Get the mock functions before the module is mocked
@@ -88,6 +88,24 @@ describe('AuthDatabaseService', () => {
 
 			expect(result.success).toBe(false);
 			expect(result.message).toBe('Email already in use');
+		});
+
+		it('should fail to create a user', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			mockedDB.mockGet.mockReturnValueOnce({ changes: 0, lastInsertRowid: 0 });
+
+			const user: BaseUserRecord = {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'john@example.com',
+				hashedPassword: 'hashedpassword'
+			};
+
+			const result = AuthDatabaseService.createUser(user);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('User creation failed');
 		});
 	});
 
@@ -732,87 +750,87 @@ describe('ServiceDatabaseService', () => {
 
 	describe('getService', () => {
 		it('should successfully retrieve a service', () => {
-		  const mockService = {
-			id: 1,
-			userID: 1,
-			name: 'Test Service',
-			description: 'A test service',
-			price: 50.0,
-			deleted: 0
-		  };
-		  mockedDB.mockGet.mockReturnValueOnce(mockService);
-		  
-		  const result = ServiceDatabaseService.getService(1);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.data).toEqual(mockService);
+			const mockService = {
+				id: 1,
+				userID: 1,
+				name: 'Test Service',
+				description: 'A test service',
+				price: 50.0,
+				deleted: 0
+			};
+			mockedDB.mockGet.mockReturnValueOnce(mockService);
+
+			const result = ServiceDatabaseService.getService(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockService);
 		});
-	  
+
 		it('should fail to retrieve a non-existent service', () => {
-		  mockedDB.mockGet.mockReturnValueOnce(null);
-		  
-		  const result = ServiceDatabaseService.getService(999);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Service wasn't found");
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			const result = ServiceDatabaseService.getService(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service wasn't found");
 		});
-	  });
-	  
-	  describe('updateServiceByID', () => {
+	});
+
+	describe('updateServiceByID', () => {
 		it('should successfully update a service', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
-	  
-		  const service: BaseServiceRecord = {
-			userID: 1,
-			name: 'Updated Service',
-			description: 'An updated test service',
-			price: 75.0,
-			deleted: 0
-		  };
-		  
-		  const result = ServiceDatabaseService.updateServiceByID(1, service);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.message).toBe('Service was updated');
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const service: BaseServiceRecord = {
+				userID: 1,
+				name: 'Updated Service',
+				description: 'An updated test service',
+				price: 75.0,
+				deleted: 0
+			};
+
+			const result = ServiceDatabaseService.updateServiceByID(1, service);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Service was updated');
 		});
-	  
+
 		it('should fail to update a non-existent service', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
-	  
-		  const service: BaseServiceRecord = {
-			userID: 1,
-			name: 'Updated Service',
-			description: 'An updated test service',
-			price: 75.0,
-			deleted: 0
-		  };
-		  
-		  const result = ServiceDatabaseService.updateServiceByID(999, service);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Service wasn't updated");
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const service: BaseServiceRecord = {
+				userID: 1,
+				name: 'Updated Service',
+				description: 'An updated test service',
+				price: 75.0,
+				deleted: 0
+			};
+
+			const result = ServiceDatabaseService.updateServiceByID(999, service);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service wasn't updated");
 		});
-	  });
-	  
-	  describe('deleteService', () => {
+	});
+
+	describe('deleteService', () => {
 		it('should successfully delete a service', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
-		  
-		  const result = ServiceDatabaseService.deleteService(1);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.message).toBe('Service was deleted');
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const result = ServiceDatabaseService.deleteService(1);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Service was deleted');
 		});
-	  
+
 		it('should fail to delete a non-existent service', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
-		  
-		  const result = ServiceDatabaseService.deleteService(999);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Service wasn't updated");
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const result = ServiceDatabaseService.deleteService(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service wasn't updated");
 		});
-	  });
+	});
 });
 
 describe('NoteDatabaseService', () => {
@@ -912,285 +930,285 @@ describe('NoteDatabaseService', () => {
 
 	describe('GetNoteByID', () => {
 		it('should successfully retrieve a note', () => {
-		  const mockNote = {
-			id: 1,
-			title: 'Test Note',
-			note: 'Test note content',
-			createdDate: Date.now(),
-			deleted: 0
-		  };
-		  mockedDB.mockGet.mockReturnValueOnce(mockNote);
-		  
-		  const result = NoteDatabaseService.GetNoteByID(1);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.data).toEqual(mockNote);
+			const mockNote = {
+				id: 1,
+				title: 'Test Note',
+				note: 'Test note content',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+			mockedDB.mockGet.mockReturnValueOnce(mockNote);
+
+			const result = NoteDatabaseService.GetNoteByID(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNote);
 		});
-	  
+
 		it('should fail to retrieve a non-existent note', () => {
-		  mockedDB.mockGet.mockReturnValueOnce(null);
-		  
-		  const result = NoteDatabaseService.GetNoteByID(999);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Note wasn't found");
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			const result = NoteDatabaseService.GetNoteByID(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note wasn't found");
 		});
-	  });
-	  
-	  describe('UpdateNotesByID', () => {
+	});
+
+	describe('UpdateNotesByID', () => {
 		it('should successfully update a note', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
-	  
-		  const note = {
-			id: 1,
-			title: 'Updated Note',
-			note: 'Updated note content',
-			createdDate: Date.now(),
-			deleted: 0
-		  };
-		  
-		  const result = NoteDatabaseService.UpdateNotesByID(note);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.message).toBe('Note updated');
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const note = {
+				id: 1,
+				title: 'Updated Note',
+				note: 'Updated note content',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.UpdateNotesByID(note);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note updated');
 		});
-	  
+
 		it('should fail to update a non-existent note', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
-	  
-		  const note = {
-			id: 999,
-			title: 'Updated Note',
-			note: 'Updated note content',
-			createdDate: Date.now(),
-			deleted: 0
-		  };
-		  
-		  const result = NoteDatabaseService.UpdateNotesByID(note);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Note couldn't be updated");
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const note = {
+				id: 999,
+				title: 'Updated Note',
+				note: 'Updated note content',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.UpdateNotesByID(note);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be updated");
 		});
-	  });
-	  
-	  describe('DeleteNoteByID', () => {
+	});
+
+	describe('DeleteNoteByID', () => {
 		it('should successfully delete a note', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
-		  
-		  const result = NoteDatabaseService.DeleteNoteByID(1);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.message).toBe('Note deleted');
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const result = NoteDatabaseService.DeleteNoteByID(1);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note deleted');
 		});
-	  
+
 		it('should fail to delete a non-existent note', () => {
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
-		  
-		  const result = NoteDatabaseService.DeleteNoteByID(999);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Note couldn't be deleted");
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const result = NoteDatabaseService.DeleteNoteByID(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be deleted");
 		});
-	  });
-	  
-	  describe('GetCustomerNotes', () => {
+	});
+
+	describe('GetCustomerNotes', () => {
 		it('should successfully retrieve customer notes', () => {
-		  const mockNotes = [
-			{
-			  id: 1,
-			  title: 'Customer Note 1',
-			  note: 'Test note content 1',
-			  createdDate: Date.now(),
-			  deleted: 0
-			},
-			{
-			  id: 2,
-			  title: 'Customer Note 2',
-			  note: 'Test note content 2',
-			  createdDate: Date.now(),
-			  deleted: 0
-			}
-		  ];
-		  mockedDB.mockAll.mockReturnValueOnce(mockNotes);
-		  
-		  const result = NoteDatabaseService.GetCustomerNotes(1);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.data).toEqual(mockNotes);
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Customer Note 1',
+					note: 'Test note content 1',
+					createdDate: Date.now(),
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Customer Note 2',
+					note: 'Test note content 2',
+					createdDate: Date.now(),
+					deleted: 0
+				}
+			];
+			mockedDB.mockAll.mockReturnValueOnce(mockNotes);
+
+			const result = NoteDatabaseService.GetCustomerNotes(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNotes);
 		});
-	  
+
 		it('should handle no customer notes found', () => {
-		  mockedDB.mockAll.mockReturnValueOnce(null);
-		  
-		  const result = NoteDatabaseService.GetCustomerNotes(1);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Notes couldn't be found");
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = NoteDatabaseService.GetCustomerNotes(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Notes couldn't be found");
 		});
-	  });
-	  
-	  describe('CreateAppointmentNote', () => {
+	});
+
+	describe('CreateAppointmentNote', () => {
 		it('should successfully create an appointment note', () => {
-		  // Mock the CreateNote method to return success
-		  const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
-			success: true,
-			data: 1
-		  });
-	  
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
-	  
-		  const note: BaseNote = {
-			title: 'Appointment Test Note',
-			note: 'A test note for an appointment',
-			createdDate: Date.now(),
-			deleted: 0
-		  };
-	  
-		  const result = NoteDatabaseService.CreateAppointmentNote(1, note);
-	  
-		  expect(result.success).toBe(true);
-		  expect(result.message).toBe('Note created');
-	  
-		  createNoteMock.mockRestore();
+			// Mock the CreateNote method to return success
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: true,
+				data: 1
+			});
+
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const note: BaseNote = {
+				title: 'Appointment Test Note',
+				note: 'A test note for an appointment',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.CreateAppointmentNote(1, note);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note created');
+
+			createNoteMock.mockRestore();
 		});
-	  
+
 		it('should fail to create an appointment note', () => {
-		  const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
-			success: false,
-			message: 'Note failed to create'
-		  });
-	  
-		  const note: BaseNote = {
-			title: 'Appointment Test Note',
-			note: 'A test note for an appointment',
-			createdDate: Date.now(),
-			deleted: 0
-		  };
-	  
-		  const result = NoteDatabaseService.CreateAppointmentNote(1, note);
-	  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Note couldn't be created");
-	  
-		  createNoteMock.mockRestore();
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: false,
+				message: 'Note failed to create'
+			});
+
+			const note: BaseNote = {
+				title: 'Appointment Test Note',
+				note: 'A test note for an appointment',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.CreateAppointmentNote(1, note);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be created");
+
+			createNoteMock.mockRestore();
 		});
-	  });
-	  
-	  describe('GetAppointmentNotes', () => {
+	});
+
+	describe('GetAppointmentNotes', () => {
 		it('should successfully retrieve appointment notes', () => {
-		  const mockNotes = [
-			{
-			  id: 1,
-			  title: 'Appointment Note 1',
-			  note: 'Test note content 1',
-			  createdDate: Date.now(),
-			  deleted: 0
-			},
-			{
-			  id: 2,
-			  title: 'Appointment Note 2',
-			  note: 'Test note content 2',
-			  createdDate: Date.now(),
-			  deleted: 0
-			}
-		  ];
-		  mockedDB.mockAll.mockReturnValueOnce(mockNotes);
-		  
-		  const result = NoteDatabaseService.GetAppointmentNotes(1);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.data).toEqual(mockNotes);
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Appointment Note 1',
+					note: 'Test note content 1',
+					createdDate: Date.now(),
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Appointment Note 2',
+					note: 'Test note content 2',
+					createdDate: Date.now(),
+					deleted: 0
+				}
+			];
+			mockedDB.mockAll.mockReturnValueOnce(mockNotes);
+
+			const result = NoteDatabaseService.GetAppointmentNotes(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNotes);
 		});
-	  
+
 		it('should handle no appointment notes found', () => {
-		  mockedDB.mockAll.mockReturnValueOnce(null);
-		  
-		  const result = NoteDatabaseService.GetAppointmentNotes(1);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Note couldn't be created");
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = NoteDatabaseService.GetAppointmentNotes(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be created");
 		});
-	  });
-	  
-	  describe('CreateServiceNote', () => {
+	});
+
+	describe('CreateServiceNote', () => {
 		it('should successfully create a service note', () => {
-		  const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
-			success: true,
-			data: 1
-		  });
-	  
-		  mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
-	  
-		  const note: BaseNote = {
-			title: 'Service Test Note',
-			note: 'A test note for a service',
-			createdDate: Date.now(),
-			deleted: 0
-		  };
-	  
-		  const result = NoteDatabaseService.CreateServiceNote(1, note);
-	  
-		  expect(result.success).toBe(true);
-		  expect(result.message).toBe('Note created');
-	  
-		  createNoteMock.mockRestore();
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: true,
+				data: 1
+			});
+
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const note: BaseNote = {
+				title: 'Service Test Note',
+				note: 'A test note for a service',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.CreateServiceNote(1, note);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note created');
+
+			createNoteMock.mockRestore();
 		});
-	  
+
 		it('should fail to create a service note', () => {
-		  const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
-			success: false,
-			message: 'Note failed to create'
-		  });
-	  
-		  const note: BaseNote = {
-			title: 'Service Test Note',
-			note: 'A test note for a service',
-			createdDate: Date.now(),
-			deleted: 0
-		  };
-	  
-		  const result = NoteDatabaseService.CreateServiceNote(1, note);
-	  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Note couldn't be created");
-	  
-		  createNoteMock.mockRestore();
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: false,
+				message: 'Note failed to create'
+			});
+
+			const note: BaseNote = {
+				title: 'Service Test Note',
+				note: 'A test note for a service',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.CreateServiceNote(1, note);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be created");
+
+			createNoteMock.mockRestore();
 		});
-	  });
-	  
-	  describe('GetServiceNotes', () => {
+	});
+
+	describe('GetServiceNotes', () => {
 		it('should successfully retrieve service notes', () => {
-		  const mockNotes = [
-			{
-			  id: 1,
-			  title: 'Service Note 1',
-			  note: 'Test note content 1',
-			  createdDate: Date.now(),
-			  deleted: 0
-			},
-			{
-			  id: 2,
-			  title: 'Service Note 2',
-			  note: 'Test note content 2',
-			  createdDate: Date.now(),
-			  deleted: 0
-			}
-		  ];
-		  mockedDB.mockAll.mockReturnValueOnce(mockNotes);
-		  
-		  const result = NoteDatabaseService.GetServiceNotes(1);
-		  
-		  expect(result.success).toBe(true);
-		  expect(result.data).toEqual(mockNotes);
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Service Note 1',
+					note: 'Test note content 1',
+					createdDate: Date.now(),
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Service Note 2',
+					note: 'Test note content 2',
+					createdDate: Date.now(),
+					deleted: 0
+				}
+			];
+			mockedDB.mockAll.mockReturnValueOnce(mockNotes);
+
+			const result = NoteDatabaseService.GetServiceNotes(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNotes);
 		});
-	  
+
 		it('should handle no service notes found', () => {
-		  mockedDB.mockAll.mockReturnValueOnce(null);
-		  
-		  const result = NoteDatabaseService.GetServiceNotes(1);
-		  
-		  expect(result.success).toBe(false);
-		  expect(result.message).toBe("Note couldn't be found");
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = NoteDatabaseService.GetServiceNotes(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be found");
 		});
-	  });
+	});
 });

@@ -154,3 +154,16 @@ export type BaseServiceRecord = {
  * @description A service record as stored in the database
  */
 export type ServiceRecord = RecordWithId<BaseServiceRecord>;
+
+
+export type BaseInvoiceRecord = {
+	createdDate: string;
+	dueDate: string;
+	customerID: number;
+	total: number;
+	paid: 0 | 1;
+	serviceItems: { serviceId: number, quantity: number }[]
+	deleted: 0 | 1;
+}
+
+export type InvoiceRecord = RecordWithId<BaseInvoiceRecord>;

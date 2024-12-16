@@ -1,14 +1,15 @@
 import type {
-	BaseCustomerRecord,
-	BaseAppointmentRecord,
 	AppointmentRecord,
-	CustomerRecord,
+	BaseAppointmentRecord,
+	BaseCustomerRecord,
 	BaseNote,
-	Note,
-	ServiceRecord,
 	BaseServiceRecord,
+	CustomerRecord,
+	DatabaseDataResponse,
 	DatabaseResponse,
-	DatabaseDataResponse
+	InvoiceRecord,
+	Note,
+	ServiceRecord
 } from '$lib/types';
 
 /**
@@ -110,8 +111,8 @@ class API {
 	 * @param {number} userid - The ID of the user to retrieve customer for
 	 * @returns {Promise<DatabaseDataResponse<CustomerRecord[]>>} Customer record(s) matching the user ID
 	 */
-	static async getCustomerByID(userid: number): Promise<DatabaseDataResponse<CustomerRecord[]>> {
-		return this.request('/customers/getCustomerByUserID', {
+	static async getCustomerByID(userid: number): Promise<DatabaseDataResponse<CustomerRecord>> {
+		return this.request('/customers/getCustomer', {
 			method: 'POST',
 			body: JSON.stringify(userid)
 		});
@@ -253,6 +254,67 @@ class API {
 		});
 	}
 
+	//Invoice Methods
+
+	/**
+	 * Retrieve invoices for a specific user
+	 * @param {number} userID - The ID of the user whose services to retrieve
+	 * @returns {Promise<DatabaseDataResponse<InvoiceRecord[]>>} List of service records
+	 */
+	static async getInvoicesByUserID(userID: number): Promise<DatabaseDataResponse<InvoiceRecord[]>> {
+		return this.request('/invoices/getInvoicesByUserID', {
+			method: 'POST',
+			body: JSON.stringify(userID)
+		});
+	}
+
+	/**
+	 * Retrieve a specific invoice by its ID
+	 * @param {number} invoiceID - The unique identifier of the invoice
+	 * @returns {Promise<DatabaseDataResponse<InvoiceRecord>>} The service record
+	 */
+	static async getInvoicesByID(invoiceID: number): Promise<DatabaseDataResponse<InvoiceRecord>> {
+		return this.request('/services/getInvoiceByID', {
+			method: 'POST',
+			body: JSON.stringify(invoiceID)
+		});
+	}
+
+	/**
+	 * Create a new invoice
+	 * @param {BaseServiceRecord} data - The invoice data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of invoice creation
+	 */
+	static async createInvoice(data: BaseServiceRecord): Promise<DatabaseResponse> {
+		return this.request('/invoices/create', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		});
+	}
+
+	/**
+	 * Update an existing service
+	 * @param {InvoiceRecord} data - The service data to update
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of the update
+	 */
+	static async updateInvoice(data: InvoiceRecord): Promise<DatabaseResponse> {
+		return this.request('/invoices/update', {
+			method: 'POST',
+			body: JSON.stringify(data)
+		});
+	}
+
+	/**
+	 * Delete a service by its ID
+	 * @param {number} invoiceID - The unique identifier of the invoice to delete
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of deletion
+	 */
+	static async deleteInvoice(invoiceID: number): Promise<DatabaseResponse> {
+		return this.request('/invoices/delete', {
+			method: 'POST',
+			body: JSON.stringify(invoiceID)
+		});
+	}
 	//Note Methods
 
 	/**

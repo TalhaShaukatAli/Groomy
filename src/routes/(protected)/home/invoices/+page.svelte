@@ -1,16 +1,23 @@
 <script lang="ts">
 	import API from '$lib/db/api';
 	import { page } from '$lib/stores.svelte';
-	import type { ServiceRecord } from '$lib/types.js';
-	page.set('Services');
+	import type { CustomerRecord, InvoiceRecord } from '$lib/types.js';
+
+	page.set('Invoices');
 
 	let { data } = $props();
-	let services: ServiceRecord[] | null = JSON.parse(data.invoices);
+	let invoices: InvoiceRecord[] | null = JSON.parse(data.invoices);
+	let customers: CustomerRecord[] | null = JSON.parse(data.customers);
+
+	function getCustomerForInvoice(customerID: number) {
+		let test = customers.filter((i) => i.id === customerID);
+		return test[0];
+	}
 
 	async function DeleteByID(id: number) {
-		let confirmResult = confirm('Are you sure you want to delete this service?');
+		let confirmResult = confirm('Are you sure you want to delete this invoice?');
 		if (confirmResult) {
-			const result = await API.deleteService(id);
+			const result = await API.deleteInvoice(id);
 			if (result.success) {
 				window.location.reload();
 			}
@@ -20,34 +27,35 @@
 
 <div class="table">
 	<a class="createNew" href="/home/services/create"> Create New Invoice > </a>
-	{#if services == null || services.length === 0}
+	{#if invoices == null || invoices.length === 0}
 		You have no invoices created yet
 	{:else}
 		<div class="rows">
-			{#each services as service}
-				{@render serviceRow(service)}
+			{#each invoices as invoice}
+				{@render serviceInvoice(invoice)}
 			{/each}
 		</div>
 	{/if}
 </div>
 
-{#snippet serviceRow(data: ServiceRecord)}
+{#snippet serviceInvoice(data: InvoiceRecord)}
 	<div class="row">
 		<div class="top">
 			<div class="fullName">
-				{`${data.name}`}
+				Invoice {`${data.id}`}
+
 			</div>
 		</div>
 		<div class="email">
-			{'$' + data.price}
+			{`${getCustomerForInvoice(data.customerID).firstName + " " + getCustomerForInvoice(data.customerID).lastName}`}
 		</div>
 		<div class="phone">
-			{data.description}
+			{data.dueDate}
 		</div>
 		<div class="bottom">
 			<div class="edit">
-				<a href="/home/services/{data.id}">View</a>
-				<a href="/home/services/{data.id}?edit=true">Edit</a>
+				<a href="/home/invoices/{data.id}">View</a>
+				<a href="/home/invoices/{data.id}?edit=true">Edit</a>
 				<button
 					onclick={() => {
 						DeleteByID(data.id);

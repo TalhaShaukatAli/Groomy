@@ -1,4 +1,4 @@
-import { CustomerDatabaseService } from '$lib/db/database';
+import { InvoiceDatabaseService } from '$lib/db/database';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request, params }) => {
@@ -8,33 +8,33 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	try {
 		switch (path) {
 			case 'create': {
-				const result = CustomerDatabaseService.createCustomer(data);
+				const result = InvoiceDatabaseService.createInvoice(data);
 				return json(result);
 			}
 
 			case 'delete': {
-				const result = CustomerDatabaseService.deleteCustomer(data);
+				const result = InvoiceDatabaseService.deleteInvoice(data);
 				return json(result);
 			}
 
 			case 'update': {
-				const result = CustomerDatabaseService.updateCustomer(data.id, data);
+				const result = InvoiceDatabaseService.updateInvoiceByID(data.id, data);
 				return json(result);
 			}
 
-			case 'getCustomersByUserID': {
-				const result = CustomerDatabaseService.getCustomers(data);
+			case 'getInvoicesByUserID': {
+				const result = InvoiceDatabaseService.getInvoicesByUserID(data);
 				return json(result);
 			}
 
-			case 'getCustomer': {
-				const result = CustomerDatabaseService.getCustomer(data);
+			case 'getInvoiceByID': {
+				const result = InvoiceDatabaseService.getInvoice(data);
 				return json(result);
 			}
 
 			default:
 				console.error(path, ' is an invalid path');
-				return json({ success: false, message: 'Invalid Endpoint' });
+				return json({ success: false, message: 'Invalid Endpoint' }, { status: 500 });
 		}
 	} catch (error) {
 		console.error(error);
