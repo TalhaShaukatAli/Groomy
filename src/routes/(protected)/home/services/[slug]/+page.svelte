@@ -3,7 +3,8 @@
 	import { page } from '$lib/stores.svelte';
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
-	import Notes from '$lib/components/Notes_Services.svelte';
+	import Notes from '$lib/components/Notes.svelte';
+	import { ServiceNoteServiceSingleton } from '$lib/db/noteHelper.js';
 	page.set('Services');
 
 	let { data } = $props();
@@ -23,7 +24,7 @@
 	async function onSave() {
 		const result = await API.updateService(service);
 		if (result.success) {
-			goto(`/home/services`);
+			await goto(`/home/services`);
 		}
 	}
 
@@ -32,12 +33,11 @@
 		if (confirmResult) {
 			const result = await API.deleteService(id);
 			if (result.success) {
-				goto('/home/services');
+				await goto('/home/services');
 			}
 		}
 	}
 </script>
-
 
 <div class="content">
 	<form onsubmit={onSave}>
@@ -49,15 +49,17 @@
 				<div class="grow"></div>
 				<div class="grow"></div>
 				{#if !editView}
-					<button onclick={changeToEdit}>Edit Service</button>
+					<button onclick={changeToEdit} type="button">Edit Service</button>
 				{:else}
 					<button type="submit">Save</button>
 					<button
+						type="button"
 						onclick={() => {
 							onDelete(service.id);
 						}}>Delete</button
 					>
 					<button
+						type="button"
 						onclick={() => {
 							onCancel();
 						}}>Cancel</button
@@ -67,23 +69,22 @@
 			<div class="inputs">
 				<div class="left">
 					<div>
-						Name: <input type="text" name="firstName" id="" bind:value={service.name} minlength="2" required  disabled={!editView}/>
+						Name: <input type="text" name="firstName" id="" bind:value={service.name} minlength="2" required disabled={!editView} />
 					</div>
 					<div>
-						Price: <input type="number" bind:value={service.price} required disabled={!editView}>
+						Price: <input type="number" bind:value={service.price} required disabled={!editView} step=".01" />
 					</div>
 				</div>
 				<div class="description">
 					<div>Description:</div>
 					<textarea name="" id="" bind:value={service.description} maxlength="100" disabled={!editView}> </textarea>
 				</div>
-				
 			</div>
 		</div>
 	</form>
-    <div>
-        <Notes notesID={service.id}/>
-    </div>
+	<div>
+		<Notes notesID={service.id} noteHelper={ServiceNoteServiceSingleton} />
+	</div>
 </div>
 
 <style>
@@ -113,33 +114,14 @@
 		align-items: start;
 		justify-content: center;
 		flex-direction: column;
-        width: fit-content;
-        margin-left: auto;
-        margin-right: auto;
+		width: fit-content;
+		margin-left: auto;
+		margin-right: auto;
 		background-color: var(--main);
 		border-radius: 1rem;
 		filter: drop-shadow(rgb(88, 88, 88) 0.2rem 0.2rem 1rem);
 
 		padding: 2rem 4rem 4rem 4rem;
-		gap: 20px;
-	}
-
-	.nameRow {
-		display: flex;
-		flex-direction: row;
-		gap: 20px;
-	}
-
-	.contactRow {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: nowrap;
-		gap: 20px;
-	}
-
-	.addressRow {
-		display: flex;
-		flex-direction: row;
 		gap: 20px;
 	}
 

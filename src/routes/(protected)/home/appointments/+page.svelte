@@ -21,9 +21,13 @@
 <div class="table">
 	<a class="createNew" href="/home/appointments/create"> Create Appointment > </a>
 	<div class="rows">
-		{#each appointments as appointment}
-			{@render appointmentRow(appointment)}
-		{/each}
+		{#if appointments == null || appointments.length === 0}
+			You have no appointments created yet
+		{:else}
+			{#each appointments as appointment}
+				{@render appointmentRow(appointment)}
+			{/each}
+		{/if}
 	</div>
 </div>
 

@@ -32,7 +32,7 @@
 	async function createAppointment() {
 		const result = await API.createAppointment(appointment);
 		if (result.success) {
-			goto(`/home/appointments`);
+			await goto(`/home/appointments`);
 		}
 	}
 
@@ -40,8 +40,9 @@
 		let result = DateTimeCombiner(appointment.time.date, appointment.time.start);
 		appointment.time.exact = result;
 	}
-
+	
 	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual.id == appointment.customerID)[0] || customerList[0]);
+	
 </script>
 
 <div class="content">

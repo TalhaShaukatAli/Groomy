@@ -1,4 +1,4 @@
-import { ServiceDatabaseService } from '$lib/db/database';
+import { InvoiceDatabaseService } from '$lib/db/database';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request, params }) => {
@@ -8,27 +8,27 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	try {
 		switch (path) {
 			case 'create': {
-				const result = ServiceDatabaseService.createService(data);
+				const result = InvoiceDatabaseService.createInvoice(data);
 				return json(result);
 			}
 
 			case 'delete': {
-				const result = ServiceDatabaseService.deleteService(data);
+				const result = InvoiceDatabaseService.deleteInvoice(data);
 				return json(result);
 			}
 
 			case 'update': {
-				const result = ServiceDatabaseService.updateServiceByID(data.id, data);
+				const result = InvoiceDatabaseService.updateInvoiceByID(data.id, data);
 				return json(result);
 			}
 
-			case 'getServicesByUserID': {
-				const result = ServiceDatabaseService.getServicesByUserID(data);
+			case 'getInvoicesByUserID': {
+				const result = InvoiceDatabaseService.getInvoicesByUserID(data);
 				return json(result);
 			}
 
-			case 'getServiceByID': {
-				const result = ServiceDatabaseService.getService(data);
+			case 'getInvoiceByID': {
+				const result = InvoiceDatabaseService.getInvoice(data);
 				return json(result);
 			}
 

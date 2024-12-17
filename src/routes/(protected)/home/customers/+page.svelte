@@ -21,9 +21,13 @@
 <div class="table">
 	<a class="createNew" href="/home/customers/create"> Add New Customer > </a>
 	<div class="rows">
-		{#each customers as customer}
-			{@render customerRow(customer)}
-		{/each}
+		{#if customers == null || customers.length === 0}
+			You have no customers created yet
+		{:else}
+			{#each customers as customer}
+				{@render customerRow(customer)}
+			{/each}
+		{/if}
 	</div>
 </div>
 

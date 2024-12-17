@@ -7,12 +7,11 @@ const config: PlaywrightTestConfig = {
 		reuseExistingServer: true
 	},
 	use: {
-		trace: 'retain-on-first-failure'
+		trace: 'on'
 	},
 	testDir: 'tests',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
 	retries: 1,
-	fullyParallel: true,
 	outputDir: 'test-results',
 	reporter: 'html'
 };

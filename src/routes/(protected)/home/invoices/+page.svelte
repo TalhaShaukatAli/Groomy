@@ -1,53 +1,98 @@
 <script lang="ts">
 	import API from '$lib/db/api';
 	import { page } from '$lib/stores.svelte';
-	import type { ServiceRecord } from '$lib/types.js';
-	page.set('Services');
+	import type { CustomerRecord, InvoiceRecord, ServiceRecord } from '$lib/types.js';
+
+	page.set('Invoices');
 
 	let { data } = $props();
-	let services: ServiceRecord[] | null = JSON.parse(data.services);
+	let invoices: InvoiceRecord[] | null = JSON.parse(data.invoices);
+	let sortedInvoices = invoices
+		? [...invoices].sort((a, b) => {
+				const dateA = Number(a.createdDate.toString().replace(/,/g, ''));
+				const dateB = Number(b.createdDate.toString().replace(/,/g, ''));
+
+				return dateB - dateA;
+			})
+		: null;
+
+	let customers: CustomerRecord[] | null = JSON.parse(data.customers);
+	let servicesList: ServiceRecord[] = JSON.parse(data.services)
+
+	function getCustomerForInvoice(customerID: number) {
+		let test = customers.filter((i) => i.id === customerID);
+		return test[0];
+	}
 
 	async function DeleteByID(id: number) {
-		let confirmResult = confirm('Are you sure you want to delete this service?');
+		let confirmResult = confirm('Are you sure you want to delete this invoice?');
 		if (confirmResult) {
-			const result = await API.deleteService(id);
+			const result = await API.deleteInvoice(id);
 			if (result.success) {
 				window.location.reload();
 			}
 		}
 	}
+
+	function getServiceInfo(serviceID: number): ServiceRecord {
+		const defaultService: ServiceRecord = {
+			id: serviceID,
+			name: 'Service Not Found',
+			description: 'Service details unavailable',
+			price: 0,
+			userID: 0,
+			deleted: 0
+		};
+		return servicesList.find((service) => service.id === serviceID) ?? defaultService;
+	}
+
+	function calculateTotal(service: ServiceRecord, quantity: number): string {
+		if (!service?.price || !quantity) return '0.00';
+		return (service.price * quantity).toFixed(2);
+	}
+
+
 </script>
 
 <div class="table">
-	<a class="createNew" href="/home/services/create"> Add New Service > </a>
-	{#if services == null || services.length === 0}
-		You have no services created yet
+	<a class="createNew" href="/home/invoices/create"> Create New Invoice > </a>
+	{#if invoices == null || invoices.length === 0}
+		You have no invoices created yet
 	{:else}
 		<div class="rows">
-			{#each services as service}
-				{@render serviceRow(service)}
+			{#each sortedInvoices as invoice}
+				{@render serviceInvoice(invoice)}
 			{/each}
 		</div>
 	{/if}
 </div>
 
-{#snippet serviceRow(data: ServiceRecord)}
+{#snippet serviceInvoice(data: InvoiceRecord)}
+{@const tempServiceItems = JSON.parse(data.serviceItems)}
 	<div class="row">
 		<div class="top">
 			<div class="fullName">
-				{`${data.name}`}
+				Invoice {`${data.id}`}
 			</div>
 		</div>
 		<div class="email">
-			{'$' + data.price}
+			Client: {`${getCustomerForInvoice(data.customerID).firstName + ' ' + getCustomerForInvoice(data.customerID).lastName}`}
 		</div>
 		<div class="phone">
-			{data.description}
+			Payment Due: {data.dueDate}
+		</div>
+		<div>
+			Paid: {data.paid === 1 ? true : false}
+		</div>
+		<div>
+			
+			Total Price: {tempServiceItems.reduce((total, value) => total + parseFloat(calculateTotal(getServiceInfo(value.serviceID), value.quantity)), 0).toFixed(2)}
+			
 		</div>
 		<div class="bottom">
 			<div class="edit">
-				<a href="/home/services/{data.id}">View</a>
-				<a href="/home/services/{data.id}?edit=true">Edit</a>
+				<a href="/home/invoices/{data.id}">View</a>
+				<a href="/home/invoices/{data.id}?edit=true">Edit</a>
 				<button
 					onclick={() => {
 						DeleteByID(data.id);

@@ -1,4 +1,4 @@
-import { Customer_AddNewCustomer, Customer_DeleteCustomerByID, Customer_GetCustomerByID, Customer_GetCustomers, Customer_UpdateCustomerByID } from '$lib/db/database';
+import { CustomerDatabaseService } from '$lib/db/database';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request, params }) => {
@@ -8,54 +8,36 @@ export const POST: RequestHandler = async ({ request, params }) => {
 	try {
 		switch (path) {
 			case 'create': {
-				const result = Customer_AddNewCustomer(data);
-				if (result) {
-					return json({ success: true }, { status: 201 });
-				} else {
-					return json({ success: false, message: 'Error adding customer' }, { status: 201 });
-				}
+				const result = CustomerDatabaseService.createCustomer(data);
+				return json(result);
 			}
 
 			case 'delete': {
-				const result = Customer_DeleteCustomerByID(data);
-				if (result) {
-					return json({ success: true, message: 'Success' });
-				} else {
-					return json({ success: false, message: "Couldn't delete user" });
-				}
+				const result = CustomerDatabaseService.deleteCustomer(data);
+				return json(result);
 			}
 
 			case 'update': {
-				const result = Customer_UpdateCustomerByID(data.id, data);
-				if (result) {
-					return json({ success: true, message: 'Success' });
-				} else {
-					return json({ success: true, message: "Couldn't update user" });
-				}
+				const result = CustomerDatabaseService.updateCustomer(data.id, data);
+				return json(result);
 			}
 
 			case 'getCustomersByUserID': {
-				const result = Customer_GetCustomers(data);
-				if (result) {
-					return json({ success: true, message: 'Success', data: result });
-				} else {
-					return json({ success: false, message: "Couldn't update user" });
-				}
+				const result = CustomerDatabaseService.getCustomers(data);
+				return json(result);
 			}
 
-			case 'getCustomerByUserID': {
-				const result = Customer_GetCustomerByID(data);
-				if (result) {
-					return json({ success: true, message: 'Success', data: result });
-				} else {
-					return json({ success: false, message: "Couldn't find customer" });
-				}
+			case 'getCustomer': {
+				const result = CustomerDatabaseService.getCustomer(data);
+				return json(result);
 			}
 
 			default:
-				return json({ success: false, message: 'Invalid Endpoint' }, { status: 500 });
+				console.error(path, ' is an invalid path');
+				return json({ success: false, message: 'Invalid Endpoint' });
 		}
 	} catch (error) {
+		console.error(error);
 		return json({ success: false, message: 'Server Error' }, { status: 500 });
 	}
 };

@@ -1,172 +1,235 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import Database from 'better-sqlite3';
-import { DatabaseAuthService, DatabaseCustomerService, DatabaseAppointmentService, DatabaseNoteService } from './database';
-import type { CustomerRecord, BaseAppointmentRecord, AppointmentRecord } from '$lib/types';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { BaseAppointmentRecord, BaseNote, BaseServiceRecord, BaseUserRecord, CustomerRecord } from '$lib/types';
+// Import database services after the mock setup
+import { AppointmentService, AuthService, CustomerService, NoteService, ServiceService } from './database';
 
-// Mock Database
+// Get the mock functions before the module is mocked
+const mockedDB = vi.hoisted(() => ({
+	mockRun: vi.fn(),
+	mockGet: vi.fn(),
+	mockAll: vi.fn(),
+	mockPrepare: vi.fn()
+}));
+
+// Mock needs to be first, with all mocked functionality defined inside it
 vi.mock('better-sqlite3', () => {
+	const mockPrepare = vi.fn(() => ({
+		run: mockedDB.mockRun,
+		get: mockedDB.mockGet,
+		all: mockedDB.mockAll
+	}));
+
 	return {
 		default: vi.fn(() => ({
-			prepare: vi.fn().mockReturnValue({
-				run: vi.fn(),
-				get: vi.fn(),
-				all: vi.fn()
-			})
+			prepare: mockPrepare,
+			close: vi.fn()
 		}))
 	};
 });
 
-describe('DatabaseAuthService', () => {
-	let authService: DatabaseAuthService;
-	let mockDb: any;
+// Create instances for testing
+const AuthDatabaseService = new AuthService();
+const CustomerDatabaseService = new CustomerService();
+const AppointmentDatabaseService = new AppointmentService();
+const ServiceDatabaseService = new ServiceService();
+const NoteDatabaseService = new NoteService();
 
-	beforeEach(() => {
-		mockDb = new Database('mydb.sqlite');
-		authService = new DatabaseAuthService(mockDb);
-	});
+beforeEach(() => {
+	vi.clearAllMocks();
 
-	describe('addNewUser', () => {
-		it('should add a new user successfully', () => {
-			const mockUser = {
+	// Reset the mocks
+	mockedDB.mockRun.mockReset();
+	mockedDB.mockGet.mockReset();
+	mockedDB.mockAll.mockReset();
+	mockedDB.mockPrepare.mockReset();
+
+	// Set default successful response for database initialization
+	mockedDB.mockRun.mockReturnValue({ changes: 0, lastInsertRowid: 0 });
+});
+
+afterEach(() => {
+	vi.clearAllMocks();
+});
+
+describe('AuthDatabaseService', () => {
+	describe('createUser', () => {
+		it('should successfully create a user when email is not in use', () => {
+			// Mock getUserByEmail to return failure (email not found)
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			// Mock run to simulate successful user creation
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1, lastInsertRowid: 1 });
+
+			const user: BaseUserRecord = {
 				firstName: 'John',
 				lastName: 'Doe',
 				email: 'john@example.com',
-				hashedPassword: 'hashedPassword'
+				hashedPassword: 'hashedpassword'
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+			const result = AuthDatabaseService.createUser(user);
 
-			const result = authService.addNewUser(mockUser);
-			expect(result).toBe(true);
-			expect(mockDb.prepare).toHaveBeenCalledWith('Insert into users (firstName, lastName, email, hashedPassword, deleted) VALUES (@firstName, @lastName, @email, @hashedPassword, @deleted)');
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('User was created successfully');
 		});
 
-		it('should return false if user insertion fails', () => {
-			const mockUser = {
-				id: 1,
+		it('should fail to create a user when email is already in use', () => {
+			// Mock getUserByEmail to return an existing user
+			mockedDB.mockGet.mockReturnValueOnce({ id: 1, email: 'john@example.com' });
+
+			const user: BaseUserRecord = {
 				firstName: 'John',
 				lastName: 'Doe',
 				email: 'john@example.com',
-				hashedPassword: 'hashedPassword'
+				hashedPassword: 'hashedpassword'
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+			const result = AuthDatabaseService.createUser(user);
 
-			const result = authService.addNewUser(mockUser);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Email already in use');
+		});
+
+		it('should fail to create a user', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			mockedDB.mockGet.mockReturnValueOnce({ changes: 0, lastInsertRowid: 0 });
+
+			const user: BaseUserRecord = {
+				firstName: 'John',
+				lastName: 'Doe',
+				email: 'john@example.com',
+				hashedPassword: 'hashedpassword'
+			};
+
+			const result = AuthDatabaseService.createUser(user);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('User creation failed');
 		});
 	});
 
 	describe('getUserByEmail', () => {
-		it('should retrieve a user by email', () => {
+		it('should retrieve a user successfully', () => {
 			const mockUser = {
 				id: 1,
+				email: 'john@example.com',
 				firstName: 'John',
 				lastName: 'Doe',
-				email: 'john@example.com',
-				hashedPassword: 'hashedPassword'
+				hashedPassword: 'hashedpassword',
+				deleted: 0
 			};
+			mockedDB.mockGet.mockReturnValueOnce(mockUser);
 
-			mockDb.prepare().get.mockReturnValue(mockUser);
+			const result = AuthDatabaseService.getUserByEmail('john@example.com');
 
-			const result = authService.getUserByEmail('john@example.com');
-			expect(result).toEqual(mockUser);
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockUser);
 		});
 
-		it('should return null if no user is found', () => {
-			mockDb.prepare().get.mockReturnValue(null);
+		it('should fail to retrieve a non-existent user', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
 
-			const result = authService.getUserByEmail('nonexistent@example.com');
-			expect(result).toBeNull();
+			const result = AuthDatabaseService.getUserByEmail('nonexistent@example.com');
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Couldn't find user");
 		});
 	});
 
-	describe('addCookie', () => {
-		it('should add a cookie successfully', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+	describe('createCookie', () => {
+		it('should successfully create a cookie', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1, lastInsertRowid: 1 });
 
-			const result = authService.addCookie('testCookie', 1);
-			expect(result).toBe(true);
+			const result = AuthDatabaseService.createCookie('testcookie', 1);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Successful cookie creation');
 		});
 
-		it('should return false if cookie insertion fails', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+		it('should fail to create a cookie', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0, lastInsertRowid: 0 });
 
-			const result = authService.addCookie('testCookie', 1);
-			expect(result).toBe(false);
+			const result = AuthDatabaseService.createCookie('testcookie', 1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed cookie creation');
 		});
 	});
 
 	describe('removeCookie', () => {
-		it('should remove a cookie successfully', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+		it('should successfully remove a cookie', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
 
-			const result = authService.removeCookie('testCookie');
-			expect(result).toBe(true);
-			expect(mockDb.prepare).toHaveBeenCalledWith('DELETE FROM cookie WHERE id = ?');
+			const result = AuthDatabaseService.removeCookie('test-cookie-id');
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Successful cookie deletion');
 		});
 
-		it('should return false if cookie removal fails', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+		it('should fail to remove a non-existent cookie', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
 
-			const result = authService.removeCookie('testCookie');
-			expect(result).toBe(false);
+			const result = AuthDatabaseService.removeCookie('non-existent-cookie');
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed cookie deletion');
 		});
 	});
 
 	describe('getCookie', () => {
-		it('should retrieve a cookie', () => {
+		it('should successfully retrieve a cookie', () => {
 			const mockCookie = {
-				id: 'testCookie',
+				id: 'test-cookie-id',
 				userID: 1,
-				expireTime: Date.now() + 3600 * 1000
+				expireTime: Date.now()
 			};
+			mockedDB.mockGet.mockReturnValueOnce(mockCookie);
 
-			mockDb.prepare().get.mockReturnValue(mockCookie);
+			const result = AuthDatabaseService.getCookie('test-cookie-id');
 
-			const result = authService.getCookie('testCookie');
-			expect(result).toEqual(mockCookie);
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockCookie);
 		});
 
-		it('should return null if no cookie is found', () => {
-			mockDb.prepare().get.mockReturnValue(null);
+		it('should fail to retrieve a non-existent cookie', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
 
-			const result = authService.getCookie('nonexistentCookie');
-			expect(result).toBeNull();
+			const result = AuthDatabaseService.getCookie('non-existent-cookie');
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed to find cookie');
 		});
 	});
 
 	describe('updateCookie', () => {
-		it('should update a cookie successfully', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+		it('should successfully update a cookie', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
 
-			const result = authService.updateCookie('testCookie');
-			expect(result).toBe(true);
-			expect(mockDb.prepare).toHaveBeenCalledWith('Update cookie SET expireTime = ? WHERE id = ?');
+			const result = AuthDatabaseService.updateCookie('test-cookie-id');
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Updated cookie successfully');
 		});
 
-		it('should return false if cookie update fails', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+		it('should fail to update a non-existent cookie', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
 
-			const result = authService.updateCookie('testCookie');
-			expect(result).toBe(false);
+			const result = AuthDatabaseService.updateCookie('non-existent-cookie');
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed to update cookie');
 		});
 	});
 });
 
-describe('DatabaseCustomerService', () => {
-	let customerService: DatabaseCustomerService;
-	let mockDb: any;
+describe('CustomerDatabaseService', () => {
+	describe('createCustomer', () => {
+		it('should successfully create a customer', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1, lastInsertRowid: 1 });
 
-	beforeEach(() => {
-		mockDb = new Database('mydb.sqlite');
-		customerService = new DatabaseCustomerService(mockDb);
-	});
-
-	describe('addNewCustomer', () => {
-		it('should add a new customer successfully', () => {
-			const mockCustomer: CustomerRecord = {
-				id: 1,
+			const customer: CustomerRecord = {
+				id: 0,
 				userID: 1,
 				firstName: 'Jane',
 				lastName: 'Doe',
@@ -181,15 +244,17 @@ describe('DatabaseCustomerService', () => {
 				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+			const result = CustomerDatabaseService.createCustomer(customer);
 
-			const result = customerService.addNewCustomer(mockCustomer);
-			expect(result).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Created customer successfully');
 		});
 
-		it('should return false if customer insertion fails', () => {
-			const mockCustomer: CustomerRecord = {
-				id: 1,
+		it('should fail to create a customer', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0, lastInsertRowid: 0 });
+
+			const customer: CustomerRecord = {
+				id: 0,
 				userID: 1,
 				firstName: 'Jane',
 				lastName: 'Doe',
@@ -204,15 +269,49 @@ describe('DatabaseCustomerService', () => {
 				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+			const result = CustomerDatabaseService.createCustomer(customer);
 
-			const result = customerService.addNewCustomer(mockCustomer);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed to create customer');
+		});
+	});
+
+	describe('getCustomer', () => {
+		it('should successfully retrieve a customer', () => {
+			const mockCustomer = {
+				id: 1,
+				userID: 1,
+				firstName: 'Jane',
+				lastName: 'Doe',
+				email: 'jane@example.com',
+				phone: '1234567890',
+				address_street: '123 Test St',
+				address_city: 'Testville',
+				address_state: 'TS',
+				address_zip: 12345,
+				deleted: 0
+			};
+			mockedDB.mockGet.mockReturnValueOnce(mockCustomer);
+
+			const result = CustomerDatabaseService.getCustomer(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data!.firstName).toBe('Jane');
+		});
+
+		it('should fail to retrieve a non-existent customer', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			const result = CustomerDatabaseService.getCustomer(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed to get customer');
 		});
 	});
 
 	describe('getCustomers', () => {
-		it('should retrieve customers for a user', () => {
+		it('should retrieve customers successfully', () => {
 			const mockCustomers = [
 				{
 					id: 1,
@@ -228,12 +327,31 @@ describe('DatabaseCustomerService', () => {
 					deleted: 0
 				}
 			];
+			mockedDB.mockAll.mockReturnValueOnce(mockCustomers);
 
-			mockDb.prepare().all.mockReturnValue(mockCustomers);
+			const result = CustomerDatabaseService.getCustomers(1);
 
-			const result = customerService.getCustomers(1);
-			expect(result).toHaveLength(1);
-			expect(result?.[0]).toEqual({
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data!.length).toBe(1);
+			expect(result.data![0].firstName).toBe('Jane');
+		});
+
+		it('should handle no customers found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = CustomerDatabaseService.getCustomers(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed to get customers');
+		});
+	});
+
+	describe('updateCustomer', () => {
+		it('should successfully update a customer', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const customer: CustomerRecord = {
 				id: 1,
 				userID: 1,
 				firstName: 'Jane',
@@ -247,26 +365,174 @@ describe('DatabaseCustomerService', () => {
 					zip: 12345
 				},
 				deleted: 0
-			});
+			};
+
+			const result = CustomerDatabaseService.updateCustomer(1, customer);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Updated customer successfully');
 		});
 
-		it('should return null if no customers are found', () => {
-			mockDb.prepare().all.mockReturnValue(null);
+		it('should fail to update a non-existent customer', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
 
-			const result = customerService.getCustomers(1);
-			expect(result).toBeNull();
-		});
-	});
-
-	describe('getCustomerByID', () => {
-		it('should retrieve a customer by ID', () => {
-			const mockCustomer = {
-				id: 1,
+			const customer: CustomerRecord = {
+				id: 999,
 				userID: 1,
 				firstName: 'Jane',
 				lastName: 'Doe',
 				email: 'jane@example.com',
 				phone: '1234567890',
+				address: {
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
+				},
+				deleted: 0
+			};
+
+			const result = CustomerDatabaseService.updateCustomer(999, customer);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed to update customer');
+		});
+	});
+
+	describe('deleteCustomer', () => {
+		it('should successfully delete a customer', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const result = CustomerDatabaseService.deleteCustomer(1);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Customer was deleted successfully');
+		});
+
+		it('should fail to delete a non-existent customer', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const result = CustomerDatabaseService.deleteCustomer(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Failed to delete customer');
+		});
+	});
+});
+
+describe('AppointmentDatabaseService', () => {
+	describe('createAppointment', () => {
+		it('should successfully create an appointment', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1, lastInsertRowid: 1 });
+
+			const appointment: BaseAppointmentRecord = {
+				userID: 1,
+				customerID: 1,
+				title: 'Test Appointment',
+				description: 'A test appointment',
+				time: {
+					date: '2023-01-01',
+					start: '10:00',
+					end: '11:00',
+					exact: 0
+				},
+				address: {
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
+				},
+				deleted: 0
+			};
+
+			const result = AppointmentDatabaseService.createAppointment(appointment);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Appointment created');
+		});
+
+		it('should fail to create an appointment', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0, lastInsertRowid: 0 });
+
+			const appointment: BaseAppointmentRecord = {
+				userID: 1,
+				customerID: 1,
+				title: 'Test Appointment',
+				description: 'A test appointment',
+				time: {
+					date: '2023-01-01',
+					start: '10:00',
+					end: '11:00',
+					exact: 0
+				},
+				address: {
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
+				},
+				deleted: 0
+			};
+
+			const result = AppointmentDatabaseService.createAppointment(appointment);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Appointment creation failed');
+		});
+	});
+
+	describe('getAppointmentsByUserID', () => {
+		it('should retrieve appointments successfully', () => {
+			const mockAppointments = [
+				{
+					id: 1,
+					userID: 1,
+					customerID: 1,
+					title: 'Test Appointment',
+					description: 'A test appointment',
+					time_date: '2023-01-01',
+					time_start: '10:00',
+					time_end: '11:00',
+					time_exact: 0,
+					address_street: '123 Test St',
+					address_city: 'Testville',
+					address_state: 'TS',
+					address_zip: 12345,
+					deleted: 0
+				}
+			];
+			mockedDB.mockAll.mockReturnValueOnce(mockAppointments);
+
+			const result = AppointmentDatabaseService.getAppointmentsByUserID(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data!.length).toBe(1);
+			expect(result.data![0].title).toBe('Test Appointment');
+		});
+
+		it('should handle no appointments found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = AppointmentDatabaseService.getAppointmentsByUserID(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Appointments couldn't be found");
+		});
+	});
+
+	describe('getAppointment', () => {
+		it('should retrieve appointments successfully', () => {
+			const mockAppointment = {
+				id: 1,
+				userID: 1,
+				customerID: 1,
+				title: 'Test Appointment',
+				description: 'A test appointment',
+				time_date: '2023-01-01',
+				time_start: '10:00',
+				time_end: '11:00',
+				time_exact: 0,
 				address_street: '123 Test St',
 				address_city: 'Testville',
 				address_state: 'TS',
@@ -274,16 +540,79 @@ describe('DatabaseCustomerService', () => {
 				deleted: 0
 			};
 
-			mockDb.prepare().get.mockReturnValue(mockCustomer);
+			mockedDB.mockGet.mockReturnValueOnce(mockAppointment);
 
-			const result = customerService.getCustomerByID(1);
-			expect(result).toEqual({
-				id: 1,
+			const result = AppointmentDatabaseService.getAppointment(1);
+			console.log(result);
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data!.title).toBe('Test Appointment');
+		});
+
+		it('should handle no appointments found', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			const result = AppointmentDatabaseService.getAppointment(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Appointment couldn't be found");
+		});
+	});
+
+	describe('getAppointmentsByCustomerID', () => {
+		it('should retrieve appointments successfully', () => {
+			const mockAppointments = [
+				{
+					id: 1,
+					userID: 1,
+					customerID: 1,
+					title: 'Test Appointment',
+					description: 'A test appointment',
+					time_date: '2023-01-01',
+					time_start: '10:00',
+					time_end: '11:00',
+					time_exact: 0,
+					address_street: '123 Test St',
+					address_city: 'Testville',
+					address_state: 'TS',
+					address_zip: 12345,
+					deleted: 0
+				}
+			];
+			mockedDB.mockAll.mockReturnValueOnce(mockAppointments);
+
+			const result = AppointmentDatabaseService.getAppointmentsByCustomerID(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data![0].title).toBe('Test Appointment');
+		});
+
+		it('should handle no appointments found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = AppointmentDatabaseService.getAppointmentsByCustomerID(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Appointments couldn't be found");
+		});
+	});
+
+	describe('updateAppointmentByID', () => {
+		it('should successfully update an appointment', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const appointment: BaseAppointmentRecord = {
 				userID: 1,
-				firstName: 'Jane',
-				lastName: 'Doe',
-				email: 'jane@example.com',
-				phone: '1234567890',
+				customerID: 1,
+				title: 'Updated Appointment',
+				description: 'An updated test appointment',
+				time: {
+					date: '2023-01-01',
+					start: '11:00',
+					end: '12:00',
+					exact: 0
+				},
 				address: {
 					street: '123 Test St',
 					city: 'Testville',
@@ -291,604 +620,595 @@ describe('DatabaseCustomerService', () => {
 					zip: 12345
 				},
 				deleted: 0
-			});
+			};
+
+			const result = AppointmentDatabaseService.updateAppointmentByID(1, appointment);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Appointment was updated');
 		});
 
-		it('should return null if no customer is found', () => {
-			mockDb.prepare().get.mockReturnValue(null);
+		it('should fail to update a non-existent appointment', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
 
-			const result = customerService.getCustomerByID(1);
-			expect(result).toBeNull();
-		});
-	});
-
-	describe('updateCustomerByID', () => {
-		it('should update a customer successfully', () => {
-			const mockCustomer: CustomerRecord = {
-				id: 1,
+			const appointment: BaseAppointmentRecord = {
 				userID: 1,
-				firstName: 'Jane',
-				lastName: 'Smith',
-				email: 'jane.smith@example.com',
-				phone: '0987654321',
+				customerID: 1,
+				title: 'Updated Appointment',
+				description: 'An updated test appointment',
+				time: {
+					date: '2023-01-01',
+					start: '11:00',
+					end: '12:00',
+					exact: 0
+				},
 				address: {
-					street: '456 New St',
-					city: 'Newville',
-					state: 'NS',
-					zip: 54321
+					street: '123 Test St',
+					city: 'Testville',
+					state: 'TS',
+					zip: 12345
 				},
 				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+			const result = AppointmentDatabaseService.updateAppointmentByID(999, appointment);
 
-			const result = customerService.updateCustomerByID(1, mockCustomer);
-			expect(result).toBe(true);
-		});
-
-		it('should return false if customer update fails', () => {
-			const mockCustomer: CustomerRecord = {
-				id: 1,
-				userID: 1,
-				firstName: 'Jane',
-				lastName: 'Smith',
-				email: 'jane.smith@example.com',
-				phone: '0987654321',
-				address: {
-					street: '456 New St',
-					city: 'Newville',
-					state: 'NS',
-					zip: 54321
-				},
-				deleted: 0
-			};
-
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
-
-			const result = customerService.updateCustomerByID(1, mockCustomer);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Appointment couldn't be updated");
 		});
 	});
 
-	describe('deleteCustomerByID', () => {
-		it('should delete a customer successfully', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+	describe('deleteAppointment', () => {
+		it('should successfully delete an appointment', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
 
-			const result = customerService.deleteCustomerByID(1);
-			expect(result).toBe(true);
+			const result = AppointmentDatabaseService.deleteAppointment(1);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Appointment was deleted');
 		});
 
-		it('should return false if customer deletion fails', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+		it('should fail to delete a non-existent appointment', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
 
-			const result = customerService.deleteCustomerByID(1);
-			expect(result).toBe(false);
+			const result = AppointmentDatabaseService.deleteAppointment(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Appointment couldn't be deleted");
 		});
 	});
 });
 
-describe('DatabaseAppointmentService', () => {
-	let appointmentService: DatabaseAppointmentService;
-	let mockDb: any;
+describe('ServiceDatabaseService', () => {
+	describe('createService', () => {
+		it('should successfully create a service', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1, lastInsertRowid: 1 });
 
-	beforeEach(() => {
-		mockDb = new Database('mydb.sqlite');
-		appointmentService = new DatabaseAppointmentService(mockDb);
-	});
-
-	describe('addNewAppointment', () => {
-		it('should add a new appointment successfully', () => {
-			const mockAppointment: BaseAppointmentRecord = {
+			const service: BaseServiceRecord = {
 				userID: 1,
-				customerID: 1,
-				title: 'Pet Grooming',
-				description: 'Regular grooming session',
-				time: {
-					date: '2023-06-15',
-					start: '10:00',
-					end: '11:00',
-					exact: 1
-				},
-				address: {
-					street: '123 Pet St',
-					city: 'Petville',
-					state: 'PS',
-					zip: 12345
-				},
+				name: 'Test Service',
+				description: 'A test service',
+				price: 50.0,
 				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+			const result = ServiceDatabaseService.createService(service);
 
-			const result = appointmentService.addNewAppointment(mockAppointment);
-			expect(result).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Service created');
 		});
 
-		it('should return false if appointment insertion fails', () => {
-			const mockAppointment: BaseAppointmentRecord = {
+		it('should fail to create a service', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0, lastInsertRowid: 0 });
+
+			const service: BaseServiceRecord = {
 				userID: 1,
-				customerID: 1,
-				title: 'Pet Grooming',
-				description: 'Regular grooming session',
-				time: {
-					date: '2023-06-15',
-					start: '10:00',
-					end: '11:00',
-					exact: 1
-				},
-				address: {
-					street: '123 Pet St',
-					city: 'Petville',
-					state: 'PS',
-					zip: 12345
-				},
+				name: 'Test Service',
+				description: 'A test service',
+				price: 50.0,
 				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+			const result = ServiceDatabaseService.createService(service);
 
-			const result = appointmentService.addNewAppointment(mockAppointment);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service couldn't be created");
 		});
 	});
 
-	describe('getAppointmentByID', () => {
-		it('should retrieve an appointment by ID', () => {
-			const mockAppointment = {
-				id: 1,
-				userID: 1,
-				customerID: 1,
-				title: 'Pet Grooming',
-				description: 'Regular grooming session',
-				time_date: '2023-06-15',
-				time_start: '10:00',
-				time_end: '11:00',
-				time_exact: 1,
-				address_street: '123 Pet St',
-				address_city: 'Petville',
-				address_state: 'PS',
-				address_zip: 12345,
-				deleted: 0
-			};
-
-			mockDb.prepare().get.mockReturnValue(mockAppointment);
-
-			const result = appointmentService.getAppointmentByID(1);
-			expect(result).toEqual({
-				id: 1,
-				userID: 1,
-				customerID: 1,
-				title: 'Pet Grooming',
-				description: 'Regular grooming session',
-				time: {
-					date: '2023-06-15',
-					start: '10:00',
-					end: '11:00',
-					exact: 1
-				},
-				address: {
-					street: '123 Pet St',
-					city: 'Petville',
-					state: 'PS',
-					zip: 12345
-				},
-				deleted: 0
-			});
-		});
-
-		it('should return null if no appointment is found', () => {
-			mockDb.prepare().get.mockReturnValue(null);
-
-			const result = appointmentService.getAppointmentByID(1);
-			expect(result).toBeNull();
-		});
-	});
-
-	describe('getAppointmentsByCustomerID', () => {
-		it('should retrieve appointments for a customer', () => {
-			const mockAppointments = [
+	describe('getServicesByUserID', () => {
+		it('should retrieve services successfully', () => {
+			const mockServices = [
 				{
 					id: 1,
 					userID: 1,
-					customerID: 1,
-					title: 'Pet Grooming',
-					description: 'Regular grooming session',
-					time_date: '2023-06-15',
-					time_start: '10:00',
-					time_end: '11:00',
-					time_exact: 1,
-					address_street: '123 Pet St',
-					address_city: 'Petville',
-					address_state: 'PS',
-					address_zip: 12345,
+					name: 'Test Service',
+					description: 'A test service',
+					price: 50.0,
 					deleted: 0
 				}
 			];
+			mockedDB.mockAll.mockReturnValueOnce(mockServices);
 
-			mockDb.prepare().all.mockReturnValue(mockAppointments);
+			const result = ServiceDatabaseService.getServicesByUserID(1);
 
-			const result = appointmentService.getAppointmentsByCustomerID(1);
-			expect(result).toHaveLength(1);
-			expect(result?.[0]).toEqual({
-				id: 1,
-				userID: 1,
-				customerID: 1,
-				title: 'Pet Grooming',
-				description: 'Regular grooming session',
-				time: {
-					date: '2023-06-15',
-					start: '10:00',
-					end: '11:00',
-					exact: 1
-				},
-				address: {
-					street: '123 Pet St',
-					city: 'Petville',
-					state: 'PS',
-					zip: 12345
-				},
-				deleted: 0
-			});
+			expect(result.success).toBe(true);
+			expect(result.data).toBeDefined();
+			expect(result.data!.length).toBe(1);
+			expect(result.data![0].name).toBe('Test Service');
 		});
 
-		it('should return null if no appointments are found', () => {
-			mockDb.prepare().all.mockReturnValue(null);
+		it('should handle no services found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
 
-			const result = appointmentService.getAppointmentsByCustomerID(1);
-			expect(result).toBeNull();
+			const result = ServiceDatabaseService.getServicesByUserID(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service wasn't found");
 		});
 	});
 
-	describe('getAppointmentsByUserID', () => {
-		it('should retrieve appointments for a user', () => {
-			const mockAppointments = [
-				{
-					id: 1,
-					userID: 1,
-					customerID: 1,
-					title: 'Pet Grooming',
-					description: 'Regular grooming session',
-					time_date: '2023-06-15',
-					time_start: '10:00',
-					time_end: '11:00',
-					time_exact: 1,
-					address_street: '123 Pet St',
-					address_city: 'Petville',
-					address_state: 'PS',
-					address_zip: 12345,
-					deleted: 0
-				}
-			];
-
-			mockDb.prepare().all.mockReturnValue(mockAppointments);
-
-			const result = appointmentService.getAppointmentsByUserID(1);
-			expect(result).toHaveLength(1);
-			expect(result?.[0]).toEqual({
+	describe('getService', () => {
+		it('should successfully retrieve a service', () => {
+			const mockService = {
 				id: 1,
 				userID: 1,
-				customerID: 1,
-				title: 'Pet Grooming',
-				description: 'Regular grooming session',
-				time: {
-					date: '2023-06-15',
-					start: '10:00',
-					end: '11:00',
-					exact: 1
-				},
-				address: {
-					street: '123 Pet St',
-					city: 'Petville',
-					state: 'PS',
-					zip: 12345
-				},
+				name: 'Test Service',
+				description: 'A test service',
+				price: 50.0,
 				deleted: 0
-			});
+			};
+			mockedDB.mockGet.mockReturnValueOnce(mockService);
+
+			const result = ServiceDatabaseService.getService(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockService);
 		});
 
-		it('should return null if no appointments are found', () => {
-			mockDb.prepare().all.mockReturnValue(null);
+		it('should fail to retrieve a non-existent service', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
 
-			const result = appointmentService.getAppointmentsByUserID(1);
-			expect(result).toBeNull();
+			const result = ServiceDatabaseService.getService(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service wasn't found");
 		});
 	});
 
-	describe('updateAppointmentByID', () => {
-		it('should update an appointment successfully', async () => {
-			const mockAppointment: AppointmentRecord = {
-				id: 1,
+	describe('updateServiceByID', () => {
+		it('should successfully update a service', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const service: BaseServiceRecord = {
 				userID: 1,
-				customerID: 1,
-				title: 'Updated Pet Grooming',
-				description: 'Updated grooming session',
-				time: {
-					date: '2023-06-16',
-					start: '11:00',
-					end: '12:00',
-					exact: 1
-				},
-				address: {
-					street: '456 New Pet St',
-					city: 'New Petville',
-					state: 'NP',
-					zip: 54321
-				},
+				name: 'Updated Service',
+				description: 'An updated test service',
+				price: 75.0,
 				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+			const result = ServiceDatabaseService.updateServiceByID(1, service);
 
-			const result = await appointmentService.updateAppointmentByID(1, mockAppointment);
-			expect(result).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Service was updated');
 		});
 
-		it('should return false if appointment update fails', async () => {
-			const mockAppointment: AppointmentRecord = {
-				id: 1,
+		it('should fail to update a non-existent service', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const service: BaseServiceRecord = {
 				userID: 1,
-				customerID: 1,
-				title: 'Updated Pet Grooming',
-				description: 'Updated grooming session',
-				time: {
-					date: '2023-06-16',
-					start: '11:00',
-					end: '12:00',
-					exact: 1
-				},
-				address: {
-					street: '456 New Pet St',
-					city: 'New Petville',
-					state: 'NP',
-					zip: 54321
-				},
+				name: 'Updated Service',
+				description: 'An updated test service',
+				price: 75.0,
 				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+			const result = ServiceDatabaseService.updateServiceByID(999, service);
 
-			const result = await appointmentService.updateAppointmentByID(1, mockAppointment);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service wasn't updated");
 		});
 	});
 
-	describe('deleteAppointmentByID', () => {
-		it('should delete an appointment successfully', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+	describe('deleteService', () => {
+		it('should successfully delete a service', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
 
-			const result = appointmentService.deleteAppointmentByID(1);
-			expect(result).toBe(true);
+			const result = ServiceDatabaseService.deleteService(1);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Service was deleted');
 		});
 
-		it('should return false if appointment deletion fails', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+		it('should fail to delete a non-existent service', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
 
-			const result = appointmentService.deleteAppointmentByID(1);
-			expect(result).toBe(false);
+			const result = ServiceDatabaseService.deleteService(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Service wasn't updated");
 		});
 	});
 });
 
-describe('DatabaseNoteService', () => {
-	let noteService: DatabaseNoteService;
-	let mockDb: any;
-
-	beforeEach(() => {
-		mockDb = new Database('mydb.sqlite');
-		noteService = new DatabaseNoteService(mockDb);
-	});
-
+describe('NoteDatabaseService', () => {
 	describe('CreateNote', () => {
-		it('should create a new note and return the inserted row ID', () => {
-			const mockNote = {
+		it('should successfully create a note', () => {
+			mockedDB.mockRun.mockReturnValueOnce({
+				changes: 1,
+				lastInsertRowid: 1
+			});
+
+			const note: BaseNote = {
 				title: 'Test Note',
-				note: 'This is a test note',
-				createdDate: '2023-06-20'
+				note: 'A test note content',
+				createdDate: Date.now(),
+				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValue({ lastInsertRowid: 1 });
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const createNoteMethod = (NoteDatabaseService as any).CreateNote.bind(NoteDatabaseService);
+			const result = createNoteMethod(note);
 
-			const result = noteService['CreateNote'](mockNote);
-			expect(result).toBe(1);
-			expect(mockDb.prepare).toHaveBeenCalledWith('INSERT into notes (title, note, createdDate, deleted) VALUES (@title, @note, @createdDate, @deleted)');
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note was created');
+			expect(result.data).toBe(1);
+		});
+
+		it('should fail to create a note', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0, lastInsertRowid: 0 });
+
+			const note: BaseNote = {
+				title: 'Test Note',
+				note: 'A test note content',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			// Use reflection to access the private method
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const createNoteMethod = (NoteDatabaseService as any).CreateNote.bind(NoteDatabaseService);
+			const result = createNoteMethod(note);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe('Note failed to create');
 		});
 	});
 
 	describe('CreateCustomerNote', () => {
-		it('should create a customer note successfully', () => {
-			const mockNote = {
-				title: 'Customer Note',
-				note: 'This is a customer note',
-				createdDate: '2023-06-20'
+		it('should successfully create a customer note', () => {
+			// Mock the CreateNote method to return success
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: true,
+				data: 1
+			});
+
+			// Mock the run method for the customer_notes insert
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1, lastInsertRowid: 1 });
+
+			const note: BaseNote = {
+				title: 'Customer Test Note',
+				note: 'A test note for a customer',
+				createdDate: Date.now(),
+				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
-			mockDb.prepare().run.mockReturnValueOnce({ changes: 1 });
+			const result = NoteDatabaseService.CreateCustomerNote(1, note);
 
-			const result = noteService.CreateCustomerNote(1, mockNote);
-			expect(result).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note created');
+
+			// Restore the original method
+			createNoteMock.mockRestore();
 		});
 
-		it('should return false if customer note creation fails', () => {
-			const mockNote = {
-				title: 'Customer Note',
-				note: 'This is a customer note',
-				createdDate: '2023-06-20'
+		it('should fail to create a customer note', () => {
+			// Mock the CreateNote method to return failure
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: false,
+				message: 'Note failed to create'
+			});
+
+			const note: BaseNote = {
+				title: 'Customer Test Note',
+				note: 'A test note for a customer',
+				createdDate: Date.now(),
+				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
-			mockDb.prepare().run.mockReturnValueOnce({ changes: 0 });
+			const result = NoteDatabaseService.CreateCustomerNote(1, note);
 
-			const result = noteService.CreateCustomerNote(1, mockNote);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Notes couldn't be found");
+
+			// Restore the original method
+			createNoteMock.mockRestore();
+		});
+	});
+
+	describe('GetNoteByID', () => {
+		it('should successfully retrieve a note', () => {
+			const mockNote = {
+				id: 1,
+				title: 'Test Note',
+				note: 'Test note content',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+			mockedDB.mockGet.mockReturnValueOnce(mockNote);
+
+			const result = NoteDatabaseService.GetNoteByID(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNote);
+		});
+
+		it('should fail to retrieve a non-existent note', () => {
+			mockedDB.mockGet.mockReturnValueOnce(null);
+
+			const result = NoteDatabaseService.GetNoteByID(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note wasn't found");
+		});
+	});
+
+	describe('UpdateNotesByID', () => {
+		it('should successfully update a note', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const note = {
+				id: 1,
+				title: 'Updated Note',
+				note: 'Updated note content',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.UpdateNotesByID(note);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note updated');
+		});
+
+		it('should fail to update a non-existent note', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const note = {
+				id: 999,
+				title: 'Updated Note',
+				note: 'Updated note content',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.UpdateNotesByID(note);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be updated");
+		});
+	});
+
+	describe('DeleteNoteByID', () => {
+		it('should successfully delete a note', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const result = NoteDatabaseService.DeleteNoteByID(1);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note deleted');
+		});
+
+		it('should fail to delete a non-existent note', () => {
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 0 });
+
+			const result = NoteDatabaseService.DeleteNoteByID(999);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be deleted");
 		});
 	});
 
 	describe('GetCustomerNotes', () => {
-		it('should retrieve customer notes successfully', () => {
+		it('should successfully retrieve customer notes', () => {
 			const mockNotes = [
 				{
 					id: 1,
 					title: 'Customer Note 1',
-					note: 'First customer note',
-					createdDate: '2023-06-20',
+					note: 'Test note content 1',
+					createdDate: Date.now(),
 					deleted: 0
 				},
 				{
 					id: 2,
 					title: 'Customer Note 2',
-					note: 'Second customer note',
-					createdDate: '2023-06-21',
+					note: 'Test note content 2',
+					createdDate: Date.now(),
 					deleted: 0
 				}
 			];
+			mockedDB.mockAll.mockReturnValueOnce(mockNotes);
 
-			mockDb.prepare().all.mockReturnValue(mockNotes);
+			const result = NoteDatabaseService.GetCustomerNotes(1);
 
-			const result = noteService.GetCustomerNotes(1);
-			expect(result).toEqual(mockNotes);
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNotes);
 		});
 
-		it('should return an empty array if no customer notes are found', () => {
-			mockDb.prepare().all.mockReturnValue(undefined);
+		it('should handle no customer notes found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
 
-			const result = noteService.GetCustomerNotes(1);
-			expect(result).toEqual([]);
-		});
-	});
+			const result = NoteDatabaseService.GetCustomerNotes(1);
 
-	describe('GetNoteByID', () => {
-		it('should retrieve a note by ID successfully', () => {
-			const mockNote = {
-				id: 1,
-				title: 'Test Note',
-				note: 'This is a test note',
-				createdDate: '2023-06-20',
-				deleted: 0
-			};
-
-			mockDb.prepare().get.mockReturnValue(mockNote);
-
-			const result = noteService.GetNoteByID(1);
-			expect(result).toEqual(mockNote);
-		});
-
-		it('should return null if no note is found', () => {
-			mockDb.prepare().get.mockReturnValue(undefined);
-
-			const result = noteService.GetNoteByID(1);
-			expect(result).toBeNull();
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Notes couldn't be found");
 		});
 	});
 
 	describe('CreateAppointmentNote', () => {
-		it('should create an appointment note successfully', () => {
-			const mockNote = {
-				title: 'Appointment Note',
-				note: 'This is an appointment note',
-				createdDate: '2023-06-20'
+		it('should successfully create an appointment note', () => {
+			// Mock the CreateNote method to return success
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: true,
+				data: 1
+			});
+
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const note: BaseNote = {
+				title: 'Appointment Test Note',
+				note: 'A test note for an appointment',
+				createdDate: Date.now(),
+				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
-			mockDb.prepare().run.mockReturnValueOnce({ changes: 1 });
+			const result = NoteDatabaseService.CreateAppointmentNote(1, note);
 
-			const result = noteService.CreateAppointmentNote(1, mockNote);
-			expect(result).toBe(true);
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note created');
+
+			createNoteMock.mockRestore();
 		});
 
-		it('should return false if appointment note creation fails', () => {
-			const mockNote = {
-				title: 'Appointment Note',
-				note: 'This is an appointment note',
-				createdDate: '2023-06-20'
+		it('should fail to create an appointment note', () => {
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: false,
+				message: 'Note failed to create'
+			});
+
+			const note: BaseNote = {
+				title: 'Appointment Test Note',
+				note: 'A test note for an appointment',
+				createdDate: Date.now(),
+				deleted: 0
 			};
 
-			mockDb.prepare().run.mockReturnValueOnce({ lastInsertRowid: 1 });
-			mockDb.prepare().run.mockReturnValueOnce({ changes: 0 });
+			const result = NoteDatabaseService.CreateAppointmentNote(1, note);
 
-			const result = noteService.CreateAppointmentNote(1, mockNote);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be created");
+
+			createNoteMock.mockRestore();
 		});
 	});
 
 	describe('GetAppointmentNotes', () => {
-		it('should retrieve appointment notes successfully', () => {
+		it('should successfully retrieve appointment notes', () => {
 			const mockNotes = [
 				{
 					id: 1,
 					title: 'Appointment Note 1',
-					note: 'First appointment note',
-					createdDate: '2023-06-20',
+					note: 'Test note content 1',
+					createdDate: Date.now(),
 					deleted: 0
 				},
 				{
 					id: 2,
 					title: 'Appointment Note 2',
-					note: 'Second appointment note',
-					createdDate: '2023-06-21',
+					note: 'Test note content 2',
+					createdDate: Date.now(),
 					deleted: 0
 				}
 			];
+			mockedDB.mockAll.mockReturnValueOnce(mockNotes);
 
-			mockDb.prepare().all.mockReturnValue(mockNotes);
+			const result = NoteDatabaseService.GetAppointmentNotes(1);
 
-			const result = noteService.GetAppointmentNotes(1);
-			expect(result).toEqual(mockNotes);
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNotes);
 		});
 
-		it('should return an empty array if no appointment notes are found', () => {
-			mockDb.prepare().all.mockReturnValue(undefined);
+		it('should handle no appointment notes found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
 
-			const result = noteService.GetAppointmentNotes(1);
-			expect(result).toEqual([]);
-		});
-	});
+			const result = NoteDatabaseService.GetAppointmentNotes(1);
 
-	describe('UpdateNotesByID', () => {
-		it('should update a note successfully', () => {
-			const mockNote = {
-				id: 1,
-				title: 'Updated Note',
-				note: 'This is an updated note',
-				createdDate: '2023-06-20',
-				deleted: 0
-			};
-
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
-
-			const result = noteService.UpdateNotesByID(mockNote);
-			expect(result).toBe(true);
-		});
-
-		it('should return false if note update fails', () => {
-			const mockNote = {
-				id: 1,
-				title: 'Updated Note',
-				note: 'This is an updated note',
-				createdDate: '2023-06-20',
-				deleted: 0
-			};
-
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
-
-			const result = noteService.UpdateNotesByID(mockNote);
-			expect(result).toBe(false);
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be created");
 		});
 	});
 
-	describe('DeleteNoteByID', () => {
-		it('should delete a note successfully', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 1 });
+	describe('CreateServiceNote', () => {
+		it('should successfully create a service note', () => {
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: true,
+				data: 1
+			});
 
-			const result = noteService.DeleteNoteByID(1);
-			expect(result).toBe(true);
+			mockedDB.mockRun.mockReturnValueOnce({ changes: 1 });
+
+			const note: BaseNote = {
+				title: 'Service Test Note',
+				note: 'A test note for a service',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.CreateServiceNote(1, note);
+
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Note created');
+
+			createNoteMock.mockRestore();
 		});
 
-		it('should return false if note deletion fails', () => {
-			mockDb.prepare().run.mockReturnValue({ changes: 0 });
+		it('should fail to create a service note', () => {
+			const createNoteMock = vi.spyOn(NoteDatabaseService as never, 'CreateNote').mockReturnValueOnce({
+				success: false,
+				message: 'Note failed to create'
+			});
 
-			const result = noteService.DeleteNoteByID(1);
-			expect(result).toBe(false);
+			const note: BaseNote = {
+				title: 'Service Test Note',
+				note: 'A test note for a service',
+				createdDate: Date.now(),
+				deleted: 0
+			};
+
+			const result = NoteDatabaseService.CreateServiceNote(1, note);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be created");
+
+			createNoteMock.mockRestore();
+		});
+	});
+
+	describe('GetServiceNotes', () => {
+		it('should successfully retrieve service notes', () => {
+			const mockNotes = [
+				{
+					id: 1,
+					title: 'Service Note 1',
+					note: 'Test note content 1',
+					createdDate: Date.now(),
+					deleted: 0
+				},
+				{
+					id: 2,
+					title: 'Service Note 2',
+					note: 'Test note content 2',
+					createdDate: Date.now(),
+					deleted: 0
+				}
+			];
+			mockedDB.mockAll.mockReturnValueOnce(mockNotes);
+
+			const result = NoteDatabaseService.GetServiceNotes(1);
+
+			expect(result.success).toBe(true);
+			expect(result.data).toEqual(mockNotes);
+		});
+
+		it('should handle no service notes found', () => {
+			mockedDB.mockAll.mockReturnValueOnce(null);
+
+			const result = NoteDatabaseService.GetServiceNotes(1);
+
+			expect(result.success).toBe(false);
+			expect(result.message).toBe("Note couldn't be found");
 		});
 	});
 });

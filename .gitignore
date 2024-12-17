@@ -28,3 +28,5 @@ test-results
 test-results/.last-run.json
 /test-results
 /test-results
+mydb.sqlite-shm
+mydb.sqlite-wal

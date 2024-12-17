@@ -1,12 +1,4 @@
-import {
-	Notes_CreateAppointmentNote,
-	Notes_CreateCustomerNote,
-	Notes_DeleteNoteByID,
-	Notes_GetAppointmentNotes,
-	Notes_GetCustomerNotes,
-	Notes_GetNoteByID,
-	Notes_UpdateNotesByID
-} from '$lib/db/database';
+import { NoteDatabaseService } from '$lib/db/database';
 import { json, type RequestHandler } from '@sveltejs/kit';
 
 export const POST: RequestHandler = async ({ request, params }) => {
@@ -17,93 +9,70 @@ export const POST: RequestHandler = async ({ request, params }) => {
 		switch (path) {
 			//Generics
 			case 'getNoteByID': {
-				const result = Notes_GetNoteByID(data);
-				if (result) {
-					return json({ success: true, message: 'Success', data: result });
-				} else {
-					return json({ success: false, message: "Couldn't get user" });
-				}
+				const result = NoteDatabaseService.GetNoteByID(data);
+				return json(result);
 			}
-			
+
 			case 'updateNoteByID': {
-				const result = Notes_UpdateNotesByID(data);
-				if (result) {
-					return json({ success: true, message: 'Success' });
-				} else {
-					return json({ success: false, message: "Couldn't update user" });
-				}
+				const result = NoteDatabaseService.UpdateNotesByID(data);
+				return json(result);
 			}
 
 			case 'deleteNoteByID': {
-				const result = Notes_DeleteNoteByID(data);
-				if (result) {
-					return json({ success: true, message: 'Success' });
-				} else {
-					return json({ success: false, message: "Couldn't delete user" });
-				}
+				const result = NoteDatabaseService.DeleteNoteByID(data);
+				return json(result);
 			}
 
 			//Customers
 			case 'createCustomerNote': {
-				const result = Notes_CreateCustomerNote(data[0], data[1]);
-				if (result) {
-					return json({ success: true }, { status: 201 });
-				} else {
-					return json({ success: false, message: "Couldn't create note" }, { status: 201 });
-				}
+				const result = NoteDatabaseService.CreateCustomerNote(data[0], data[1]);
+				return json(result);
 			}
 
 			case 'getCustomerNotes': {
-				const result = Notes_GetCustomerNotes(data);
-				if (result) {
-					return json({ success: true, message: 'Success', data: result });
-				} else {
-					return json({ success: false, message: "Couldn't get notes" });
-				}
+				const result = NoteDatabaseService.GetCustomerNotes(data);
+				return json(result);
 			}
 
 			//Appointment
 			case 'createAppointmentNote': {
-				const result = Notes_CreateAppointmentNote(data[0], data[1]);
-				if (result) {
-					return json({ success: true, message: 'Success' });
-				} else {
-					return json({ success: false, message: "Couldn't create notes" });
-				}
+				const result = NoteDatabaseService.CreateAppointmentNote(data[0], data[1]);
+				return json(result);
 			}
 
 			case 'getAppointmentNotes': {
-				const result = Notes_GetAppointmentNotes(data);
-				if (result) {
-					return json({ success: true, message: 'Success', data: result });
-				} else {
-					return json({ success: false, message: "Couldn't get notes" });
-				}
+				const result = NoteDatabaseService.GetAppointmentNotes(data);
+				return json(result);
 			}
 
 			//Service
 			case 'createServiceNote': {
-				const result = Notes_CreateAppointmentNote(data[0], data[1]);
-				if (result) {
-					return json({ success: true, message: 'Success' });
-				} else {
-					return json({ success: false, message: "Couldn't create notes" });
-				}
+				const result = NoteDatabaseService.CreateServiceNote(data[0], data[1]);
+				return json(result);
 			}
 
 			case 'getServiceNotes': {
-				const result = Notes_GetAppointmentNotes(data);
-				if (result) {
-					return json({ success: true, message: 'Success', data: result });
-				} else {
-					return json({ success: false, message: "Couldn't get notes" });
-				}
+				const result = NoteDatabaseService.GetServiceNotes(data);
+				return json(result);
+			}
+
+			//Invoice
+			case 'createInvoiceNote': {
+				const result = NoteDatabaseService.CreateInvoiceNote(data[0], data[1]);
+				return json(result);
+			}
+
+			case 'getInvoiceNotes': {
+				const result = NoteDatabaseService.GetInvoiceNotes(data);
+				return json(result);
 			}
 
 			default:
+				console.error(path, ' is an invalid path');
 				return json({ success: false, message: 'Invalid Endpoint' }, { status: 500 });
 		}
 	} catch (error) {
+		console.error(error);
 		return json({ success: false, message: 'Server Error' }, { status: 500 });
 	}
 };

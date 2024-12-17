@@ -9,11 +9,8 @@ test("Make sure you can't go to protected page", async ({ page }) => {
 });
 
 test.describe('Existing Account', async () => {
-	let testEmail = 'test@gmail.com';
-	let testPassword = 'test123';
-	let firstName = 'Test';
-	let lastName = 'Test';
-
+	const testEmail = 'test@gmail.com';
+	const testPassword = 'test123';
 
 	test('Login Test', async ({ page }) => {
 		const map = new TestMapping(page);
@@ -60,16 +57,20 @@ test.describe('Existing Account', async () => {
 });
 
 test.describe('New Account', async () => {
-	const FirstName = generateRandomString(10);
-	const LastName = generateRandomString(10);
-	const Email = generateRandomString(10) + '@gmail.com';
-	const Password = generateRandomString(10);
+	const testData = {
+		firstName: generateRandomString(10),
+		lastName: generateRandomString(10),
+		email: generateRandomString(10) + '@gmail.com',
+		password: generateRandomString(10)
+	};
 
 	test('Create account', async ({ page }) => {
 		const map = new TestMapping(page);
 
-		await map.Account_Register(FirstName, LastName, Email, Password)
-		await map.Account_Login(Email, Password)
+		await map.Account_Register(testData.firstName, testData.lastName, testData.email, testData.password);
+		await page.waitForTimeout(1000);
+
+		await map.Account_Login(testData.email, testData.password);
 		await expect(page).toHaveURL('/home');
 		await page.goto('http://localhost:4173/');
 		await expect(page).toHaveURL('/');

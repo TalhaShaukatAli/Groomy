@@ -4,7 +4,8 @@
 	import API from '$lib/db/api.js';
 	import { goto } from '$app/navigation';
 	import { DateTimeCombiner } from '$lib';
-	import Notes from '$lib/components/Notes_Appointment.svelte';
+	import Notes from '$lib/components/Notes.svelte';
+	import { AppointmentNoteServiceSingleton } from '$lib/db/noteHelper.js';
 	page.set('Appointments');
 
 	let { data } = $props();
@@ -24,7 +25,7 @@
 	async function onSave() {
 		const result = await API.updateAppointment(appointment);
 		if (result.success) {
-			goto(`/home/appointments`);
+			await goto(`/home/appointments`);
 		}
 	}
 
@@ -33,7 +34,7 @@
 		if (confirmResult) {
 			const result = await API.deleteAppointment(id);
 			if (result.success) {
-				goto('/home/appointments');
+				await goto('/home/appointments');
 			}
 		}
 	}
@@ -56,6 +57,7 @@
 					</div>
 					<div class="grow"></div>
 					<button
+						type="button"
 						onclick={() => {
 							changeToEdit();
 						}}>Edit</button
@@ -69,11 +71,13 @@
 					<div class="grow"></div>
 					<button type="submit">Save</button>
 					<button
+						type="button"
 						onclick={() => {
 							onDelete(appointment.id);
 						}}>Delete</button
 					>
 					<button
+						type="button"
 						onclick={() => {
 							cancel();
 						}}>Cancel</button
@@ -149,7 +153,7 @@
 			</div>
 		</div>
 	</form>
-	<Notes notesID={appointment.id} />
+	<Notes notesID={appointment.id} noteHelper={AppointmentNoteServiceSingleton} />
 </div>
 
 <style>

@@ -13,6 +13,7 @@
 	<a class="sideBarItem" class:highlighted={page.get() === 'Customer'} href="/home/customers">Customers</a>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Appointments'} href="/home/appointments">Appointments</a>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Services'} href="/home/services">Services</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'Invoices'} href="/home/invoices">Invoices</a>
 
 	<div style="flex-grow: 1;"></div>
 	<a class="sideBarItem" href="/login/logout">Log Out</a>
