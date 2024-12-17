@@ -157,13 +157,15 @@ export type ServiceRecord = RecordWithId<BaseServiceRecord>;
 
 
 export type BaseInvoiceRecord = {
-	createdDate: string;
+	createdDate: number;
 	dueDate: string;
+	date: string
 	customerID: number;
 	total: number;
 	paid: 0 | 1;
 	serviceItems: { serviceId: number, quantity: number }[]
 	deleted: 0 | 1;
+	userID: number
 }
 
 export type InvoiceRecord = RecordWithId<BaseInvoiceRecord>;

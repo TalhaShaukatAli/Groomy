@@ -4,8 +4,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const customers = CustomerDatabaseService.getCustomers(locals.user?.id);
-
-	if (customers === null) {
+	if (customers === null || customers.data.length == 0) {
 		redirect(302, '/home/customers');
 	}
 	return {

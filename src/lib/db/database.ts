@@ -1044,6 +1044,59 @@ class NoteService extends BaseDatabaseService {
 			};
 		}
 	}
+
+	/**
+	 * Creates a new note associated with a specific service
+	 * @param {number} invoiceID - The unique identifier of the service
+	 * @param {BaseNote} noteData - The note details to create
+	 * @returns {DatabaseResponse} Result of service note creation
+	 */
+	CreateInvoiceNote(invoiceID: number, noteData: BaseNote): DatabaseResponse {
+		const newNote = this.CreateNote(noteData);
+		if (newNote.success) {
+			const query = this.db.prepare('INSERT into invoice_notes (invoiceID, noteID) VALUES (@invoiceID, @noteID)');
+			const result = query.run({
+				invoiceID: invoiceID,
+				noteID: newNote.data
+			});
+
+			if (result.changes == 1) {
+				return {
+					success: true,
+					message: 'Note created'
+				};
+			}
+		}
+
+		console.error('Failed to create note - note:', noteData);
+		return {
+			success: false,
+			message: "Note couldn't be created"
+		};
+	}
+
+	/**
+	 * Retrieves all non-deleted notes for a specific service
+	 * @param {number} invoiceID - The unique identifier of the service
+	 * @returns {DatabaseDataResponse<Note[]>} List of service's notes or error response
+	 */
+	GetInvoiceNotes(invoiceID: number): DatabaseDataResponse<Note[]> {
+		const query = this.db.prepare('SELECT n.* FROM invoice_notes sn INNER JOIN notes n ON sn.noteID = n.id WHERE sn.invoiceID = ? and deleted = 0');
+		const result = <Note[]>query.all(invoiceID);
+		if (result) {
+			return {
+				success: true,
+				message: 'Note Found',
+				data: result
+			};
+		} else {
+			console.error('Failed to get note - serviceID:', invoiceID);
+			return {
+				success: false,
+				message: "Note couldn't be found"
+			};
+		}
+	}
 }
 
 /**
@@ -1063,16 +1116,18 @@ class InvoiceService extends BaseDatabaseService {
 	 */
 	createInvoice(invoice: BaseInvoiceRecord): DatabaseResponse {
 		const query = this.db.prepare(
-			'Insert into invoices (createdDate, dueDate, customerID, total, paid, serviceItems, deleted) VALUES (@createdDate, @dueDate, @customerID, @total,  @paid, @serviceItems, @deleted)'
+			'Insert into invoices (createdDate, dueDate, customerID, total, paid, serviceItems, deleted, date,userID) VALUES (@createdDate, @dueDate, @customerID, @total,  @paid, @serviceItems, @deleted, @date, @userID)'
 		);
 		const result = query.run({
-			createdDate: invoice.createdDate,
+			createdDate: Date.now(),
 			dueDate: invoice.dueDate,
 			customerID: invoice.customerID,
 			total: invoice.total,
 			paid: invoice.paid,
 			serviceItems: invoice.serviceItems,
-			deleted: 0
+			deleted: 0,
+			date: invoice.date,
+			userID: invoice.userID
 		});
 
 		if (result.changes == 1) {
@@ -1143,15 +1198,25 @@ class InvoiceService extends BaseDatabaseService {
 	 */
 	updateInvoiceByID(invoiceID: number, invoice: InvoiceRecord): DatabaseResponse {
 		const query = this.db.prepare(
-			'Update invoices set createdDate = @createdDate, dueDate=@dueDate, customerID=@customerID, total = @total, paid = @paid, serviceItems = @serviceItems, deleted = @deleted, WHERE id = @id'
+			'Update invoices set createdDate = @createdDate, dueDate=@dueDate, customerID=@customerID, total = @total, paid = @paid, date= @date, serviceItems = @serviceItems, deleted = @deleted WHERE id = @id'
 		);
+
+		let serviceItems: string | object
+
+		if(typeof invoice.serviceItems === "string"){
+			serviceItems = invoice.serviceItems
+		} else {
+			serviceItems = JSON.stringify(invoice.serviceItems)
+		}
+
 		const result = query.run({
-			createdDate: invoice.createdDate,
+			createdDate: Date.now(),
 			dueDate: invoice.dueDate,
 			customerID: invoice.customerID,
 			total: invoice.total,
 			paid: invoice.paid,
-			serviceItems: invoice.serviceItems,
+			date: invoice.date,
+			serviceItems: serviceItems,
 			deleted: 0,
 			id: invoiceID
 		});

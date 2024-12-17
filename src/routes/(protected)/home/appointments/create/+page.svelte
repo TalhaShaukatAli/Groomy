@@ -40,8 +40,9 @@
 		let result = DateTimeCombiner(appointment.time.date, appointment.time.start);
 		appointment.time.exact = result;
 	}
-
+	
 	let customer: CustomerRecord = $derived(customerList.filter((customerIndividual) => customerIndividual.id == appointment.customerID)[0] || customerList[0]);
+	
 </script>
 
 <div class="content">

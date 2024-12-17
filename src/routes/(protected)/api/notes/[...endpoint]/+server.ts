@@ -56,6 +56,17 @@ export const POST: RequestHandler = async ({ request, params }) => {
 				return json(result);
 			}
 
+			//Invoice
+			case 'createInvoiceNote': {
+				const result = NoteDatabaseService.CreateInvoiceNote(data[0], data[1]);
+				return json(result);
+			}
+
+			case 'getInvoiceNotes': {
+				const result = NoteDatabaseService.GetInvoiceNotes(data);
+				return json(result);
+			}
+
 			default:
 				console.error(path, ' is an invalid path');
 				return json({ success: false, message: 'Invalid Endpoint' }, { status: 500 });

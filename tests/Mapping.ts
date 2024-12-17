@@ -95,6 +95,7 @@ export class TestMapping {
 	async Customer_DeleteFromEdit(customerPhone: string) {
 		await this.GoTo('Customers');
 		await this.page.locator('.row').filter({ hasText: customerPhone }).getByText('Edit').click();
+		await this.page.waitForTimeout(1000)
 		await this.page.on('dialog', (dialog) => dialog.accept());
 		await this.page.getByText('Delete').click();
 		await this.page.waitForTimeout(100);
@@ -163,6 +164,7 @@ export class TestMapping {
 	async Appointment_DeleteFromEdit(appointmentTitle: string) {
 		await this.GoTo('Appointments');
 		await this.page.locator('.row').filter({ hasText: appointmentTitle }).getByText('Edit').click();
+		await this.page.waitForTimeout(100)
 		await this.page.on('dialog', (dialog) => dialog.accept());
 		await this.page.getByText('Delete').click();
 		await this.page.waitForTimeout(100);

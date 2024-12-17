@@ -2,6 +2,7 @@ import type {
 	AppointmentRecord,
 	BaseAppointmentRecord,
 	BaseCustomerRecord,
+	BaseInvoiceRecord,
 	BaseNote,
 	BaseServiceRecord,
 	CustomerRecord,
@@ -285,7 +286,7 @@ class API {
 	 * @param {BaseServiceRecord} data - The invoice data to create
 	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of invoice creation
 	 */
-	static async createInvoice(data: BaseServiceRecord): Promise<DatabaseResponse> {
+	static async createInvoice(data: BaseInvoiceRecord): Promise<DatabaseResponse> {
 		return this.request('/invoices/create', {
 			method: 'POST',
 			body: JSON.stringify(data)
@@ -377,6 +378,33 @@ class API {
 		return this.request('/notes/getAppointmentNotes', {
 			method: 'POST',
 			body: JSON.stringify(appointmentID)
+		});
+	}
+
+	//Invoice Notes Methods
+
+	/**
+	 * Create a new note for a specific appointment
+	 * @param {number} invoiceID - The ID of the invoice to add a note to
+	 * @param {BaseNote} data - The note data to create
+	 * @returns {Promise<DatabaseResponse>} Response indicating success or failure of note creation
+	 */
+	static async createInvoiceNote(invoiceID: number, data: BaseNote): Promise<DatabaseResponse> {
+		return this.request('/notes/createInvoiceNote', {
+			method: 'POST',
+			body: JSON.stringify([invoiceID, data])
+		});
+	}
+
+	/**
+	 * Retrieve notes for a specific appointment
+	 * @param {number} invoiceID - The ID of the invoice to retrieve notes for
+	 * @returns {Promise<DatabaseDataResponse<Note[]>>} List of note records for the invoice
+	 */
+	static async getInvoiceNotes(invoiceID: number): Promise<DatabaseDataResponse<Note[]>> {
+		return this.request('/notes/getInvoiceNotes', {
+			method: 'POST',
+			body: JSON.stringify(invoiceID)
 		});
 	}
 

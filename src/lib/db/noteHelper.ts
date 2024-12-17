@@ -136,6 +136,33 @@ class CustomerNoteService extends NoteService {
 }
 
 /**
+ * Concrete implementation of NoteService for managing service-related notes.
+ * @extends NoteService
+ */
+class InvoiceNoteService extends NoteService {
+	/**
+	 * Retrieves notes associated with a specific service.
+	 * @param {number} id - The service ID to retrieve notes for
+	 * @returns {Promise<DatabaseDataResponse<Note[]>>} A promise resolving to service notes
+	 */
+	async getNotes(id: number) {
+		const response = await API.getInvoiceNotes(id);
+		return response;
+	}
+
+	/**
+	 * Creates a new note for a specific service.
+	 * @param {number} correspondingID - The service ID to associate the note with
+	 * @param {BaseNote} noteData - The data for the new service note
+	 * @returns {Promise<DatabaseResponse>} A promise resolving to a database response
+	 */
+	async createNote(correspondingID: number, noteData: BaseNote) {
+		const response = await API.createInvoiceNote(correspondingID, noteData);
+		return response;
+	}
+}
+
+/**
  * Singleton instance of CustomerNoteService for global access.
  */
 export const CustomerNoteServiceSingleton = new CustomerNoteService();
@@ -149,3 +176,8 @@ export const AppointmentNoteServiceSingleton = new AppointmentNoteService();
  * Singleton instance of ServiceNoteService for global access.
  */
 export const ServiceNoteServiceSingleton = new ServiceNoteService();
+
+/**
+ * Singleton instance of ServiceNoteService for global access.
+ */
+export const InvoiceNoteServiceSingleton = new InvoiceNoteService();

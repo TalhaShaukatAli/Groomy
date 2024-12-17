@@ -1,13 +1,23 @@
 <script lang="ts">
 	import API from '$lib/db/api';
 	import { page } from '$lib/stores.svelte';
-	import type { CustomerRecord, InvoiceRecord } from '$lib/types.js';
+	import type { CustomerRecord, InvoiceRecord, ServiceRecord } from '$lib/types.js';
 
 	page.set('Invoices');
 
 	let { data } = $props();
 	let invoices: InvoiceRecord[] | null = JSON.parse(data.invoices);
+	let sortedInvoices = invoices
+		? [...invoices].sort((a, b) => {
+				const dateA = Number(a.createdDate.toString().replace(/,/g, ''));
+				const dateB = Number(b.createdDate.toString().replace(/,/g, ''));
+
+				return dateB - dateA;
+			})
+		: null;
+
 	let customers: CustomerRecord[] | null = JSON.parse(data.customers);
+	let servicesList: ServiceRecord[] = JSON.parse(data.services)
 
 	function getCustomerForInvoice(customerID: number) {
 		let test = customers.filter((i) => i.id === customerID);
@@ -23,15 +33,34 @@
 			}
 		}
 	}
+
+	function getServiceInfo(serviceID: number): ServiceRecord {
+		const defaultService: ServiceRecord = {
+			id: serviceID,
+			name: 'Service Not Found',
+			description: 'Service details unavailable',
+			price: 0,
+			userID: 0,
+			deleted: 0
+		};
+		return servicesList.find((service) => service.id === serviceID) ?? defaultService;
+	}
+
+	function calculateTotal(service: ServiceRecord, quantity: number): string {
+		if (!service?.price || !quantity) return '0.00';
+		return (service.price * quantity).toFixed(2);
+	}
+
+
 </script>
 
 <div class="table">
-	<a class="createNew" href="/home/services/create"> Create New Invoice > </a>
+	<a class="createNew" href="/home/invoices/create"> Create New Invoice > </a>
 	{#if invoices == null || invoices.length === 0}
 		You have no invoices created yet
 	{:else}
 		<div class="rows">
-			{#each invoices as invoice}
+			{#each sortedInvoices as invoice}
 				{@render serviceInvoice(invoice)}
 			{/each}
 		</div>
@@ -39,18 +68,26 @@
 </div>
 
 {#snippet serviceInvoice(data: InvoiceRecord)}
+{@const tempServiceItems = JSON.parse(data.serviceItems)}
 	<div class="row">
 		<div class="top">
 			<div class="fullName">
 				Invoice {`${data.id}`}
-
 			</div>
 		</div>
 		<div class="email">
-			{`${getCustomerForInvoice(data.customerID).firstName + " " + getCustomerForInvoice(data.customerID).lastName}`}
+			Client: {`${getCustomerForInvoice(data.customerID).firstName + ' ' + getCustomerForInvoice(data.customerID).lastName}`}
 		</div>
 		<div class="phone">
-			{data.dueDate}
+			Payment Due: {data.dueDate}
+		</div>
+		<div>
+			Paid: {data.paid === 1 ? true : false}
+		</div>
+		<div>
+			
+			Total Price: {tempServiceItems.reduce((total, value) => total + parseFloat(calculateTotal(getServiceInfo(value.serviceID), value.quantity)), 0).toFixed(2)}
+			
 		</div>
 		<div class="bottom">
 			<div class="edit">
