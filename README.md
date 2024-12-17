@@ -1,5 +1,7 @@
 # Software Engineering Technical Specification
 
+Here is the link to our site - http://164.90.147.233:3000/
+
 ## Overview
 
 This document outlines the technical specifications for a web-based business management system, designed to handle customer relationships, appointments, and payments.
