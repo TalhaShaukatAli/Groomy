@@ -1,9 +1,9 @@
 /** @type {import('./$types').Actions} */
 
-import { AddCookie, AddNewUser, GetUserByEmail, RemoveCookie } from '$lib/db/database';
+import { AuthDatabaseService } from '$lib/db/database';
 import { generateRandomString } from '@oslojs/crypto/random';
 import argon2 from 'argon2';
-import type { newUser } from '$lib/types';
+import type { BaseUserRecord } from '$lib/types';
 import type { Actions } from './$types';
 
 import type { RandomReader } from '@oslojs/crypto/random';
@@ -18,50 +18,45 @@ const random: RandomReader = {
 export const actions = {
 	login: async ({ cookies, request }) => {
 		const data = await request.formData();
-		const email = <string>data.get('email');
+		const email = (<string>data.get('email')).toLowerCase();
 		const password = <string>data.get('password');
 
-		let user = await GetUserByEmail(email);
+		const user = AuthDatabaseService.getUserByEmail(email);
 
-		if (user == null) {
-			return fail(422, {
-				error: "Incorrect username or password"
-			});
-		} else {
-			if (await argon2.verify(user.password, password)) {
-				let cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
-				await AddCookie(cookieID)
+		if (user.success) {
+			if (await argon2.verify(user.data.hashedPassword, password)) {
+				const cookieID = generateRandomString(random, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20);
+				AuthDatabaseService.createCookie(cookieID, user.data.id);
 				cookies.set('sessionID', cookieID, { path: '/' });
-				redirect(302, "/home")
+				redirect(302, '/home');
 			}
 		}
 
+		return fail(422, {
+			error: 'Incorrect username or password'
+		});
 	},
-	create: async ({ cookies, request }) => {
+	signup: async ({ request }) => {
 		const data = await request.formData();
 		const email = <string>data.get('email');
 		const password = <string>data.get('password');
-		const passwordHash = await argon2.hash(password);
+		const passwordHash = await argon2.hash(password, { timeCost: 2 });
 		const firstName = <string>data.get('firstName');
 		const lastName = <string>data.get('lastName');
 
-		
-
-		let user = await GetUserByEmail(email);
-
-		if (user !== null) {
-			return fail(422, {
-				error: "User with that email already exists"
-			});
-		}
-
-		const newUserData: newUser = {
+		const newUserData: BaseUserRecord = {
 			firstName: firstName,
 			lastName: lastName,
 			email: email.toLowerCase(),
-			password: passwordHash
+			hashedPassword: passwordHash
 		};
 
-		await AddNewUser(newUserData);
-	},
+		const result = AuthDatabaseService.createUser(newUserData);
+
+		if (!result.success) {
+			return fail(422, {
+				error: result.message
+			});
+		}
+	}
 } satisfies Actions;

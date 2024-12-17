@@ -10,7 +10,11 @@
 		<b>Groomy</b>
 	</div>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Home'} href="/home">Home</a>
-	<a class="sideBarItem" class:highlighted={page.get() === 'Test'} href="/home/test">Test</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'Customer'} href="/home/customers">Customers</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'Appointments'} href="/home/appointments">Appointments</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'Services'} href="/home/services">Services</a>
+	<a class="sideBarItem" class:highlighted={page.get() === 'Invoices'} href="/home/invoices">Invoices</a>
+
 	<div style="flex-grow: 1;"></div>
 	<a class="sideBarItem" href="/login/logout">Log Out</a>
 </div>
@@ -18,7 +22,6 @@
 <style>
 	.highlighted {
 		background-color: var(--main-hover) !important;
-		color: white;
 	}
 
 	b {

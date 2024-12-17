@@ -1,9 +1,9 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { RemoveCookie } from '$lib/db/database';
+import { AuthDatabaseService } from '$lib/db/database';
 
-export const GET: RequestHandler = async ({ url, cookies }) => {
-	RemoveCookie(cookies.get('sessionID')).then((value) => {});
+export const GET: RequestHandler = async ({ cookies }) => {
+	AuthDatabaseService.removeCookie(cookies.get('sessionID') || '');
 	cookies.delete('sessionID', { path: '/' });
 	redirect(302, '/');
 };

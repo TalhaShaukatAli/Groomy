@@ -10,14 +10,12 @@
 		<b>Groomy</b>
 	</div>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Home'} href="/">Home</a>
-	<a class="sideBarItem" class:highlighted={page.get() === 'About'} href="/about">About</a>
 	<a class="sideBarItem" class:highlighted={page.get() === 'Login'} href="/login">Login</a>
 </div>
 
 <style>
 	.highlighted {
 		background-color: var(--main-hover) !important;
-		color: white;
 	}
 	b {
 		font-size: 1.7rem;
